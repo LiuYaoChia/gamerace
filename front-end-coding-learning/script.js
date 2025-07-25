@@ -23,7 +23,7 @@ const firebaseConfig = {
 
 // 🔌 Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const db = getDatabase(app, "https://pinny-c0821-default-rtdb.asia-southeast1.firebasedatabase.app");
 const messagesRef = ref(db, "messages");
 
 // 🔧 DOM Elements
