@@ -122,7 +122,7 @@ setTimeout(() => {
   if (qrCanvas && window.QRious) {
     new QRious({
       element: qrCanvas,
-      value: 'https://liuyaochia.github.io/pinny-wedding/front-end-coding-learning/pinny.html',
+      value: 'https://liuyaochia.github.io/pinny/front-end-coding-learning/pinny.html',
       size: 120
     });
     console.log("QR Code generated.");
