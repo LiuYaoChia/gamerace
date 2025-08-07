@@ -4,45 +4,49 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🚤 Multiplayer Game Race</title>
-  <link rel="stylesheet" href="happiness-game.css" /> <!-- Your external CSS file -->
+  <link rel="stylesheet" href="happiness-game.css" />
 </head>
 <body>
-<!-- QR Code -->
-  <div id="qr-code">
-    <img id="qr-img" 
-      src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https%3A%2F%2Fliuyaochia.github.io%2Fgamerace%2FGame-setting%2Fhappiness-game.html" 
-      alt="無法顯示" />
-  </div>
-<!-- PLAYER SETUP SCREEN -->
-  <div id="player-setup">
-      <h2>🚤 Enter Your Name</h2>
-      <form id="name-form">
-          <input type="text" id="player-name" placeholder="Enter your name" required />
-           <button type="submit">Join Race</button>
-      </form>
-      <ul id="player-list"></ul>
-      <button id="start-game" disabled>Start Game</button>
+
+<!-- ✅ QR Code -->
+<div id="qr-code">
+  <img id="qr-img"
+    src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https%3A%2F%2Fliuyaochia.github.io%2Fgamerace%2FGame-setting%2Fhappiness-game.html"
+    alt="無法顯示" />
+</div>
+
+<!-- ✅ PLAYER SETUP SCREEN -->
+<div id="player-setup">
+  <h2>🚤 Enter Your Name</h2>
+  <form id="name-form">
+    <input type="text" id="player-name" placeholder="Enter your name" required />
+    <button type="submit">Join Race</button>
+  </form>
+  <ul id="player-list"></ul>
+  <button id="start-game" disabled>Start Game</button>
+</div>
+
+<!-- ✅ GAME CONTAINER -->
+<div class="game-container" style="display: none;">
+
+  <!-- ✅ Track -->
+  <div class="track" id="track">
+    <!-- Lanes (with emoji boats) will be dynamically added here -->
   </div>
 
-<!-- GAME CONTAINER -->
-  <div class="game-container" style="display: none;">
-      <div class="track" id="track" style="position: relative; width: 100%; height: 300px; border: 1px solid #ccc; margin-bottom: 1rem;">
-    <!-- Lanes and boats will be rendered here -->
-      </div>
-      <div class="ranking-panel">
-           <h3>🏁 RANKING</h3>
-            <ul id="ranking-list"></ul>
-      </div>
-      <div class="overlay" id="timeup" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(255,0,0,0.8); color: white; font-size: 3rem; padding: 2rem 4rem; border-radius: 12px; z-index: 999;">
-            TIME UP!
-       </div>
+  <!-- ✅ Ranking Panel -->
+  <div class="ranking-panel">
+    <h3>🏁 RANKING</h3>
+    <ul id="ranking-list"></ul>
   </div>
-  <script type="module" src="happiness-game.js"></script>
+
+  <!-- ✅ Time Up Overlay -->
+  <div class="overlay" id="timeup">
+    TIME UP!
+  </div>
+
+</div>
+
+<script type="module" src="happiness-game.js"></script>
 </body>
-
 </html>
-
-
-
-
