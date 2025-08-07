@@ -117,3 +117,8 @@ async function onShake() {
     await update(ref(db, `players/${currentPlayerId}`), { progress: newProgress });
   }
 }
+
+window.addEventListener("devicemotion", (e) => {
+  console.log("DeviceMotion detected", e); // ✅ ADD THIS LINE
+  ...
+});
