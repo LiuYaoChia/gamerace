@@ -1,42 +1,53 @@
-/* PLAYER SETUP SCREEN */
+/* === GENERAL STYLES === */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Microsoft JhengHei', sans-serif;
+  background: url('your-water-bg.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: #333;
+  overflow-x: hidden;
+}
+
+/* === QR Code (Top-Left Corner) === */
+#qr-code {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 999;
+  background: white;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+#qr-code img {
+  width: 100px;
+  height: 100px;
+}
+
+/* === PLAYER SETUP SCREEN === */
 #player-setup {
   position: absolute;
   top: 20%;
   left: 50%;
   transform: translateX(-50%);
-  background: white;
-  padding: 20px 40px;
-  border-radius: 10px;
-  box-shadow: 0 0 20px #444;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 24px 36px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   text-align: center;
-  width: 320px;
-  font-family: 'Microsoft JhengHei', sans-serif;
+  width: 340px;
 }
 
 #player-setup h2 {
   margin-bottom: 16px;
-}
-
-#player-list {
-  margin-top: 10px;
-  list-style: none;
-  padding: 0;
-  max-height: 150px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-}
-
-#player-list li {
-  margin: 6px 0;
-  font-size: 1.2em;
+  font-size: 1.6rem;
   color: #333;
-  padding: 6px 12px;
-  background: #f7f7f7;
-  border-radius: 6px;
 }
 
-/* FORM INPUTS & BUTTONS */
+/* === FORM INPUTS === */
 #name-form input[type="text"] {
   width: calc(100% - 24px);
   padding: 10px 12px;
@@ -72,60 +83,79 @@
   cursor: not-allowed;
 }
 
-/* GAME CONTAINER */
-.game-container {
-  max-width: 600px;
-  margin: 2rem auto;
-  font-family: 'Microsoft JhengHei', sans-serif;
+/* === PLAYER LIST === */
+#player-list {
+  margin-top: 10px;
+  list-style: none;
+  padding: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 6px;
 }
 
-/* TRACK & LANES */
+#player-list li {
+  margin: 6px 0;
+  font-size: 1.2em;
+  color: #333;
+  padding: 6px 12px;
+  background: #f7f7f7;
+  border-radius: 6px;
+}
+
+/* === GAME CONTAINER === */
+.game-container {
+  max-width: 900px;
+  margin: 2rem auto;
+}
+
+/* === TRACK === */
 #track {
   position: relative;
   width: 100%;
-  height: 300px;
-  border: 2px solid #5f6bc2;
-  border-radius: 12px;
-  background: linear-gradient(90deg, #e0e7ff 0%, #cfd8ff 100%);
+  height: 350px;
+  border: 2px solid #005288;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #cceeff 0%, #aaddff 100%);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  padding: 1rem 0;
 }
 
-/* Each lane */
+/* === LANE STYLING === */
 .lane {
   position: relative;
   height: 40px;
-  margin: 12px 0;
-  background: #fff;
+  margin: 14px 0;
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 20px;
-  box-shadow: inset 0 0 8px #a0aaff;
-  overflow: visible;
+  box-shadow: inset 0 0 8px #a0caff;
   display: flex;
   align-items: center;
   padding-left: 12px;
 }
 
-/* Boat (emoji) inside lane */
 .lane span {
-  position: relative;
-  display: inline-block;
   font-size: 2rem;
-  transition: transform 0.2s ease-out;
-  will-change: transform;
+  transition: transform 0.3s ease-out;
 }
 
-/* RANKING PANEL */
+/* === RANKING PANEL === */
 .ranking-panel {
-  margin-top: 1.5rem;
-  background: #f0f0ff;
-  padding: 12px 16px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px #ccc;
+  margin-top: 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
   font-size: 1.2em;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .ranking-panel h3 {
-  margin-bottom: 8px;
-  color: #333;
+  margin-bottom: 10px;
+  color: #222;
   text-align: center;
 }
 
@@ -145,38 +175,34 @@
   border-bottom: none;
 }
 
-/* TIME UP OVERLAY */
+/* === TIME UP OVERLAY === */
 #timeup {
   display: none;
   position: fixed;
-  top: 50%;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(255, 0, 0, 0.85);
-  color: white;
-  font-size: 3rem;
-  padding: 2rem 4rem;
-  border-radius: 12px;
+  background: #ffe13c;
+  color: #0b2a74;
+  font-size: 3.5rem;
+  font-weight: bold;
+  padding: 2rem 5rem;
+  border-radius: 16px;
   z-index: 9999;
-  box-shadow: 0 0 20px #ff5555;
   text-align: center;
-  font-weight: 900;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+  border: 6px solid #0b2a74;
+  animation: popUp 0.4s ease-in-out;
 }
 
-#qr-code {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 999;
-  background: white;
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+/* === TIME UP Animation === */
+@keyframes popUp {
+  from {
+    transform: scale(0.8) translate(-50%, -50%);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translate(-50%, -50%);
+    opacity: 1;
+  }
 }
-
-#qr-code img {
-  width: 100px;
-  height: 100px;
-}
-
