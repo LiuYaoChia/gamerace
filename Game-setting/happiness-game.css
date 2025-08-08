@@ -126,18 +126,18 @@ body {
 .lane {
   position: relative;
   height: 40px;
-  margin: 14px 0;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  box-shadow: inset 0 0 8px #a0caff;
-  display: flex;
-  align-items: center;
-  padding-left: 12px;
+  margin-bottom: 8px;
+  background: #e0f7fa;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .lane span {
-  font-size: 2rem;
-  transition: transform 0.3s ease-out;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.3s ease;
 }
 
 /* === RANKING PANEL === */
@@ -222,3 +222,4 @@ body {
 #reset-players:hover {
   background-color: #c0392b;
 }
+
