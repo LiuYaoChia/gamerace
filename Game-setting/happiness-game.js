@@ -24,6 +24,7 @@ const startButton = document.getElementById("start-game");
 const track = document.getElementById("track");
 const rankList = document.getElementById("ranking-list");
 const exitButton = document.getElementById("exit-game");
+const resetButton = document.getElementById("reset-players");
 
 let players = [];
 let currentPlayerId = null;
@@ -184,5 +185,6 @@ exitButton.addEventListener("click", async () => {
   startButton.disabled = true;
   currentPlayerId = null;
 });
+
 
 
