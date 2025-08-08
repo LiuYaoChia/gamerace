@@ -207,3 +207,18 @@ body {
   }
 }
 
+#reset-players {
+  width: 100%;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #e74c3c;
+  transition: background-color 0.3s ease;
+}
+
+#reset-players:hover {
+  background-color: #c0392b;
+}
