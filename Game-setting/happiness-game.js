@@ -41,6 +41,20 @@ playerForm.addEventListener("submit", async (e) => {
   }
 });
 
+resetButton.addEventListener("click", async () => {
+  if (confirm("Are you sure you want to reset all players?")) {
+    await set(ref(db, "players"), null); // This clears all player entries
+    playerList.innerHTML = "";
+    rankList.innerHTML = "";
+    track.innerHTML = "";
+    currentPlayerId = null;
+    playerInput.value = "";
+    startButton.disabled = true;
+    document.querySelector(".game-container").style.display = "none";
+    document.getElementById("player-setup").style.display = "block";
+  }
+});
+
 // Firebase listener
 onValue(ref(db, "players"), (snapshot) => {
   const data = snapshot.val() || {};
@@ -170,4 +184,5 @@ exitButton.addEventListener("click", async () => {
   startButton.disabled = true;
   currentPlayerId = null;
 });
+
 
