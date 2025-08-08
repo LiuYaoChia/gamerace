@@ -26,8 +26,38 @@ const rankList = document.getElementById("ranking-list");
 const exitButton = document.getElementById("exit-game");
 const resetButton = document.getElementById("reset-players");
 
+// NEW: Create and add the "Enable Motion Sensors" button dynamically
+const enableMotionBtn = document.createElement("button");
+enableMotionBtn.id = "enable-motion";
+enableMotionBtn.textContent = "Enable Motion Sensors";
+enableMotionBtn.style.cssText = "margin-top: 12px; background-color: #2980b9; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;";
+document.getElementById("player-setup").appendChild(enableMotionBtn);
+
+// Debug log on screen
+function logToScreen(message) {
+  let debugBox = document.getElementById("debug-log");
+  if (!debugBox) {
+    debugBox = document.createElement("div");
+    debugBox.id = "debug-log";
+    debugBox.style.position = "fixed";
+    debugBox.style.bottom = "10px";
+    debugBox.style.left = "10px";
+    debugBox.style.background = "rgba(0,0,0,0.7)";
+    debugBox.style.color = "white";
+    debugBox.style.padding = "10px";
+    debugBox.style.zIndex = "9999";
+    debugBox.style.fontSize = "14px";
+    debugBox.style.maxWidth = "90vw";
+    debugBox.style.maxHeight = "150px";
+    debugBox.style.overflowY = "auto";
+    document.body.appendChild(debugBox);
+  }
+  debugBox.textContent = message;
+}
+
 let players = [];
 let currentPlayerId = null;
+let lastShake = 0;
 
 // Handle player joining
 playerForm.addEventListener("submit", async (e) => {
@@ -42,6 +72,7 @@ playerForm.addEventListener("submit", async (e) => {
   }
 });
 
+// Reset players
 resetButton.addEventListener("click", async () => {
   if (confirm("Are you sure you want to reset all players?")) {
     await set(ref(db, "players"), null); // This clears all player entries
@@ -79,7 +110,7 @@ startButton.addEventListener("click", () => {
   document.querySelector(".game-container").style.display = "block";
 });
 
-// Render track
+// Render track with boats styled nicely
 function renderTrack() {
   track.innerHTML = "";
   players.forEach((p) => {
@@ -88,20 +119,35 @@ function renderTrack() {
       lane = document.createElement("div");
       lane.className = "lane";
       lane.id = `player${p.id}`;
+      lane.style.position = "relative";
+      lane.style.height = "40px";
+      lane.style.marginBottom = "8px";
+      lane.style.background = "#e0f7fa";
+      lane.style.borderRadius = "6px";
+      lane.style.overflow = "hidden";
+
       const boat = document.createElement("span");
       boat.textContent = `🚤 ${p.name}`;
+      boat.style.position = "absolute";
+      boat.style.left = "0";
+      boat.style.top = "50%";
+      boat.style.transform = "translateY(-50%)"; // vertically center initially
+      boat.style.transition = "transform 0.3s ease"; // smooth movement
       lane.appendChild(boat);
+
       track.appendChild(lane);
     }
     updateBoatProgress(`player${p.id}`, p.progress);
   });
 }
 
+// Update the boat's horizontal progress with vertical centering
 function updateBoatProgress(playerId, percent) {
   const lane = document.getElementById(playerId);
   if (!lane) return;
   const span = lane.querySelector("span");
-  span.style.transform = `translateX(${Math.min(percent, 100)}%)`;
+  // Move boat horizontally by percent%, keep vertical centered (-50%)
+  span.style.transform = `translate(${Math.min(percent, 100)}%, -50%)`;
 }
 
 // Update rankings
@@ -115,9 +161,7 @@ function updateRankings() {
   });
 }
 
-// Shake Detection
-let lastShake = 0;
-
+// Shake detection handler
 function handleShake(e) {
   const acc = e.accelerationIncludingGravity;
   if (!acc) return;
@@ -127,41 +171,45 @@ function handleShake(e) {
 
   if (magnitude > 18 && now - lastShake > 1000) {
     lastShake = now;
-    console.log("Shake detected!", magnitude);
+    logToScreen(`Shake detected! Magnitude: ${magnitude.toFixed(2)}`);
     onShake();
   }
 }
 
-// Request permission on iOS
-if (typeof DeviceMotionEvent.requestPermission === 'function') {
-  // iOS
-  DeviceMotionEvent.requestPermission()
-    .then((permissionState) => {
-      if (permissionState === 'granted') {
-        console.log("DeviceMotion permission granted");
-        window.addEventListener("devicemotion", handleShake);
-      } else {
-        alert("Device motion permission denied. Please enable it in settings.");
-      }
-    })
-    .catch((err) => {
-      console.error("Permission error:", err);
-    });
-} else {
-  // Android / Others
-  window.addEventListener("devicemotion", handleShake);
-}
+// Enable motion sensors on button click (iOS permission)
+enableMotionBtn.addEventListener("click", () => {
+  if (typeof DeviceMotionEvent.requestPermission === "function") {
+    DeviceMotionEvent.requestPermission()
+      .then(permissionState => {
+        if (permissionState === "granted") {
+          logToScreen("Motion permission granted.");
+          window.addEventListener("devicemotion", handleShake);
+          enableMotionBtn.style.display = "none"; // hide button after granted
+        } else {
+          alert("Motion permission denied.");
+        }
+      })
+      .catch(err => {
+        console.error("Permission error:", err);
+        alert("Motion permission error. See console.");
+      });
+  } else {
+    // Non iOS or permission not required
+    window.addEventListener("devicemotion", handleShake);
+    logToScreen("Motion access granted or not needed.");
+    enableMotionBtn.style.display = "none"; // hide button anyway
+  }
+});
 
-// Simulate shake by pressing 's' key (for testing on desktop)
+// Simulate shake by pressing 's' (for desktop testing)
 document.addEventListener("keydown", (e) => {
-  const key = e.key || ""; // fallback to empty string
-  if (key.toLowerCase() === "s") {
-    console.log("Simulated shake with keyboard");
+  if ((e.key || "").toLowerCase() === "s") {
+    logToScreen("Simulated shake (keyboard)");
     onShake();
   }
 });
 
-// On shake, update progress
+// On shake, increase progress and update Firebase
 async function onShake() {
   if (!currentPlayerId) return;
 
@@ -172,6 +220,8 @@ async function onShake() {
   }
 }
 
+
+// Exit game button
 exitButton.addEventListener("click", async () => {
   if (currentPlayerId) {
     // Optional: Remove player from Firebase
@@ -185,6 +235,7 @@ exitButton.addEventListener("click", async () => {
   startButton.disabled = true;
   currentPlayerId = null;
 });
+
 
 
 
