@@ -138,7 +138,8 @@ if (typeof DeviceMotionEvent.requestPermission === 'function') {
 
 // Simulate shake by pressing 's' key (for testing on desktop)
 document.addEventListener("keydown", (e) => {
-  if (e.key.toLowerCase() === "s") {
+  const key = e.key || ""; // fallback to empty string
+  if (key.toLowerCase() === "s") {
     console.log("Simulated shake with keyboard");
     onShake();
   }
@@ -154,3 +155,4 @@ async function onShake() {
     await update(ref(db, `players/${currentPlayerId}`), { progress: newProgress });
   }
 }
+
