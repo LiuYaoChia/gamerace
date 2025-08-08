@@ -23,6 +23,7 @@ const playerList = document.getElementById("player-list");
 const startButton = document.getElementById("start-game");
 const track = document.getElementById("track");
 const rankList = document.getElementById("ranking-list");
+const exitButton = document.getElementById("exit-game");
 
 let players = [];
 let currentPlayerId = null;
@@ -155,4 +156,18 @@ async function onShake() {
     await update(ref(db, `players/${currentPlayerId}`), { progress: newProgress });
   }
 }
+
+exitButton.addEventListener("click", async () => {
+  if (currentPlayerId) {
+    // Optional: Remove player from Firebase
+    await set(ref(db, `players/${currentPlayerId}`), null);
+  }
+
+  // Reset UI
+  document.querySelector(".game-container").style.display = "none";
+  document.getElementById("player-setup").style.display = "block";
+  playerInput.value = "";
+  startButton.disabled = true;
+  currentPlayerId = null;
+});
 
