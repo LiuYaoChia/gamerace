@@ -27,11 +27,7 @@ const exitButton = document.getElementById("exit-game");
 const resetButton = document.getElementById("reset-players");
 
 // NEW: Create and add the "Enable Motion Sensors" button dynamically
-const enableMotionBtn = document.createElement("button");
-enableMotionBtn.id = "enable-motion";
-enableMotionBtn.textContent = "Enable Motion Sensors";
-enableMotionBtn.style.cssText = "margin-top: 12px; background-color: #2980b9; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer;";
-document.getElementById("player-setup").appendChild(enableMotionBtn);
+const enableMotionBtn = document.getElementById("enable-motion");
 
 // Debug log on screen
 function logToScreen(message) {
@@ -235,7 +231,3 @@ exitButton.addEventListener("click", async () => {
   startButton.disabled = true;
   currentPlayerId = null;
 });
-
-
-
-
