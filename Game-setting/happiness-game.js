@@ -149,6 +149,12 @@ els.resetBtn.addEventListener("click", async () => {
 });
 
 els.startBtn.addEventListener("click", async () => {
+  // Blur any active input to stop iOS "Undo Typing"
+  document.activeElement?.blur();
+  document.querySelectorAll("input, textarea").forEach(el => el.blur());
+
+  // Optionally disable inputs during game
+  els.nameInput.setAttribute("readonly", true);
   await set(ref(db, "gameState"), "race");
 });
 
@@ -158,6 +164,10 @@ els.exitBtn.addEventListener("click", async () => {
   }
   currentPlayerId = null;
   els.startBtn.disabled = true;
+
+  // Re-enable name input for next game
+  els.nameInput.removeAttribute("readonly");
+  
   showSetup();
 });
 
@@ -199,3 +209,4 @@ onValue(ref(db, "gameState"), (snapshot) => {
   const state = snapshot.val() || "lobby";
   state === "lobby" ? showSetup() : showGame();
 });
+
