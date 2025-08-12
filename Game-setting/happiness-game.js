@@ -1,6 +1,6 @@
 // ====== Firebase Setup ======
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCK4uNQlQwXk4LS9ZYB6_pkbZbrd1kj-vA",
@@ -123,6 +123,13 @@ async function increaseProgress() {
   if (player && player.progress < 100) {
     const newProgress = Math.min(100, player.progress + 5);
     await update(ref(db, `players/${currentPlayerId}`), { progress: newProgress });
+    
+    if (newProgress >= 100) {
+      const winnerSnap = await get(ref(db, "winner"));
+      if (!winnerSnap.exists()) {
+        await set(ref(db, "winner"), player.name);
+      }
+    }
   }
 }
 
@@ -149,11 +156,8 @@ els.resetBtn.addEventListener("click", async () => {
 });
 
 els.startBtn.addEventListener("click", async () => {
-  // Blur any active input to stop iOS "Undo Typing"
   document.activeElement?.blur();
   document.querySelectorAll("input, textarea").forEach(el => el.blur());
-
-  // Optionally disable inputs during game
   els.nameInput.setAttribute("readonly", true);
   await set(ref(db, "gameState"), "race");
 });
@@ -164,10 +168,7 @@ els.exitBtn.addEventListener("click", async () => {
   }
   currentPlayerId = null;
   els.startBtn.disabled = true;
-
-  // Re-enable name input for next game
   els.nameInput.removeAttribute("readonly");
-  
   showSetup();
 });
 
@@ -210,3 +211,29 @@ onValue(ref(db, "gameState"), (snapshot) => {
   state === "lobby" ? showSetup() : showGame();
 });
 
+// ====== Winner Popup ======
+onValue(ref(db, "winner"), (snapshot) => {
+  const winnerName = snapshot.val();
+  const popup = document.getElementById("winner-popup");
+  const msg = document.getElementById("winner-message");
+  
+  if (winnerName) {
+    msg.textContent = `🏆 Winner: ${winnerName}!`;
+    popup.style.display = "flex";
+  } else {
+    popup.style.display = "none";
+  }
+});
+
+document.getElementById("winner-exit").addEventListener("click", async () => {
+  await set(ref(db, "winner"), null);
+  if (currentPlayerId) {
+    await set(ref(db, `players/${currentPlayerId}`), null);
+  }
+  await set(ref(db, "gameState"), "lobby");
+  currentPlayerId = null;
+  els.startBtn.disabled = true;
+  els.nameInput.removeAttribute("readonly");
+  document.getElementById("winner-popup").style.display = "none";
+  showSetup();
+});
