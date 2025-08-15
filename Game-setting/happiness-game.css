@@ -223,3 +223,14 @@ body {
   background-color: #c0392b;
 }
 
+.cupid {
+  pointer-events: none;
+}
+
+.arrow-img {
+  pointer-events: none;
+}
+
+.player-name {
+  font-size: 14px;
+}
