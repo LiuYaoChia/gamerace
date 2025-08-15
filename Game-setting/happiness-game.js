@@ -45,6 +45,7 @@ function showGame() {
 function updatePlayerList() {
   els.playerList.innerHTML = players.map((p, i) => `<li>Player ${i + 1}: ${p.name}</li>`).join("");
 }
+
 function updateTrack() {
   els.track.innerHTML = "";
   players.forEach((p) => {
@@ -61,9 +62,9 @@ function updateTrack() {
       align-items:center;
     `;
 
-    // Cupid image (fixed at start)
+    // Cupid image fixed at start
     const cupid = document.createElement("img");
-    cupid.src = "images/cupid.png"; // your cupid figure
+    cupid.src = "images/cupid.png";
     cupid.className = "cupid";
     cupid.style.cssText = `
       height:50px;
@@ -71,22 +72,23 @@ function updateTrack() {
       left:5px;
       top:50%;
       transform:translateY(-50%);
+      transition: transform 0.15s ease;
     `;
 
-    // Arrow image (moves across track)
+    // Arrow image moves across
     const arrow = document.createElement("img");
-    arrow.src = "images/arrow.png"; // replace with your uploaded arrow picture
+    arrow.src = "images/arrow.png";
     arrow.className = "arrow-img";
     arrow.style.cssText = `
       height:30px;
       position:absolute;
       top:50%;
-      left:40px; /* start a little after cupid */
+      left:40px;
       transform:translateY(-50%);
       transition: transform 0.3s ease;
     `;
 
-    // Player name label
+    // Player name at right
     const label = document.createElement("span");
     label.textContent = p.name;
     label.className = "player-name";
@@ -101,11 +103,13 @@ function updateTrack() {
     lane.appendChild(label);
     els.track.appendChild(lane);
 
-    // Store arrow element reference in player object for movement
+    // Store for movement & animation
     p.arrowEl = arrow;
+    p.cupidEl = cupid;
     setArrowProgress(arrow, p.progress);
   });
 }
+
 
 function setArrowProgress(arrowEl, percent) {
   // Move arrow across lane (max about 90% to not overshoot)
@@ -223,4 +227,70 @@ els.winnerExit.addEventListener("click", async () => {
   els.winnerPopup.style.display = "none";
   showSetup();
 });
+
+function animateCupidShot(player) {
+  if (!player || !player.arrowEl || !player.cupidEl) return;
+
+  // Cupid animation: small scale back and release
+  player.cupidEl.style.transition = "transform 0.15s ease";
+  player.cupidEl.style.transform = "translateY(-50%) scale(0.9)";
+  setTimeout(() => {
+    player.cupidEl.style.transform = "translateY(-50%) scale(1)";
+  }, 150);
+
+   // Reset arrow back to cupid before shooting
+  player.arrowEl.style.transition = "none";
+  player.arrowEl.style.transform = "translate(40px, -50%)"; // back to cupid position
+
+  // Arrow animation: shoot forward before settling
+  const currentPercent = player.progress;
+  const targetPercent = Math.min(100, currentPercent + 5);
+
+  const arrow = player.arrowEl;
+  arrow.style.transition = "transform 0.2s ease-out";
+  arrow.style.transform = `translate(${Math.min(targetPercent + 5, 95)}%, -50%)`;
+  
+  // Small delay so reset is visible before shooting
+  setTimeout(() => {
+    // Pull back cupid slightly
+    player.cupidEl.style.transition = "transform 0.15s ease";
+    player.cupidEl.style.transform = "translateY(-50%) rotate(-5deg) scale(0.9)";
+
+    setTimeout(() => {
+      // Release bow
+      player.cupidEl.style.transform = "translateY(-50%) rotate(0) scale(1)";
+
+      // Shoot arrow forward
+      const currentPercent = player.progress;
+      const targetPercent = Math.min(100, currentPercent + 5);
+      player.arrowEl.style.transition = "transform 0.25s ease-out";
+      player.arrowEl.style.transform = `translate(${Math.min(targetPercent + 5, 95)}%, -50%)`;
+
+      // Snap to actual progress after animation
+      setTimeout(() => {
+        setArrowProgress(player.arrowEl, targetPercent);
+      }, 250);
+    }, 150);
+  }, 50);
+}
+
+async function increaseProgress() {
+  if (!currentPlayerId) return;
+  const player = players.find(p => p.id === currentPlayerId);
+  if (player && player.progress < 100) {
+    const newProgress = Math.min(100, player.progress + 5);
+
+    // Animate Cupid shot
+    animateCupidShot(player);
+
+    await update(ref(db, `players/${currentPlayerId}`), { progress: newProgress });
+
+    if (newProgress >= 100) {
+      const winnerSnap = await get(ref(db, "winner"));
+      if (!winnerSnap.exists()) {
+        await set(ref(db, "winner"), player.name);
+      }
+    }
+  }
+}
 
