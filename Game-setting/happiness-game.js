@@ -50,17 +50,66 @@ function updateTrack() {
   players.forEach((p) => {
     const lane = document.createElement("div");
     lane.className = "lane";
-    lane.style.cssText = "position:relative;height:40px;margin-bottom:8px;background:#e0f7fa;border-radius:6px;overflow:hidden";
-    const boat = document.createElement("span");
-    boat.textContent = `🚤 ${p.name}`;
-    boat.style.cssText = "position:absolute;top:50%;left:0;transform:translateY(-50%);transition:transform 0.3s ease";
-    lane.appendChild(boat);
+    lane.style.cssText = `
+      position:relative;
+      height:60px;
+      margin-bottom:8px;
+      background:#e0f7fa;
+      border-radius:6px;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+    `;
+
+    // Cupid image (fixed at start)
+    const cupid = document.createElement("img");
+    cupid.src = "images/cupid.png"; // your cupid figure
+    cupid.className = "cupid";
+    cupid.style.cssText = `
+      height:50px;
+      position:absolute;
+      left:5px;
+      top:50%;
+      transform:translateY(-50%);
+    `;
+
+    // Arrow image (moves across track)
+    const arrow = document.createElement("img");
+    arrow.src = "images/arrow.png"; // replace with your uploaded arrow picture
+    arrow.className = "arrow-img";
+    arrow.style.cssText = `
+      height:30px;
+      position:absolute;
+      top:50%;
+      left:40px; /* start a little after cupid */
+      transform:translateY(-50%);
+      transition: transform 0.3s ease;
+    `;
+
+    // Player name label
+    const label = document.createElement("span");
+    label.textContent = p.name;
+    label.className = "player-name";
+    label.style.cssText = `
+      position:absolute;
+      right:10px;
+      font-weight:bold;
+    `;
+
+    lane.appendChild(cupid);
+    lane.appendChild(arrow);
+    lane.appendChild(label);
     els.track.appendChild(lane);
-    setBoatProgress(boat, p.progress);
+
+    // Store arrow element reference in player object for movement
+    p.arrowEl = arrow;
+    setArrowProgress(arrow, p.progress);
   });
 }
-function setBoatProgress(boatEl, percent) {
-  boatEl.style.transform = `translate(${Math.min(percent, 100)}%, -50%)`;
+
+function setArrowProgress(arrowEl, percent) {
+  // Move arrow across lane (max about 90% to not overshoot)
+  arrowEl.style.transform = `translate(${Math.min(percent, 90)}%, -50%)`;
 }
 function updateRankings() {
   els.rankList.innerHTML = [...players]
@@ -174,3 +223,4 @@ els.winnerExit.addEventListener("click", async () => {
   els.winnerPopup.style.display = "none";
   showSetup();
 });
+
