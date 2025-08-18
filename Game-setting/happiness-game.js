@@ -72,7 +72,7 @@ function updateTrack() {
 
       // Cupid
       const cupid = document.createElement("img");
-      cupid.src = "images/cupid.png";
+      cupid.src = "img/cuppid-player.png";
       cupid.className = "cupid";
       cupid.style.cssText = `
         height:50px;
@@ -85,7 +85,7 @@ function updateTrack() {
 
       // Arrow
       const arrow = document.createElement("img");
-      arrow.src = "images/arrow.png";
+      arrow.src = "img/Heart-Cupid-Arrow.png";
       arrow.className = "arrow-img";
       arrow.style.cssText = `
         height:30px;
@@ -326,5 +326,6 @@ function animateCupidShot(player) {
     }
   }
 }
+
 
 
