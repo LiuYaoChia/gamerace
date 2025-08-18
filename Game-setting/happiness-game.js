@@ -47,74 +47,104 @@ function updatePlayerList() {
 }
 
 function updateTrack() {
-  els.track.innerHTML = "";
+  const existingLanes = new Map(
+    Array.from(els.track.children).map(lane => [lane.dataset.playerId, lane])
+  );
+
   players.forEach((p) => {
-    const lane = document.createElement("div");
-    lane.className = "lane";
-    lane.style.cssText = `
-      position:relative;
-      height:60px;
-      margin-bottom:8px;
-      background:#e0f7fa;
-      border-radius:6px;
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-    `;
+    let lane = existingLanes.get(p.id);
 
-    // Cupid image fixed at start
-    const cupid = document.createElement("img");
-    cupid.src = "images/cupid.png";
-    cupid.className = "cupid";
-    cupid.style.cssText = `
-      height:50px;
-      position:absolute;
-      left:5px;
-      top:50%;
-      transform:translateY(-50%);
-      transition: transform 0.15s ease;
-    `;
+    if (!lane) {
+      // --- Create lane once ---
+      lane = document.createElement("div");
+      lane.className = "lane";
+      lane.dataset.playerId = p.id;
+      lane.style.cssText = `
+        position:relative;
+        height:60px;
+        margin-bottom:8px;
+        background:#e0f7fa;
+        border-radius:6px;
+        overflow:hidden;
+        display:flex;
+        align-items:center;
+      `;
 
-    // Arrow image moves across
-    const arrow = document.createElement("img");
-    arrow.src = "images/arrow.png";
-    arrow.className = "arrow-img";
-    arrow.style.cssText = `
-      height:30px;
-      position:absolute;
-      top:50%;
-      left:40px;
-      transform:translateY(-50%);
-      transition: transform 0.3s ease;
-    `;
+      // Cupid
+      const cupid = document.createElement("img");
+      cupid.src = "images/cupid.png";
+      cupid.className = "cupid";
+      cupid.style.cssText = `
+        height:50px;
+        position:absolute;
+        left:5px;
+        top:50%;
+        transform:translateY(-50%);
+        transition: transform 0.15s ease;
+      `;
 
-    // Player name at right
-    const label = document.createElement("span");
-    label.textContent = p.name;
-    label.className = "player-name";
-    label.style.cssText = `
-      position:absolute;
-      right:10px;
-      font-weight:bold;
-    `;
+      // Arrow
+      const arrow = document.createElement("img");
+      arrow.src = "images/arrow.png";
+      arrow.className = "arrow-img";
+      arrow.style.cssText = `
+        height:30px;
+        position:absolute;
+        top:50%;
+        left:40px;
+        transform:translateY(-50%);
+        transition: transform 0.3s ease; /* <-- default smooth move */
+      `;
 
-    lane.appendChild(cupid);
-    lane.appendChild(arrow);
-    lane.appendChild(label);
-    els.track.appendChild(lane);
+      // Label
+      const label = document.createElement("span");
+      label.className = "player-name";
+      label.style.cssText = `
+        position:absolute;
+        right:10px;
+        font-weight:bold;
+      `;
+      label.textContent = p.name;
 
-    // Store for movement & animation
-    p.arrowEl = arrow;
-    p.cupidEl = cupid;
-    setArrowProgress(arrow, p.progress);
+      lane.appendChild(cupid);
+      lane.appendChild(arrow);
+      lane.appendChild(label);
+      els.track.appendChild(lane);
+
+      // Save references for reuse
+      p.arrowEl = arrow;
+      p.cupidEl = cupid;
+      p.labelEl = label;
+      p._lastProgress = -1; // cache
+    } else {
+      // --- Reuse existing lane ---
+      p.arrowEl = lane.querySelector(".arrow-img");
+      p.cupidEl = lane.querySelector(".cupid");
+      p.labelEl = lane.querySelector(".player-name");
+      if (p.labelEl.textContent !== p.name) {
+        p.labelEl.textContent = p.name;
+      }
+    }
+
+    // Always update arrow position
+    if (p.progress !== p._lastprogress) {
+      setArrowProgress(p.arrowEl, p.progress);
+      p._lastprogress = p.pprogress;
+    }
+    // Mark lane as still active
+    existingLanes.delete(p.id);
   });
-}
 
+  // --- Remove lanes for players that disappeared ---
+  existingLanes.forEach((lane) => lane.remove());
+}
 
 function setArrowProgress(arrowEl, percent) {
-  // Move arrow across lane (max about 90% to not overshoot)
+  if (!arrowEl) return;
   arrowEl.style.transform = `translate(${Math.min(percent, 90)}%, -50%)`;
 }
+
+
 function updateRankings() {
   els.rankList.innerHTML = [...players]
     .sort((a, b) => b.progress - a.progress)
@@ -128,7 +158,7 @@ function handleShakeEvent(e) {
   if (!acc) return;
   const now = Date.now();
   const magnitude = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
-  if (magnitude > 18 && now - lastShake > 1000) {
+  if (magnitude > 18 && now - lastShake > 500) {
     lastShake = now;
     increaseProgress();
   }
@@ -157,6 +187,10 @@ els.form.addEventListener("submit", async (e) => {
   await set(ref(db, `players/${currentPlayerId}`), { name, progress: 0 });
   els.nameInput.value = "";
   els.startBtn.disabled = false;
+  if (players.some(p => p.name === name)) {
+    alert("Name already taken!");
+    return;
+  }
 });
 els.resetBtn.addEventListener("click", async () => {
   if (!confirm("Reset all players?")) return;
@@ -216,6 +250,11 @@ onValue(ref(db, "winner"), (snapshot) => {
   } else {
     els.winnerPopup.style.display = "none";
   }
+  setTimeout(() => {
+    if (els.winnerPopup.style.display === "flex") {
+      els.winnerExit.click();
+    }
+  }, 10000);
 });
 els.winnerExit.addEventListener("click", async () => {
   await set(ref(db, "winner"), null);
@@ -274,12 +313,6 @@ function animateCupidShot(player) {
   }, 50);
 }
 
-async function increaseProgress() {
-  if (!currentPlayerId) return;
-  const player = players.find(p => p.id === currentPlayerId);
-  if (player && player.progress < 100) {
-    const newProgress = Math.min(100, player.progress + 5);
-
     // Animate Cupid shot
     animateCupidShot(player);
 
@@ -293,4 +326,5 @@ async function increaseProgress() {
     }
   }
 }
+
 
