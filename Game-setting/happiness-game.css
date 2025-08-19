@@ -234,3 +234,33 @@ body {
 .player-name {
   font-size: 14px;
 }
+
+.winner-scene {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+}
+.winner-cupid {
+  height:80px;
+  animation: float 2s infinite ease-in-out;
+}
+.winner-goal {
+  height:80px;
+}
+#winner-title {
+  font-size:2rem;
+  color:gold;
+  margin-bottom:10px;
+}
+#winner-name {
+  margin-top:10px;
+  font-size:1.5rem;
+  font-weight:bold;
+  color:white;
+}
+@keyframes float {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-5px); }
+}
+
