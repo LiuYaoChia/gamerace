@@ -198,13 +198,13 @@ async function updateProgress() {
   }
 }
 
-// ====== Animate Cupid Shake ======
+// ====== Animate Cupid Jump ======
 function animateCupidShake() {
   const lane = document.querySelector(`.lane[data-player-id="${currentPlayerId}"]`);
   if (!lane) return;
   const cupid = lane.querySelector(".cupid");
-  cupid.classList.add("shake");
-  setTimeout(() => cupid.classList.remove("shake"), 500);
+  cupid.classList.add("jump");
+  setTimeout(() => cupid.classList.remove("jump"), 600);
 }
 
 // ====== Firebase Listeners ======
@@ -250,3 +250,4 @@ els.winnerExit.addEventListener("click", async () => {
   currentPlayerId = null;
   showSetup();
 });
+
