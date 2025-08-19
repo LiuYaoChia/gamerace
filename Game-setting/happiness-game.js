@@ -1,6 +1,6 @@
 // ====== Firebase Setup ======
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCK4uNQlQwXk4LS9ZYB6_pkbZbrd1kj-vA",
@@ -57,39 +57,48 @@ function showGame() {
 
 // ====== Init Groups (1–6) ======
 for (let i = 1; i <= 6; i++) {
-  set(ref(db, `groups/${i}`), {
-    name: i.toString(),
-    players: {}
-  });
+  set(ref(db, `groups/${i}`), { name: i.toString(), players: {} });
 }
 
-// ====== Track / DOM Updates ======
-function updateTrack() {
-  const existing = new Map([...els.track.children].map(l => [l.dataset.playerId, l]));
-  players.forEach(p => {
-    let lane = existing.get(p.id);
+// ====== Track & Rankings ======
+function updateTrackAndRankings() {
+  const existingLanes = new Map([...els.track.children].map(l => [l.dataset.playerId, l]));
+  const sortedPlayers = [...players].sort((a, b) => b.progress - a.progress);
+
+  sortedPlayers.forEach((p) => {
+    let lane = existingLanes.get(p.id);
     if (!lane) {
       lane = document.createElement("div");
       lane.className = "lane";
       lane.dataset.playerId = p.id;
       lane.innerHTML = `
-        <img class="cupid" src="${cupidVariants[p.cupidIndex]}" style="height:50px;position:absolute;left:5%;top:50%;transform:translateY(-50%)">
+        <img class="cupid" src="${cupidVariants[p.cupidIndex]}" style="height:50px;position:absolute;top:50%;transform:translateY(-50%)">
         <img class="goal" src="img/goal.png" style="height:50px;position:absolute;right:5px;top:50%;transform:translateY(-50%)">
         <span class="player-name" style="position:absolute;right:10px;font-weight:bold">${p.name}</span>
       `;
       els.track.appendChild(lane);
     }
+
     const cupid = lane.querySelector(".cupid");
     cupid.style.left = `${Math.min(p.progress, 95)}%`;
-    existing.delete(p.id);
-  });
-  existing.forEach(lane => lane.remove());
-}
 
-// Rankings
-function updateRankings() {
-  els.rankList.innerHTML = [...players]
-    .sort((a, b) => b.progress - a.progress)
+    // ====== Progress label ======
+    let progressLabel = lane.querySelector(".progress-label");
+    if (!progressLabel) {
+      progressLabel = document.createElement("span");
+      progressLabel.className = "progress-label";
+      progressLabel.style.cssText = "position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:bold;color:#333";
+      lane.appendChild(progressLabel);
+    }
+    progressLabel.textContent = `${Math.floor(p.progress)}%`;
+
+    existingLanes.delete(p.id);
+  });
+
+  existingLanes.forEach(lane => lane.remove());
+
+  // ====== Rankings ======
+  els.rankList.innerHTML = sortedPlayers
     .map((p, i) => `<li>${i + 1}️⃣ ${p.name} - ${Math.floor(p.progress)}%</li>`)
     .join("");
 }
@@ -101,7 +110,6 @@ els.form.addEventListener("submit", async e => {
   const groupId = els.groupSelect.value;
   if (!name || !groupId) return;
 
-  // Prevent duplicate name in same group
   const snap = await get(ref(db, `groups/${groupId}/players`));
   if (Object.values(snap.val() || {}).some(p => p.name === name)) {
     alert("Name already taken in this group!");
@@ -126,9 +134,7 @@ els.form.addEventListener("submit", async e => {
 // ====== Reset All ======
 els.resetBtn.addEventListener("click", async () => {
   if (!confirm("Reset all players?")) return;
-  for (let i = 1; i <= 6; i++) {
-    await set(ref(db, `groups/${i}/players`), {});
-  }
+  for (let i = 1; i <= 6; i++) await set(ref(db, `groups/${i}/players`), {});
   await set(ref(db, "gameState"), "lobby");
   players = [];
   currentPlayerId = null;
@@ -138,9 +144,7 @@ els.resetBtn.addEventListener("click", async () => {
 
 // ====== Exit Game ======
 els.exitBtn.addEventListener("click", async () => {
-  if (currentPlayerId && currentGroupId) {
-    await remove(ref(db, `groups/${currentGroupId}/players/${currentPlayerId}`));
-  }
+  if (currentPlayerId && currentGroupId) await remove(ref(db, `groups/${currentGroupId}/players/${currentPlayerId}`));
   currentPlayerId = null;
   els.startBtn.disabled = true;
   els.nameInput.removeAttribute("readonly");
@@ -153,7 +157,7 @@ els.startBtn.addEventListener("click", async () => {
 });
 
 // ====== Rename Group ======
-window.renameGroup = async function (groupId) {
+window.renameGroup = async function(groupId) {
   const newName = prompt("Enter new group name:");
   if (newName) await update(ref(db, `groups/${groupId}`), { name: newName });
 };
@@ -179,7 +183,7 @@ function handleMotion(event) {
     if (now - lastShakeTime > 500 && currentPlayerId && currentGroupId) {
       lastShakeTime = now;
       updateProgress();
-      animateCupidShake();
+      animateCupidJump();
     }
   }
 }
@@ -192,17 +196,17 @@ async function updateProgress() {
     let p = snap.val();
     p.progress = Math.min(100, p.progress + 5);
     await set(playerRef, p);
-    if (p.progress >= 100) {
-      await set(ref(db, "winner"), p.name);
-    }
+    if (p.progress >= 100) await set(ref(db, "winner"), p.name);
   }
 }
 
-// ====== Animate Cupid Jump ======
-function animateCupidShake() {
+// ====== Cupid Jump Animation ======
+function animateCupidJump() {
   const lane = document.querySelector(`.lane[data-player-id="${currentPlayerId}"]`);
   if (!lane) return;
   const cupid = lane.querySelector(".cupid");
+  const snap = players.find(p => p.id === currentPlayerId);
+  if (!snap || snap.progress >= 100) return;
   cupid.classList.add("jump");
   setTimeout(() => cupid.classList.remove("jump"), 600);
 }
@@ -216,14 +220,9 @@ onValue(ref(db, "groups"), snap => {
       players.push({ id: pid, ...p });
       return `<li>${p.name}</li>`;
     }).join("");
-    return `
-      <div class="group">
-        <h3>${g.name} <button onclick="renameGroup('${gid}')">✏️</button></h3>
-        <ul>${groupPlayers}</ul>
-      </div>`;
+    return `<div class="group"><h3>${g.name} <button onclick="renameGroup('${gid}')">✏️</button></h3><ul>${groupPlayers}</ul></div>`;
   }).join("");
-  updateTrack();
-  updateRankings();
+  updateTrackAndRankings();
 });
 
 onValue(ref(db, "gameState"), snap => {
@@ -244,10 +243,7 @@ onValue(ref(db, "winner"), snap => {
 els.winnerExit.addEventListener("click", async () => {
   await set(ref(db, "winner"), null);
   await set(ref(db, "gameState"), "lobby");
-  if (currentPlayerId && currentGroupId) {
-    await remove(ref(db, `groups/${currentGroupId}/players/${currentPlayerId}`));
-  }
+  if (currentPlayerId && currentGroupId) await remove(ref(db, `groups/${currentGroupId}/players/${currentPlayerId}`));
   currentPlayerId = null;
   showSetup();
 });
-
