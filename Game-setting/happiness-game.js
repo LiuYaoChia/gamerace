@@ -1,52 +1,51 @@
-// ====== Prevent iOS "Shake to Undo" ======
-window.addEventListener("touchstart", () => {
-  if (navigator.vibrate) navigator.vibrate(1); // optional small vibration to keep sensors active
-}, { passive: true });
-
 // ====== Firebase Setup ======
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// Pre-create 6 groups if they don't exist
-for (let i = 1; i <= 6; i++) {
-  set(ref(db, `groups/${i}`), {
-    name: i.toString(),   // default group name = "1", "2", ...
-    players: {}           // empty player list
-  });
-}
-
-const firebaseConfig = { /* ... same config as before ... */ };
+const firebaseConfig = {
+  apiKey: "AIzaSyCK4uNQlQwXk4LS9ZYB6_pkbZbrd1kj-vA",
+  authDomain: "happiness-game-e6bf1.firebaseapp.com",
+  databaseURL: "https://happiness-game-e6bf1-default-rtdb.asia-southeast1.firebasedatabase.app/", 
+  projectId: "happiness-game-e6bf1",
+  storageBucket: "happiness-game-e6bf1.firebasestorage.app",
+  messagingSenderId: "714276517910",
+  appId: "1:714276517910:web:3fe25271b371e639fb1d37",
+  measurementId: "G-3JL827HV8Q"
+};
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+// ====== Cupid Variants ======
 const cupidVariants = [
   "images/cupid-redbow.png",
   "images/cupid-bluebow.png",
   "images/cupid-goldbow.png"
 ];
 
-// ====== DOM References ======
+// ====== DOM Refs ======
 const els = {
   form: document.getElementById("name-form"),
   nameInput: document.getElementById("player-name"),
+  groupSelect: document.getElementById("group-select"),
   playerList: document.getElementById("player-list"),
   startBtn: document.getElementById("start-game"),
-  track: document.getElementById("track"),
-  rankList: document.getElementById("ranking-list"),
-  exitBtn: document.getElementById("exit-game"),
   resetBtn: document.getElementById("reset-players"),
+  exitBtn: document.getElementById("exit-game"),
   motionBtn: document.getElementById("enable-motion"),
   setupScreen: document.getElementById("player-setup"),
   gameScreen: document.querySelector(".game-container"),
+  track: document.getElementById("track"),
+  rankList: document.getElementById("ranking-list"),
   winnerPopup: document.getElementById("winner-popup"),
   winnerMsg: document.getElementById("winner-message"),
-  winnerExit: document.getElementById("winner-exit"),
+  winnerExit: document.getElementById("winner-exit")
 };
 
 let players = [];
 let currentPlayerId = null;
-let lastShake = 0;
+let currentGroupId = null;
 
-// ====== UI Helpers ======
+// ====== Screen Helpers ======
 function showSetup() {
   els.setupScreen.style.display = "block";
   els.gameScreen.style.display = "none";
@@ -55,124 +54,39 @@ function showGame() {
   els.setupScreen.style.display = "none";
   els.gameScreen.style.display = "block";
 }
-function updatePlayerList() {
-  els.playerList.innerHTML = players.map((p, i) => `<li>Player ${i + 1}: ${p.name}</li>`).join("");
+
+// ====== Init Groups (1–6) ======
+for (let i = 1; i <= 6; i++) {
+  set(ref(db, `groups/${i}`), {
+    name: i.toString(),
+    players: {}
+  });
 }
 
+// ====== Track / DOM Updates ======
 function updateTrack() {
-  const existingLanes = new Map(
-    Array.from(els.track.children).map(lane => [lane.dataset.playerId, lane])
-  );
-
-  players.forEach((p) => {
-    let lane = existingLanes.get(p.id);
-
+  const existing = new Map([...els.track.children].map(l => [l.dataset.playerId, l]));
+  players.forEach(p => {
+    let lane = existing.get(p.id);
     if (!lane) {
-      // --- Create lane once ---
       lane = document.createElement("div");
       lane.className = "lane";
       lane.dataset.playerId = p.id;
-      lane.style.cssText = `
-        position:relative;
-        height:60px;
-        margin-bottom:8px;
-        background:#e0f7fa;
-        border-radius:6px;
-        overflow:hidden;
-        display:flex;
-        align-items:center;
+      lane.innerHTML = `
+        <img class="cupid" src="${cupidVariants[p.cupidIndex]}" style="height:50px;position:absolute;left:5%;top:50%;transform:translateY(-50%)">
+        <img class="goal" src="img/goal.png" style="height:50px;position:absolute;right:5px;top:50%;transform:translateY(-50%)">
+        <span class="player-name" style="position:absolute;right:10px;font-weight:bold">${p.name}</span>
       `;
-
-      // Cupid
-      const cupid = document.createElement("img");
-      const index = p.cupidIndex ?? 0; // fallback to 0 if missing
-      cupid.src = cupidVariants[index];
-      cupid.className = "cupid";
-      cupid.style.cssText = `
-        height:50px;
-        position:absolute;
-        left:5px;
-        top:50%;
-        transform:translateY(-50%);
-        transition: transform 0.15s ease;
-      `;
-
-      // Arrow
-      const arrow = document.createElement("img");
-      arrow.src = "img/Heart-Cupid-Arrow.png";
-      arrow.className = "arrow-img";
-      arrow.style.cssText = `
-        height:30px;
-        position:absolute;
-        top:50%;
-        left:40px;
-        transform:translateY(-50%);
-        transition: transform 0.3s ease; /* <-- default smooth move */
-      `;
-
-      // Label
-      const label = document.createElement("span");
-      label.className = "player-name";
-      label.style.cssText = `
-        position:absolute;
-        right:10px;
-        font-weight:bold;
-      `;
-      
-      // Goal image
-      const goal = document.createElement("img");
-      goal.src = "img/goal.png"; // replace with your goal image
-      goal.className = "goal";
-      goal.style.cssText = `
-        height:50px;
-        position:absolute;
-        right:5px;
-        top:50%;
-        transform:translateY(-50%);
-      `;
-      lane.appendChild(goal);
-      
-      label.textContent = p.name;
-
-      lane.appendChild(cupid);
-      lane.appendChild(arrow);
-      lane.appendChild(label);
       els.track.appendChild(lane);
-
-      // Save references for reuse
-      p.arrowEl = arrow;
-      p.cupidEl = cupid;
-      p.labelEl = label;
-      p._lastProgress = -1; // cache
-    } else {
-      // --- Reuse existing lane ---
-      p.arrowEl = lane.querySelector(".arrow-img");
-      p.cupidEl = lane.querySelector(".cupid");
-      p.labelEl = lane.querySelector(".player-name");
-      if (p.labelEl.textContent !== p.name) {
-        p.labelEl.textContent = p.name;
-      }
     }
-
-    // Always update arrow position
-    if (p.progress !== p._lastprogress) {
-      setArrowProgress(p.arrowEl, p.progress);
-      p._lastprogress = p.pprogress;
-    }
-    // Mark lane as still active
-    existingLanes.delete(p.id);
+    const cupid = lane.querySelector(".cupid");
+    cupid.style.left = `${Math.min(p.progress, 95)}%`;
+    existing.delete(p.id);
   });
-
-  // --- Remove lanes for players that disappeared ---
-  existingLanes.forEach((lane) => lane.remove());
+  existing.forEach(lane => lane.remove());
 }
 
-function setArrowProgress(arrowEl, percent) {
-  if (!arrowEl) return;
-  arrowEl.style.transform = `translate(${Math.min(percent, 90)}%, -50%)`;
-}
-
-
+// Rankings
 function updateRankings() {
   els.rankList.innerHTML = [...players]
     .sort((a, b) => b.progress - a.progress)
@@ -180,269 +94,159 @@ function updateRankings() {
     .join("");
 }
 
-// ====== Game Logic ======
-function handleShakeEvent(e) {
-  const acc = e.accelerationIncludingGravity;
-  if (!acc) return;
-  const now = Date.now();
-  const magnitude = Math.abs(acc.x) + Math.abs(acc.y) + Math.abs(acc.z);
-  if (magnitude > 18 && now - lastShake > 500) {
-    lastShake = now;
-    increaseProgress();
-  }
-}
-function triggerShakeEffect(player) {
-  if (!player) return;
-  [player.cupidEl, player.arrowEl].forEach(el => {
-    el.style.animation = "shake 0.3s ease";
-    setTimeout(() => el.style.animation = "", 300);
-  });
-}
-
-async function increaseProgress() {
-  if (!currentPlayerId) return;
-  const player = players.find(p => p.id === currentPlayerId);
-  if (player && player.progress < 100) {
-    const newProgress = Math.min(100, player.progress + 5);
-    await update(ref(db, `players/${currentPlayerId}`), { progress: newProgress });
-    if (newProgress >= 100) {
-      const winnerSnap = await get(ref(db, "winner"));
-      if (!winnerSnap.exists()) {
-        await set(ref(db, "winner"), player.name);
-      }
-    }
-  }
-}
-
-// ====== Event Listeners ======
-els.form.addEventListener("submit", async (e) => {
+// ====== Form: Join Player ======
+els.form.addEventListener("submit", async e => {
   e.preventDefault();
   const name = els.nameInput.value.trim();
-  if (!name) return;
-  currentPlayerId = Date.now().toString();
-  await set(ref(db, `players/${currentPlayerId}`), { name, progress: 0 });
-  els.nameInput.value = "";
-  els.startBtn.disabled = false;
-  if (players.some(p => p.name === name)) {
-    alert("Name already taken!");
+  const groupId = els.groupSelect.value;
+  if (!name || !groupId) return;
+
+  // Prevent duplicate name in same group
+  const snap = await get(ref(db, `groups/${groupId}/players`));
+  if (Object.values(snap.val() || {}).some(p => p.name === name)) {
+    alert("Name already taken in this group!");
     return;
   }
-  // Pick random cupid variant
-  const randomIndex = Math.floor(Math.random() * cupidVariants.length);
 
-  await set(ref(db, `players/${currentPlayerId}`), { 
-    name, 
+  currentPlayerId = Date.now().toString();
+  currentGroupId = groupId;
+  const cupidIndex = Math.floor(Math.random() * cupidVariants.length);
+
+  await set(ref(db, `groups/${groupId}/players/${currentPlayerId}`), {
+    name,
     progress: 0,
-    cupidIndex: randomIndex
+    cupidIndex,
+    groupId
   });
 
   els.nameInput.value = "";
   els.startBtn.disabled = false;
 });
+
+// ====== Reset All ======
 els.resetBtn.addEventListener("click", async () => {
   if (!confirm("Reset all players?")) return;
-  await set(ref(db, "players"), null);
+  for (let i = 1; i <= 6; i++) {
+    await set(ref(db, `groups/${i}/players`), {});
+  }
   await set(ref(db, "gameState"), "lobby");
   players = [];
   currentPlayerId = null;
   els.startBtn.disabled = true;
   showSetup();
 });
-els.startBtn.addEventListener("click", async () => {
-  document.activeElement?.blur();
-  document.querySelectorAll("input, textarea").forEach(el => el.blur());
-  els.nameInput.setAttribute("readonly", true);
-  await set(ref(db, "gameState"), "race");
-});
+
+// ====== Exit Game ======
 els.exitBtn.addEventListener("click", async () => {
-  if (currentPlayerId) await set(ref(db, `players/${currentPlayerId}`), null);
+  if (currentPlayerId && currentGroupId) {
+    await remove(ref(db, `groups/${currentGroupId}/players/${currentPlayerId}`));
+  }
   currentPlayerId = null;
   els.startBtn.disabled = true;
   els.nameInput.removeAttribute("readonly");
   showSetup();
 });
+
+// ====== Start Game ======
+els.startBtn.addEventListener("click", async () => {
+  await set(ref(db, "gameState"), "race");
+});
+
+// ====== Rename Group ======
+window.renameGroup = async function (groupId) {
+  const newName = prompt("Enter new group name:");
+  if (newName) await update(ref(db, `groups/${groupId}`), { name: newName });
+};
+
+// ====== Motion / Shake Detection ======
+let lastShakeTime = 0;
 els.motionBtn.addEventListener("click", () => {
   if (typeof DeviceMotionEvent.requestPermission === "function") {
-    DeviceMotionEvent.requestPermission()
-      .then((state) => {
-        if (state === "granted") {
-          window.addEventListener("devicemotion", handleShakeEvent);
-          els.motionBtn.style.display = "none";
-        } else alert("Motion permission denied.");
-      })
-      .catch(console.error);
+    DeviceMotionEvent.requestPermission().then(res => {
+      if (res === "granted") window.addEventListener("devicemotion", handleMotion);
+    });
   } else {
-    window.addEventListener("devicemotion", handleShakeEvent);
-    els.motionBtn.style.display = "none";
+    window.addEventListener("devicemotion", handleMotion);
   }
 });
 
-// ====== Event Listeners ======
-const groupSelect = document.getElementById("group-select");
-
-els.form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const name = els.nameInput.value.trim();
-  const groupId = groupSelect.value;
-  if (!name || !groupId) return;
-
-  // Prevent duplicate names inside the SAME group
-  const existingGroupSnap = await get(ref(db, `groups/${groupId}/players`));
-  const groupPlayers = existingGroupSnap.val() || {};
-  if (Object.values(groupPlayers).some(p => p.name === name)) {
-    alert("Name already taken in this group!");
-    return;
-  }
-
-  currentPlayerId = Date.now().toString();
-  const randomIndex = Math.floor(Math.random() * cupidVariants.length);
-
-  await set(ref(db, `groups/${groupId}/players/${currentPlayerId}`), { 
-    name, 
-    progress: 0, 
-    cupidIndex: randomIndex 
-  });
-});
-
-  // Group renaming
-async function renameGroup(groupId) {
-  const newName = prompt("Enter new group name:");
-  if (newName) {
-    await update(ref(db, `groups/${groupId}`), { name: newName });
+function handleMotion(event) {
+  const acc = event.accelerationIncludingGravity;
+  if (!acc) return;
+  const strength = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
+  if (strength > 20) {
+    const now = Date.now();
+    if (now - lastShakeTime > 500 && currentPlayerId && currentGroupId) {
+      lastShakeTime = now;
+      updateProgress();
+      animateCupidShake();
+    }
   }
 }
 
+async function updateProgress() {
+  if (!currentPlayerId || !currentGroupId) return;
+  const playerRef = ref(db, `groups/${currentGroupId}/players/${currentPlayerId}`);
+  const snap = await get(playerRef);
+  if (snap.exists()) {
+    let p = snap.val();
+    p.progress = Math.min(100, p.progress + 5);
+    await set(playerRef, p);
+    if (p.progress >= 100) {
+      await set(ref(db, "winner"), p.name);
+    }
+  }
+}
 
+// ====== Animate Cupid Shake ======
+function animateCupidShake() {
+  const lane = document.querySelector(`.lane[data-player-id="${currentPlayerId}"]`);
+  if (!lane) return;
+  const cupid = lane.querySelector(".cupid");
+  cupid.classList.add("shake");
+  setTimeout(() => cupid.classList.remove("shake"), 500);
+}
 
 // ====== Firebase Listeners ======
-onValue(ref(db, "winner"), (snapshot) => {
-  const winnerName = snapshot.val();
-  if (winnerName) {
-    const player = players.find(p => p.name === winnerName);
-    if (player) {
-      document.getElementById("winner-cupid").src = player.cupidEl?.src || "img/cuppid-player.png";
-    }
-    document.getElementById("winner-name").textContent = winnerName;
-    els.winnerPopup.style.display = "flex";
-  } else {
-    els.winnerPopup.style.display = "none";
-  }
-});
-onValue(ref(db, "players"), (snapshot) => {
-  const data = snapshot.val() || {};
-  players = Object.entries(data).map(([id, val]) => ({ id, ...val }));
-  updatePlayerList();
+onValue(ref(db, "groups"), snap => {
+  const groups = snap.val() || {};
+  players = [];
+  els.playerList.innerHTML = Object.entries(groups).map(([gid, g]) => {
+    const groupPlayers = Object.entries(g.players || {}).map(([pid, p]) => {
+      players.push({ id: pid, ...p });
+      return `<li>${p.name}</li>`;
+    }).join("");
+    return `
+      <div class="group">
+        <h3>${g.name} <button onclick="renameGroup('${gid}')">✏️</button></h3>
+        <ul>${groupPlayers}</ul>
+      </div>`;
+  }).join("");
   updateTrack();
   updateRankings();
 });
-onValue(ref(db, "gameState"), (snapshot) => {
-  const state = snapshot.val() || "lobby";
-  state === "lobby" ? showSetup() : showGame();
+
+onValue(ref(db, "gameState"), snap => {
+  (snap.val() || "lobby") === "lobby" ? showSetup() : showGame();
 });
-onValue(ref(db, "winner"), (snapshot) => {
-  const winnerName = snapshot.val();
-  if (winnerName) {
-    els.winnerMsg.textContent = `🏆 Winner: ${winnerName}!`;
+
+onValue(ref(db, "winner"), snap => {
+  const name = snap.val();
+  if (name) {
+    els.winnerMsg.textContent = `🏆 Winner: ${name}!`;
     els.winnerPopup.style.display = "flex";
   } else {
     els.winnerPopup.style.display = "none";
   }
-  setTimeout(() => {
-    if (els.winnerPopup.style.display === "flex") {
-      els.winnerExit.click();
-    }
-  }, 10000);
 });
+
+// ====== Winner Reset ======
 els.winnerExit.addEventListener("click", async () => {
   await set(ref(db, "winner"), null);
-  if (currentPlayerId) await set(ref(db, `players/${currentPlayerId}`), null);
   await set(ref(db, "gameState"), "lobby");
+  if (currentPlayerId && currentGroupId) {
+    await remove(ref(db, `groups/${currentGroupId}/players/${currentPlayerId}`));
+  }
   currentPlayerId = null;
-  els.startBtn.disabled = true;
-  els.nameInput.removeAttribute("readonly");
-  els.winnerPopup.style.display = "none";
   showSetup();
 });
-
-onValue(ref(db, "groups"), (snapshot) => {
-  const groups = snapshot.val() || {};
-  els.playerList.innerHTML = Object.entries(groups)
-    .map(([gid, group]) => {
-      const players = group.players ? Object.values(group.players) : [];
-      return `
-        <div class="group">
-          <h3>${group.name} <button onclick="renameGroup('${gid}')">✏️</button></h3>
-          <ul>
-            ${players.map(p => `<li>${p.name}</li>`).join("")}
-          </ul>
-        </div>
-      `;
-    })
-    .join("");
-});
-
-// ====== Animation ======
-function animateCupidShot(player) {
-  if (!player || !player.arrowEl || !player.cupidEl) return;
-
-  // Cupid animation: small scale back and release
-  player.cupidEl.style.transition = "transform 0.15s ease";
-  player.cupidEl.style.transform = "translateY(-50%) scale(0.9)";
-  setTimeout(() => {
-    player.cupidEl.style.transform = "translateY(-50%) scale(1)";
-  }, 150);
-
-   // Reset arrow back to cupid before shooting
-  player.arrowEl.style.transition = "none";
-  player.arrowEl.style.transform = "translate(40px, -50%)"; // back to cupid position
-
-  // Arrow animation: shoot forward before settling
-  const currentPercent = player.progress;
-  const targetPercent = Math.min(100, currentPercent + 5);
-
-  const arrow = player.arrowEl;
-  arrow.style.transition = "transform 0.2s ease-out";
-  arrow.style.transform = `translate(${Math.min(targetPercent + 5, 95)}%, -50%)`;
-  
-  // Small delay so reset is visible before shooting
-  setTimeout(() => {
-    // Pull back cupid slightly
-    player.cupidEl.style.transition = "transform 0.15s ease";
-    player.cupidEl.style.transform = "translateY(-50%) rotate(-5deg) scale(0.9)";
-
-    setTimeout(() => {
-      // Release bow
-      player.cupidEl.style.transform = "translateY(-50%) rotate(0) scale(1)";
-
-      // Shoot arrow forward
-      const currentPercent = player.progress;
-      const targetPercent = Math.min(100, currentPercent + 5);
-      player.arrowEl.style.transition = "transform 0.25s ease-out";
-      player.arrowEl.style.transform = `translate(${Math.min(targetPercent + 5, 95)}%, -50%)`;
-
-      // Snap to actual progress after animation
-      setTimeout(() => {
-        setArrowProgress(player.arrowEl, targetPercent);
-      }, 250);
-    }, 150);
-  }, 50);
-}
-
-    // Animate Cupid shot
-    animateCupidShot(player);
-
-    await update(ref(db, `players/${currentPlayerId}`), { progress: newProgress });
-
-    if (newProgress >= 100) {
-      const winnerSnap = await get(ref(db, "winner"));
-      if (!winnerSnap.exists()) {
-        await set(ref(db, "winner"), player.name);
-      }
-    }
-  }
-}
-
-
-
-
-
