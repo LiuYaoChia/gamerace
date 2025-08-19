@@ -104,6 +104,20 @@ function updateTrack() {
         right:10px;
         font-weight:bold;
       `;
+      
+      // Goal image
+      const goal = document.createElement("img");
+      goal.src = "img/goal.png"; // replace with your goal image
+      goal.className = "goal";
+      goal.style.cssText = `
+        height:50px;
+        position:absolute;
+        right:5px;
+        top:50%;
+        transform:translateY(-50%);
+      `;
+      lane.appendChild(goal);
+      
       label.textContent = p.name;
 
       lane.appendChild(cupid);
@@ -163,6 +177,14 @@ function handleShakeEvent(e) {
     increaseProgress();
   }
 }
+function triggerShakeEffect(player) {
+  if (!player) return;
+  [player.cupidEl, player.arrowEl].forEach(el => {
+    el.style.animation = "shake 0.3s ease";
+    setTimeout(() => el.style.animation = "", 300);
+  });
+}
+
 async function increaseProgress() {
   if (!currentPlayerId) return;
   const player = players.find(p => p.id === currentPlayerId);
@@ -326,6 +348,7 @@ function animateCupidShot(player) {
     }
   }
 }
+
 
 
 
