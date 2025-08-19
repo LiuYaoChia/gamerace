@@ -7,9 +7,22 @@ window.addEventListener("touchstart", () => {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+// Pre-create 6 groups if they don't exist
+for (let i = 1; i <= 6; i++) {
+  set(ref(db, `groups/${i}`), {
+    name: i.toString(),   // default group name = "1", "2", ...
+    players: {}           // empty player list
+  });
+}
+
 const firebaseConfig = { /* ... same config as before ... */ };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const cupidVariants = [
+  "images/cupid-redbow.png",
+  "images/cupid-bluebow.png",
+  "images/cupid-goldbow.png"
+];
 
 // ====== DOM References ======
 const els = {
@@ -72,7 +85,8 @@ function updateTrack() {
 
       // Cupid
       const cupid = document.createElement("img");
-      cupid.src = "img/cuppid-player.png";
+      const index = p.cupidIndex ?? 0; // fallback to 0 if missing
+      cupid.src = cupidVariants[index];
       cupid.className = "cupid";
       cupid.style.cssText = `
         height:50px;
@@ -213,6 +227,17 @@ els.form.addEventListener("submit", async (e) => {
     alert("Name already taken!");
     return;
   }
+  // Pick random cupid variant
+  const randomIndex = Math.floor(Math.random() * cupidVariants.length);
+
+  await set(ref(db, `players/${currentPlayerId}`), { 
+    name, 
+    progress: 0,
+    cupidIndex: randomIndex
+  });
+
+  els.nameInput.value = "";
+  els.startBtn.disabled = false;
 });
 els.resetBtn.addEventListener("click", async () => {
   if (!confirm("Reset all players?")) return;
@@ -252,7 +277,57 @@ els.motionBtn.addEventListener("click", () => {
   }
 });
 
+// ====== Event Listeners ======
+const groupSelect = document.getElementById("group-select");
+
+els.form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = els.nameInput.value.trim();
+  const groupId = groupSelect.value;
+  if (!name || !groupId) return;
+
+  // Prevent duplicate names inside the SAME group
+  const existingGroupSnap = await get(ref(db, `groups/${groupId}/players`));
+  const groupPlayers = existingGroupSnap.val() || {};
+  if (Object.values(groupPlayers).some(p => p.name === name)) {
+    alert("Name already taken in this group!");
+    return;
+  }
+
+  currentPlayerId = Date.now().toString();
+  const randomIndex = Math.floor(Math.random() * cupidVariants.length);
+
+  await set(ref(db, `groups/${groupId}/players/${currentPlayerId}`), { 
+    name, 
+    progress: 0, 
+    cupidIndex: randomIndex 
+  });
+});
+
+  // Group renaming
+async function renameGroup(groupId) {
+  const newName = prompt("Enter new group name:");
+  if (newName) {
+    await update(ref(db, `groups/${groupId}`), { name: newName });
+  }
+}
+
+
+
 // ====== Firebase Listeners ======
+onValue(ref(db, "winner"), (snapshot) => {
+  const winnerName = snapshot.val();
+  if (winnerName) {
+    const player = players.find(p => p.name === winnerName);
+    if (player) {
+      document.getElementById("winner-cupid").src = player.cupidEl?.src || "img/cuppid-player.png";
+    }
+    document.getElementById("winner-name").textContent = winnerName;
+    els.winnerPopup.style.display = "flex";
+  } else {
+    els.winnerPopup.style.display = "none";
+  }
+});
 onValue(ref(db, "players"), (snapshot) => {
   const data = snapshot.val() || {};
   players = Object.entries(data).map(([id, val]) => ({ id, ...val }));
@@ -289,6 +364,24 @@ els.winnerExit.addEventListener("click", async () => {
   showSetup();
 });
 
+onValue(ref(db, "groups"), (snapshot) => {
+  const groups = snapshot.val() || {};
+  els.playerList.innerHTML = Object.entries(groups)
+    .map(([gid, group]) => {
+      const players = group.players ? Object.values(group.players) : [];
+      return `
+        <div class="group">
+          <h3>${group.name} <button onclick="renameGroup('${gid}')">✏️</button></h3>
+          <ul>
+            ${players.map(p => `<li>${p.name}</li>`).join("")}
+          </ul>
+        </div>
+      `;
+    })
+    .join("");
+});
+
+// ====== Animation ======
 function animateCupidShot(player) {
   if (!player || !player.arrowEl || !player.cupidEl) return;
 
@@ -348,6 +441,7 @@ function animateCupidShot(player) {
     }
   }
 }
+
 
 
 
