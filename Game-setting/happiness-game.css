@@ -264,3 +264,14 @@ body {
   50% { transform:translateY(-5px); }
 }
 
+.cupid.jump {
+  animation: jumpAnim 0.6s ease;
+}
+
+@keyframes jumpAnim {
+  0%   { transform: translateY(-50%) scale(1) }
+  30%  { transform: translateY(-90%) scale(1.1) } /* hop up */
+  50%  { transform: translateY(-70%) scale(0.95) } /* fall */
+  70%  { transform: translateY(-80%) scale(1.05) } /* small rebound */
+  100% { transform: translateY(-50%) scale(1) } /* back to lane */
+}
