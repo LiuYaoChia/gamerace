@@ -19,13 +19,9 @@ body {
   padding: 5px;
   border: 1px solid #ccc;
   border-radius: 6px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 8px rgba(0,0,0,0.2);
 }
-
-#qr-code img {
-  width: 100px;
-  height: 100px;
-}
+#qr-code img { width: 100px; height: 100px; }
 
 /* === PLAYER SETUP SCREEN === */
 #player-setup {
@@ -33,19 +29,14 @@ body {
   top: 20%;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255,255,255,0.95);
   padding: 24px 36px;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
   text-align: center;
   width: 340px;
 }
-
-#player-setup h2 {
-  margin-bottom: 16px;
-  font-size: 1.6rem;
-  color: #333;
-}
+#player-setup h2 { margin-bottom: 16px; font-size: 1.6rem; color: #333; }
 
 /* === FORM INPUTS === */
 #name-form input[type="text"] {
@@ -57,9 +48,7 @@ body {
   outline: none;
   box-sizing: border-box;
 }
-
-#name-form button,
-#start-game {
+#name-form button, #start-game {
   margin-top: 12px;
   padding: 12px;
   width: 100%;
@@ -72,16 +61,9 @@ body {
   color: white;
   transition: background-color 0.3s ease;
 }
-
 #name-form button:hover:not(:disabled),
-#start-game:hover:not(:disabled) {
-  background-color: #4a54a2;
-}
-
-#start-game:disabled {
-  background-color: #999;
-  cursor: not-allowed;
-}
+#start-game:hover:not(:disabled) { background-color: #4a54a2; }
+#start-game:disabled { background-color: #999; cursor: not-allowed; }
 
 /* === PLAYER LIST === */
 #player-list {
@@ -93,7 +75,6 @@ body {
   border: 1px solid #ddd;
   border-radius: 6px;
 }
-
 #player-list li {
   margin: 6px 0;
   font-size: 1.2em;
@@ -104,76 +85,69 @@ body {
 }
 
 /* === GAME CONTAINER === */
-.game-container {
-  max-width: 900px;
-  margin: 2rem auto;
-}
+.game-container { max-width: 900px; margin: 2rem auto; }
 
-/* === TRACK === */
+/* === TRACK (now auto-height and grouped) === */
 #track {
   position: relative;
   width: 100%;
-  height: 350px;
   border: 2px solid #005288;
   border-radius: 16px;
   background: linear-gradient(90deg, #cceeff 0%, #aaddff 100%);
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-  padding: 1rem 0;
+  box-shadow: 0 0 12px rgba(0,0,0,0.2);
+  padding: 1rem;
+}
+
+/* === GROUP TRACK CONTAINER === */
+.group-track {
+  margin: 15px 0;
+  padding: 10px;
+  border: 2px solid #b9d6ff;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.6);
+}
+.group-track h3 {
+  margin: 0 0 6px 0;
+  font-size: 1rem;
+  color: #0b2a74;
 }
 
 /* === LANE STYLING === */
+.track-lanes { position: relative; width: 100%; }
 .lane {
   position: relative;
-  height: 40px;
-  margin-bottom: 8px;
+  height: 60px;
+  margin: 8px 0;
   background: #e0f7fa;
   border-radius: 6px;
-  overflow: hidden;
+  overflow: visible; /* allow label above */
+  border: 1px dashed #bde3e6;
 }
-
-.lane span {
+.lane span.player-name {
   position: absolute;
-  left: 0;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  transition: transform 0.3s ease;
+  font-weight: bold;
 }
+.cupid { pointer-events: none; }
 
 /* === RANKING PANEL === */
 .ranking-panel {
-  margin-top: 2rem;
-  background: rgba(255, 255, 255, 0.9);
+  margin-top: 1rem;
+  background: rgba(255,255,255,0.9);
   padding: 16px;
   border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
-  font-size: 1.2em;
-  max-width: 300px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.15);
+  font-size: 1.05em;
+  max-width: 520px;
   margin-left: auto;
   margin-right: auto;
 }
-
-.ranking-panel h3 {
-  margin-bottom: 10px;
-  color: #222;
-  text-align: center;
-}
-
-#ranking-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-#ranking-list li {
-  padding: 6px 8px;
-  border-bottom: 1px solid #ddd;
-  color: #444;
-}
-
-#ranking-list li:last-child {
-  border-bottom: none;
-}
+.ranking-panel h3 { margin-bottom: 10px; color: #222; text-align: center; }
+#ranking-list { list-style: none; padding: 0; margin: 0; }
+#ranking-list > li { margin-bottom: 10px; }
+#ranking-list ul { margin: 6px 0 0 16px; }
 
 /* === TIME UP OVERLAY === */
 #timeup {
@@ -190,21 +164,13 @@ body {
   border-radius: 16px;
   z-index: 9999;
   text-align: center;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 30px rgba(0,0,0,0.4);
   border: 6px solid #0b2a74;
   animation: popUp 0.4s ease-in-out;
 }
-
-/* === TIME UP Animation === */
 @keyframes popUp {
-  from {
-    transform: scale(0.8) translate(-50%, -50%);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1) translate(-50%, -50%);
-    opacity: 1;
-  }
+  from { transform: scale(0.8) translate(-50%, -50%); opacity: 0; }
+  to   { transform: scale(1)   translate(-50%, -50%); opacity: 1; }
 }
 
 #reset-players {
@@ -218,51 +184,17 @@ body {
   background-color: #e74c3c;
   transition: background-color 0.3s ease;
 }
+#reset-players:hover { background-color: #c0392b; }
 
-#reset-players:hover {
-  background-color: #c0392b;
-}
+.player-name { font-size: 14px; }
 
-.cupid {
-  pointer-events: none;
-}
-
-.arrow-img {
-  pointer-events: none;
-}
-
-.player-name {
-  font-size: 14px;
-}
-
-.winner-scene {
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:20px;
-}
-.winner-cupid {
-  height:80px;
-  animation: float 2s infinite ease-in-out;
-}
-.winner-goal {
-  height:80px;
-}
-#winner-title {
-  font-size:2rem;
-  color:gold;
-  margin-bottom:10px;
-}
-#winner-name {
-  margin-top:10px;
-  font-size:1.5rem;
-  font-weight:bold;
-  color:white;
-}
-@keyframes float {
-  0%,100% { transform:translateY(0); }
-  50% { transform:translateY(-5px); }
-}
+/* === Winner Scene === */
+.winner-scene { display:flex; align-items:center; justify-content:center; gap:20px; }
+.winner-cupid { height:80px; animation: float 2s infinite ease-in-out; }
+.winner-goal  { height:80px; }
+#winner-title { font-size:2rem; color:gold; margin-bottom:10px; }
+#winner-name  { margin-top:10px; font-size:1.5rem; font-weight:bold; color:white; }
+@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
 
 /* === Progress Label Above Cupid === */
 .progress-label {
@@ -275,16 +207,12 @@ body {
   color: #333;
 }
 
-/* === Slightly more pronounced hop === */
-.cupid.jump {
-  animation: jumpAnim 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-}
-
+/* === Cupid Jump === */
+.cupid.jump { animation: jumpAnim 0.6s cubic-bezier(0.68,-0.55,0.27,1.55); }
 @keyframes jumpAnim {
   0%   { transform: translateY(-50%) scale(1); }
   25%  { transform: translateY(-100%) scale(1.1); }
-  50%  { transform: translateY(-60%) scale(0.95); }
-  75%  { transform: translateY(-80%) scale(1.05); }
-  100% { transform: translateY(-50%) scale(1); }
+  50%  { transform: translateY(-60%)  scale(0.95); }
+  75%  { transform: translateY(-80%)  scale(1.05); }
+  100% { transform: translateY(-50%)  scale(1); }
 }
-
