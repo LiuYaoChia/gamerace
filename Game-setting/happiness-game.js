@@ -60,15 +60,29 @@ for (let i = 1; i <= 6; i++) {
   set(ref(db, `groups/${i}`), { name: i.toString(), players: {} });
 }
 
-// ====== Track & Rankings ======
-function updateTrackAndRankings() {
-  const existingLanes = new Map([...els.track.children].map(l => [l.dataset.playerId, l]));
-  const sortedPlayers = [...players].sort((a, b) => b.progress - a.progress);
+// ====== Track & Rankings (Grouped) ======
+function updateTrackAndRankings(allGroups) {
+  els.track.innerHTML = ""; // clear old lanes
+  els.rankList.innerHTML = ""; // clear old rankings
 
-  sortedPlayers.forEach((p) => {
-    let lane = existingLanes.get(p.id);
-    if (!lane) {
-      lane = document.createElement("div");
+  Object.entries(allGroups).forEach(([gid, group]) => {
+    const groupPlayers = Object.entries(group.players || {}).map(([id, p]) => ({ id, ...p }));
+
+    // ---- Track container per group ----
+    const groupTrack = document.createElement("div");
+    groupTrack.className = "group-track";
+    groupTrack.innerHTML = `<h3 style="margin:5px 0;">Group ${group.name}</h3>`;
+    
+    const trackLanes = document.createElement("div");
+    trackLanes.className = "track-lanes";
+    groupTrack.appendChild(trackLanes);
+
+    // ---- Sort players for ranking ----
+    const sorted = [...groupPlayers].sort((a, b) => b.progress - a.progress);
+
+    sorted.forEach(p => {
+      // Lane per player
+      let lane = document.createElement("div");
       lane.className = "lane";
       lane.dataset.playerId = p.id;
       lane.innerHTML = `
@@ -76,31 +90,35 @@ function updateTrackAndRankings() {
         <img class="goal" src="img/goal.png" style="height:50px;position:absolute;right:5px;top:50%;transform:translateY(-50%)">
         <span class="player-name" style="position:absolute;right:10px;font-weight:bold">${p.name}</span>
       `;
-      els.track.appendChild(lane);
-    }
+      trackLanes.appendChild(lane);
 
-    const cupid = lane.querySelector(".cupid");
-    cupid.style.left = `${Math.min(p.progress, 95)}%`;
+      // Move cupid
+      const cupid = lane.querySelector(".cupid");
+      cupid.style.left = `${Math.min(p.progress, 95)}%`;
 
-    // ====== Progress label ======
-    let progressLabel = lane.querySelector(".progress-label");
-    if (!progressLabel) {
-      progressLabel = document.createElement("span");
-      progressLabel.className = "progress-label";
-      progressLabel.style.cssText = "position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:bold;color:#333";
-      lane.appendChild(progressLabel);
-    }
-    progressLabel.textContent = `${Math.floor(p.progress)}%`;
+      // Label
+      let lbl = lane.querySelector(".progress-label");
+      if (!lbl) {
+        lbl = document.createElement("span");
+        lbl.className = "progress-label";
+        lbl.style.cssText = "position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:bold;color:#333";
+        lane.appendChild(lbl);
+      }
+      lbl.textContent = `${Math.floor(p.progress)}%`;
+    });
 
-    existingLanes.delete(p.id);
+    els.track.appendChild(groupTrack);
+
+    // ---- Rankings per group ----
+    const groupRank = document.createElement("li");
+    groupRank.innerHTML = `
+      <strong>${group.name} Rankings:</strong>
+      <ul>
+        ${sorted.map((p, i) => `<li>${i + 1}️⃣ ${p.name} - ${Math.floor(p.progress)}%</li>`).join("")}
+      </ul>
+    `;
+    els.rankList.appendChild(groupRank);
   });
-
-  existingLanes.forEach(lane => lane.remove());
-
-  // ====== Rankings ======
-  els.rankList.innerHTML = sortedPlayers
-    .map((p, i) => `<li>${i + 1}️⃣ ${p.name} - ${Math.floor(p.progress)}%</li>`)
-    .join("");
 }
 
 // ====== Form: Join Player ======
@@ -123,12 +141,17 @@ els.form.addEventListener("submit", async e => {
   await set(ref(db, `groups/${groupId}/players/${currentPlayerId}`), {
     name,
     progress: 0,
-    cupidIndex,
-    groupId
+    cupidIndex
   });
 
   els.nameInput.value = "";
   els.startBtn.disabled = false;
+
+  // Listen only to this group
+  onValue(ref(db, `groups/${groupId}/players`), snap => {
+    players = snap.val() || {};
+    updateTrackAndRankings(players);
+  });
 });
 
 // ====== Reset All ======
@@ -194,6 +217,7 @@ async function updateProgress() {
   const snap = await get(playerRef);
   if (snap.exists()) {
     let p = snap.val();
+    if (p.progress >= 100) return; // stop hopping if finished
     p.progress = Math.min(100, p.progress + 5);
     await set(playerRef, p);
     if (p.progress >= 100) await set(ref(db, "winner"), p.name);
@@ -205,8 +229,8 @@ function animateCupidJump() {
   const lane = document.querySelector(`.lane[data-player-id="${currentPlayerId}"]`);
   if (!lane) return;
   const cupid = lane.querySelector(".cupid");
-  const snap = players.find(p => p.id === currentPlayerId);
-  if (!snap || snap.progress >= 100) return;
+  const me = players[currentPlayerId];
+  if (!me || me.progress >= 100) return;
   cupid.classList.add("jump");
   setTimeout(() => cupid.classList.remove("jump"), 600);
 }
@@ -214,15 +238,15 @@ function animateCupidJump() {
 // ====== Firebase Listeners ======
 onValue(ref(db, "groups"), snap => {
   const groups = snap.val() || {};
-  players = [];
+  
+  // Show group rosters (setup screen)
   els.playerList.innerHTML = Object.entries(groups).map(([gid, g]) => {
-    const groupPlayers = Object.entries(g.players || {}).map(([pid, p]) => {
-      players.push({ id: pid, ...p });
-      return `<li>${p.name}</li>`;
-    }).join("");
-    return `<div class="group"><h3>${g.name} <button onclick="renameGroup('${gid}')">✏️</button></h3><ul>${groupPlayers}</ul></div>`;
+    const list = Object.values(g.players || {}).map(p => `<li>${p.name}</li>`).join("");
+    return `<div class="group"><h3>${g.name} <button onclick="renameGroup('${gid}')">✏️</button></h3><ul>${list}</ul></div>`;
   }).join("");
-  updateTrackAndRankings();
+  
+   // Update tracks & rankings for all groups
+  updateTrackAndRankings(groups);
 });
 
 onValue(ref(db, "gameState"), snap => {
