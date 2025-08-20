@@ -14,6 +14,7 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 // ====== Cupid Variants ======
 const cupidVariants = [
@@ -62,13 +63,11 @@ for (let i = 1; i <= 6; i++) {
 
 // ====== Track & Rankings (Grouped) ======
 function updateTrackAndRankings(allGroups) {
-  els.track.innerHTML = ""; // clear old lanes
-  els.rankList.innerHTML = ""; // clear old rankings
+  els.track.innerHTML = "";
+  els.rankList.innerHTML = "";
 
   Object.entries(allGroups).forEach(([gid, group]) => {
     const groupPlayers = Object.entries(group.players || {}).map(([id, p]) => ({ id, ...p }));
-
-    // ---- Track container per group ----
     const groupTrack = document.createElement("div");
     groupTrack.className = "group-track";
     groupTrack.innerHTML = `<h3 style="margin:5px 0;">Group ${group.name}</h3>`;
@@ -77,11 +76,8 @@ function updateTrackAndRankings(allGroups) {
     trackLanes.className = "track-lanes";
     groupTrack.appendChild(trackLanes);
 
-    // ---- Sort players for ranking ----
     const sorted = [...groupPlayers].sort((a, b) => b.progress - a.progress);
-
     sorted.forEach(p => {
-      // Lane per player
       let lane = document.createElement("div");
       lane.className = "lane";
       lane.dataset.playerId = p.id;
@@ -92,11 +88,9 @@ function updateTrackAndRankings(allGroups) {
       `;
       trackLanes.appendChild(lane);
 
-      // Move cupid
       const cupid = lane.querySelector(".cupid");
       cupid.style.left = `${Math.min(p.progress, 95)}%`;
 
-      // Label
       let lbl = lane.querySelector(".progress-label");
       if (!lbl) {
         lbl = document.createElement("span");
@@ -109,13 +103,10 @@ function updateTrackAndRankings(allGroups) {
 
     els.track.appendChild(groupTrack);
 
-    // ---- Rankings per group ----
     const groupRank = document.createElement("li");
     groupRank.innerHTML = `
       <strong>${group.name} Rankings:</strong>
-      <ul>
-        ${sorted.map((p, i) => `<li>${i + 1}️⃣ ${p.name} - ${Math.floor(p.progress)}%</li>`).join("")}
-      </ul>
+      <ul>${sorted.map((p, i) => `<li>${i + 1}️⃣ ${p.name} - ${Math.floor(p.progress)}%</li>`).join("")}</ul>
     `;
     els.rankList.appendChild(groupRank);
   });
@@ -146,12 +137,17 @@ els.form.addEventListener("submit", async e => {
 
   els.nameInput.value = "";
   els.startBtn.disabled = false;
+  
+  if (isPhone) {
+    // 👉 Phone only: minimal UI
+    document.getElementById("player-setup").style.display = "none";
+    document.querySelector(".game-container").style.display = "none";
+    document.getElementById("phone-view").style.display = "block";
 
-  // Listen only to this group
-  onValue(ref(db, `groups/${groupId}/players`), snap => {
-    players = snap.val() || {};
-    updateTrackAndRankings(players);
-  });
+    onValue(ref(db, `groups/${groupId}/players/${currentPlayerId}`), snap => {
+      if (snap.exists()) updatePhoneView({ id: currentPlayerId, ...snap.val() });
+    });
+  }
 });
 
 // ====== Reset All ======
@@ -173,17 +169,6 @@ els.exitBtn.addEventListener("click", async () => {
   els.nameInput.removeAttribute("readonly");
   showSetup();
 });
-
-// ====== Start Game ======
-els.startBtn.addEventListener("click", async () => {
-  await set(ref(db, "gameState"), "race");
-});
-
-// ====== Rename Group ======
-window.renameGroup = async function(groupId) {
-  const newName = prompt("Enter new group name:");
-  if (newName) await update(ref(db, `groups/${groupId}`), { name: newName });
-};
 
 // ====== Motion / Shake Detection ======
 let lastShakeTime = 0;
@@ -217,7 +202,7 @@ async function updateProgress() {
   const snap = await get(playerRef);
   if (snap.exists()) {
     let p = snap.val();
-    if (p.progress >= 100) return; // stop hopping if finished
+    if (p.progress >= 100) return;
     p.progress = Math.min(100, p.progress + 5);
     await set(playerRef, p);
     if (p.progress >= 100) await set(ref(db, "winner"), p.name);
@@ -236,18 +221,18 @@ function animateCupidJump() {
 }
 
 // ====== Firebase Listeners ======
-onValue(ref(db, "groups"), snap => {
-  const groups = snap.val() || {};
-  
-  // Show group rosters (setup screen)
-  els.playerList.innerHTML = Object.entries(groups).map(([gid, g]) => {
-    const list = Object.values(g.players || {}).map(p => `<li>${p.name}</li>`).join("");
-    return `<div class="group"><h3>${g.name} <button onclick="renameGroup('${gid}')">✏️</button></h3><ul>${list}</ul></div>`;
-  }).join("");
-  
-   // Update tracks & rankings for all groups
-  updateTrackAndRankings(groups);
+// ✅ new: only listen to the group you joined
+onValue(ref(db, `groups/${currentGroupId}`), snap => {
+  const group = snap.val() || {};
+  els.playerList.innerHTML = `
+    <div class="group">
+      <h3>${group.name}</h3>
+      <ul>${Object.values(group.players || {}).map(p => `<li>${p.name}</li>`).join("")}</ul>
+    </div>
+  `;
+  updateTrackAndRankings({ [currentGroupId]: group });
 });
+
 
 onValue(ref(db, "gameState"), snap => {
   (snap.val() || "lobby") === "lobby" ? showSetup() : showGame();
@@ -263,7 +248,6 @@ onValue(ref(db, "winner"), snap => {
   }
 });
 
-// ====== Winner Reset ======
 els.winnerExit.addEventListener("click", async () => {
   await set(ref(db, "winner"), null);
   await set(ref(db, "gameState"), "lobby");
@@ -271,3 +255,36 @@ els.winnerExit.addEventListener("click", async () => {
   currentPlayerId = null;
   showSetup();
 });
+
+// ====== Phone label update ======
+function updatePhoneView(player) {
+  if (!isPhone || player.id !== currentPlayerId) return;
+  const cupid = document.getElementById("phone-cupid");
+  const label = document.getElementById("phone-label");
+  if (!cupid || !label) return;
+  label.textContent = `${player.name}: ${Math.floor(player.progress)}%`;
+  if (player.progress < 100) {
+    cupid.classList.remove("jump");
+    void cupid.offsetWidth;
+    cupid.classList.add("jump");
+  }
+}
+
+// ====== Start Game (password-protected on computer) ======
+function startGame() {
+  set(ref(db, "gameState"), "playing");
+}
+
+if (isPhone) {
+  const startBtn = document.getElementById("start-game");
+  if (startBtn) startBtn.style.display = "none";
+} else {
+  els.startBtn.addEventListener("click", async () => {
+    const password = prompt("請輸入管理密碼才能開始遊戲:");
+    if (password === "1234") {
+      startGame();
+    } else {
+      alert("密碼錯誤，無法開始遊戲！");
+    }
+  });
+}
