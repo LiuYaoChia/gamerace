@@ -22,9 +22,13 @@ const SHAKE_COOLDOWN_MS = 500;   // throttle shakes per device
 
 // ====== Cupid Variants (used per group) ======
 const cupidVariants = [
-  "images/cupid-redbow.png",
-  "images/cupid-bluebow.png",
-  "images/cupid-goldbow.png"
+  "img/groom1.png",
+  "img/groom2.png",
+  "img/groom3.png",
+  "img/groom4.png",
+  "img/groom5.png",
+  "img/groom6.png",
+  "img/groom7.png"
 ];
 
 // ====== DOM Refs ======
@@ -329,3 +333,4 @@ if (isPhone) {
     }
   });
 }
+
