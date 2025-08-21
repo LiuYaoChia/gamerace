@@ -1,6 +1,7 @@
 // ====== Firebase Setup ======
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, get, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, get, remove, update, runTransaction, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCK4uNQlQwXk4LS9ZYB6_pkbZbrd1kj-vA",
@@ -12,15 +13,19 @@ const firebaseConfig = {
   appId: "1:714276517910:web:3fe25271b371e639fb1d37",
   measurementId: "G-3JL827HV8Q"
 };
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+
+const app  = initializeApp(firebaseConfig);
+const db   = getDatabase(app);
+const auth = getAuth(app);
+
 const isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-// ====== Config ======
-const STEP_PERCENT = 3;          // each valid shake adds this % to the group's progress
-const SHAKE_COOLDOWN_MS = 500;   // throttle shakes per device
+// ====== Game Config ======
+const STEP_PERCENT       = 3;     // % added to group progress per valid shake
+const SHAKE_COOLDOWN_MS  = 500;   // throttle per device
+const SHAKE_THRESHOLD    = 15;    // motion strength threshold
 
-// ====== Cupid Variants (used per group) ======
+// ====== Group Avatars (one cupid per group) ======
 const cupidVariants = [
   "img/groom1.png",
   "img/groom2.png",
@@ -33,71 +38,73 @@ const cupidVariants = [
 
 // ====== DOM Refs ======
 const els = {
-  form: document.getElementById("name-form"),
-  nameInput: document.getElementById("player-name"),
+  form:        document.getElementById("name-form"),
+  nameInput:   document.getElementById("player-name"),
   groupSelect: document.getElementById("group-select"),
-  playerList: document.getElementById("player-list"),
-  startBtn: document.getElementById("start-game"),
-  resetBtn: document.getElementById("reset-players"),
-  exitBtn: document.getElementById("exit-game"),
-  motionBtn: document.getElementById("enable-motion"),
+  playerList:  document.getElementById("player-list"),
+  startBtn:    document.getElementById("start-game"),
+  resetBtn:    document.getElementById("reset-players"),
+  exitBtn:     document.getElementById("exit-game"),
+  motionBtn:   document.getElementById("enable-motion"),
   setupScreen: document.getElementById("player-setup"),
-  gameScreen: document.querySelector(".game-container"),
-  track: document.getElementById("track"),
-  rankList: document.getElementById("ranking-list"),
+  gameScreen:  document.querySelector(".game-container"),
+  track:       document.getElementById("track"),
+  rankList:    document.getElementById("ranking-list"),
   winnerPopup: document.getElementById("winner-popup"),
-  winnerMsg: document.getElementById("winner-message"),
-  winnerExit: document.getElementById("winner-exit"),
-  // phone-only UI
-  phoneView: document.getElementById("phone-view"),
-  phoneCupid: document.getElementById("phone-cupid"),
-  phoneLabel: document.getElementById("phone-label")
+  winnerMsg:   document.getElementById("winner-message"),
+  winnerExit:  document.getElementById("winner-exit"),
+  phoneView:   document.getElementById("phone-view"),
+  phoneCupid:  document.getElementById("phone-cupid"),
+  phoneLabel:  document.getElementById("phone-label"),
 };
 
-let currentPlayerId = null;
-let currentGroupId = null;
-let lastShakeTime = 0;
+let currentPlayerId = null;   // == auth.uid
+let currentGroupId  = null;
+let lastShakeTime   = 0;
 
-// ====== Screen Helpers ======
+// ====== UI helpers ======
 function showSetup() {
-  els.setupScreen && (els.setupScreen.style.display = "block");
-  els.gameScreen && (els.gameScreen.style.display = "none");
-  if (els.phoneView) els.phoneView.style.display = "none";
+  if (els.setupScreen) els.setupScreen.style.display = "block";
+  if (els.gameScreen)  els.gameScreen.style.display  = "none";
+  if (els.phoneView)   els.phoneView.style.display   = "none";
 }
 function showGame() {
-  els.setupScreen && (els.setupScreen.style.display = "none");
-  els.gameScreen && (els.gameScreen.style.display = "block");
-  if (els.phoneView) els.phoneView.style.display = "none";
+  if (els.setupScreen) els.setupScreen.style.display = "none";
+  if (els.gameScreen)  els.gameScreen.style.display  = "block";
+  if (els.phoneView)   els.phoneView.style.display   = "none";
 }
 function showPhoneOnly() {
-  // phone minimal view: only label (text) above the picture
-  els.setupScreen && (els.setupScreen.style.display = "none");
-  els.gameScreen && (els.gameScreen.style.display = "none");
-  if (els.phoneView) els.phoneView.style.display = "block";
+  if (els.setupScreen) els.setupScreen.style.display = "none";
+  if (els.gameScreen)  els.gameScreen.style.display  = "none";
+  if (els.phoneView)   els.phoneView.style.display   = "block";
 }
 
-// ====== Ensure Groups 1–6 exist ======
-for (let i = 1; i <= 6; i++) {
-  const groupRef = ref(db, `groups/${i}`);
-  get(groupRef).then(snap => {
+// ====== Ensure Groups 1–6 exist (idempotent) ======
+async function ensureGroups() {
+  for (let i = 1; i <= 6; i++) {
+    const gRef = ref(db, `groups/${i}`);
+    const snap = await get(gRef);
     if (!snap.exists()) {
-      set(groupRef, { name: i.toString(), members: {}, shakes: 0, progress: 0, cupidIndex: (i - 1) % cupidVariants.length });
+      await set(gRef, {
+        name: i.toString(),
+        members: {},
+        shakes: 0,
+        progress: 0,
+        cupidIndex: (i - 1) % cupidVariants.length
+      });
     }
-  });
+  }
 }
 
-// ====== Render Track (one cupid per group) & Rankings ======
+// ====== Render Track & Rankings (desktop) ======
 function renderTrackAndRankings(groups) {
   if (!els.track || !els.rankList) return;
 
   els.track.innerHTML = "";
   els.rankList.innerHTML = "";
 
-  // sort groups by progress desc for ranking list
-  const sortedGroups = Object.entries(groups).sort(([, a], [, b]) => (b.progress || 0) - (a.progress || 0));
-
-  // Build lanes in group ID order (1..6) for consistent track layout
-  Object.entries(groups).sort((a, b) => Number(a[0]) - Number(b[0])).forEach(([gid, group]) => {
+  // Fixed order lanes by group id
+  Object.entries(groups).sort((a,b) => Number(a[0]) - Number(b[0])).forEach(([gid, group]) => {
     const lane = document.createElement("div");
     lane.className = "lane";
     lane.dataset.groupId = gid;
@@ -109,110 +116,112 @@ function renderTrackAndRankings(groups) {
         <span class="player-name" style="position:absolute;left:8px;top:6px;font-weight:bold;">Group ${group.name}</span>
         <img class="cupid" src="${cupidSrc}" style="height:50px;position:absolute;top:50%;transform:translateY(-50%);left:0%">
         <img class="goal" src="img/goal.png" style="height:50px;position:absolute;right:5px;top:50%;transform:translateY(-50%)">
-        <span class="progress-label" style="position:absolute;top:-2px;right:10px;font-size:12px;font-weight:bold;color:#333">${Math.floor(group.progress || 0)}%</span>
-      </div>
-    `;
-
-    // position cupid by progress
+        <span class="progress-label" style="position:absolute;top:-2px;right:10px;font-size:12px;font-weight:bold;color:#333">${Math.floor(group.progress||0)}%</span>
+      </div>`;
     const cupid = lane.querySelector(".cupid");
     cupid.style.left = `${Math.min(group.progress || 0, 95)}%`;
-
     els.track.appendChild(lane);
   });
 
-  // Rankings
-  sortedGroups.forEach(([gid, group], i) => {
-    const li = document.createElement("li");
-    li.textContent = `${i + 1}️⃣  Group ${group.name}: ${Math.floor(group.progress || 0)}%`;
-    els.rankList.appendChild(li);
-  });
+  // Rankings by progress desc
+  Object.entries(groups)
+    .sort(([,a],[,b]) => (b.progress||0) - (a.progress||0))
+    .forEach(([gid, group], idx) => {
+      const li = document.createElement("li");
+      li.textContent = `${idx+1}️⃣ Group ${group.name}: ${Math.floor(group.progress||0)}%`;
+      els.rankList.appendChild(li);
+    });
 }
 
-// ====== Join (Add Player to Group) ======
-els.form?.addEventListener("submit", async e => {
+// ====== Phone view label ======
+function updatePhoneView(group) {
+  if (!els.phoneLabel || !els.phoneCupid) return;
+  const progress = Math.floor(group.progress || 0);
+  els.phoneLabel.textContent = `Group ${group.name}: ${progress}%`;
+}
+
+// ====== Anonymous Auth ======
+signInAnonymously(auth).catch(err => console.error("Anonymous sign-in failed:", err));
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentPlayerId = user.uid;
+    // optional: attach disconnect cleanup if user has joined
+    // (we attach after join because we need currentGroupId)
+  }
+});
+
+// ====== Join Group ======
+els.form?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const name = (els.nameInput?.value || "").trim();
+  const name    = (els.nameInput?.value || "").trim();
   const groupId = els.groupSelect?.value || "";
   if (!name || !groupId) return;
 
+  // ensure group exists
   const groupRef = ref(db, `groups/${groupId}`);
-  const groupSnap = await get(groupRef);
-  if (!groupSnap.exists()) {
-    // create on the fly if not present
-    await set(groupRef, { name: groupId.toString(), members: {}, shakes: 0, progress: 0, cupidIndex: (Number(groupId) - 1) % cupidVariants.length });
+  const snap = await get(groupRef);
+  if (!snap.exists()) {
+    await set(groupRef, {
+      name: groupId.toString(),
+      members: {},
+      shakes: 0,
+      progress: 0,
+      cupidIndex: (Number(groupId)-1) % cupidVariants.length
+    });
   }
+  const group = (await get(groupRef)).val();
 
-  // prevent duplicate names within the same group
-  const members = (groupSnap.val()?.members) || {};
+  // prevent duplicate names in same group
+  const members = group.members || {};
   if (Object.values(members).some(m => m?.name === name)) {
     alert("Name already taken in this group!");
     return;
   }
 
-  currentPlayerId = Date.now().toString();
   currentGroupId = groupId;
 
+  // Add/Update member using auth.uid
   await update(groupRef, {
-    [`members/${currentPlayerId}`]: { name }
+    [`members/${currentPlayerId}`]: { name, joinedAt: Date.now() }
   });
+
+  // Clean up membership if this client disconnects
+  try {
+    onDisconnect(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`)).remove();
+  } catch (_) {}
 
   els.nameInput.value = "";
 
   if (isPhone) {
-    // Phone: show only picture and label; hide start button entirely
-    const startBtn = document.getElementById("start-game");
-    if (startBtn) startBtn.style.display = "none";
+    // Phone: minimal view
+    if (els.startBtn) els.startBtn.style.display = "none";
     showPhoneOnly();
-
-    // keep phone UI label updated from GROUP progress
-    onValue(groupRef, snap => {
-      const group = snap.val() || {};
-      updatePhoneView(group);
+    // keep phone UI updated from GROUP progress
+    onValue(groupRef, s => {
+      const g = s.val() || {};
+      updatePhoneView(g);
     });
   } else {
-    // Desktop: show full UI for the whole game
+    // Desktop host: show full UI and roster for this group on the left
     showGame();
-
-    // update only this group's roster panel (left)
-    onValue(groupRef, snap => {
-      const g = snap.val() || {};
+    onValue(groupRef, s => {
+      const g = s.val() || {};
       if (els.playerList) {
-        const memberList = Object.values(g.members || {}).map(m => `<li>${m.name}</li>`).join("");
-        els.playerList.innerHTML = `<div class="group"><h3>Group ${g.name}</h3><ul>${memberList}</ul></div>`;
+        const list = Object.values(g.members || {}).map(m => `<li>${m.name}</li>`).join("");
+        els.playerList.innerHTML = `<div class="group"><h3>Group ${g.name}</h3><ul>${list}</ul></div>`;
       }
     });
   }
 });
 
-// ====== Reset All (desktop host) ======
-els.resetBtn?.addEventListener("click", async () => {
-  if (!confirm("Reset ALL groups and players?")) return;
-  for (let i = 1; i <= 6; i++) {
-    await set(ref(db, `groups/${i}`), { name: i.toString(), members: {}, shakes: 0, progress: 0, cupidIndex: (i - 1) % cupidVariants.length });
-  }
-  await remove(ref(db, "winner"));
-  await set(ref(db, "gameState"), "lobby");
-  currentPlayerId = null;
-  showSetup();
-});
-
-// ====== Exit (leave current group) ======
-els.exitBtn?.addEventListener("click", async () => {
-  if (currentPlayerId && currentGroupId) {
-    await remove(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`));
-  }
-  currentPlayerId = null;
-  showSetup();
-});
-
-// ====== Motion / Shake Detection (phones tap to enable) ======
+// ====== Shake Handling ======
 els.motionBtn?.addEventListener("click", () => {
-  if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
+  if (typeof DeviceMotionEvent !== "undefined" &&
+      typeof DeviceMotionEvent.requestPermission === "function") {
     DeviceMotionEvent.requestPermission().then(res => {
       if (res === "granted") window.addEventListener("devicemotion", handleMotion);
     }).catch(() => {});
   } else {
-    // Android / older iOS (no permission prompt)
     window.addEventListener("devicemotion", handleMotion);
   }
 });
@@ -220,77 +229,69 @@ els.motionBtn?.addEventListener("click", () => {
 function handleMotion(event) {
   const acc = event.accelerationIncludingGravity;
   if (!acc) return;
-  const strength = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2);
-  if (strength > 15) {
+  const strength = Math.sqrt((acc.x||0)**2 + (acc.y||0)**2 + (acc.z||0)**2);
+  if (strength > SHAKE_THRESHOLD && currentGroupId) {
     const now = Date.now();
-    if (now - lastShakeTime > SHAKE_COOLDOWN_MS && currentGroupId) {
+    if (now - lastShakeTime > SHAKE_COOLDOWN_MS) {
       lastShakeTime = now;
-      addGroupShake(currentGroupId);
+      addGroupShakeTx(currentGroupId);
       animateCupidJump(currentGroupId);
     }
   }
 }
 
-async function addGroupShake(groupId) {
+// Use transaction to avoid race conditions across many devices
+function addGroupShakeTx(groupId) {
   const groupRef = ref(db, `groups/${groupId}`);
-  const snap = await get(groupRef);
-  if (!snap.exists()) return;
-  const g = snap.val();
-  const newShakes = (g.shakes || 0) + 1;
-  const newProgress = Math.min(100, (g.progress || 0) + STEP_PERCENT);
-
-  await update(groupRef, { shakes: newShakes, progress: newProgress });
-  if (newProgress >= 100) {
-    await set(ref(db, "winner"), g.name || groupId.toString());
-  }
+  runTransaction(groupRef, (g) => {
+    if (!g) return g;
+    const shakes   = (g.shakes || 0) + 1;
+    const progress = Math.min(100, (g.progress || 0) + STEP_PERCENT);
+    return { ...g, shakes, progress };
+  }).then(async (res) => {
+    const g = res.snapshot?.val();
+    if (g && g.progress >= 100) {
+      await set(ref(db, "winner"), g.name || groupId.toString());
+    }
+  }).catch((err) => {
+    console.error("Transaction failed:", err);
+  });
 }
 
-// ====== Cupid Jump Animation (both phone & desktop) ======
+// ====== Little animation on shake ======
 function animateCupidJump(groupId) {
-  // desktop lane
-  const lane = document.querySelector(`.lane[data-group-id="${groupId}"]`);
-  if (lane) {
-    const cupid = lane.querySelector(".cupid");
-    if (cupid) {
-      cupid.classList.add("jump");
-      setTimeout(() => cupid.classList.remove("jump"), 600);
-    }
+  const lane  = document.querySelector(`.lane[data-group-id="${groupId}"]`);
+  const cupid = lane?.querySelector(".cupid");
+  if (cupid) {
+    cupid.classList.add("jump");
+    setTimeout(() => cupid.classList.remove("jump"), 600);
   }
-  // phone cupid
   if (els.phoneCupid && els.phoneView?.style.display === "block") {
     els.phoneCupid.classList.add("jump");
     setTimeout(() => els.phoneCupid.classList.remove("jump"), 600);
   }
 }
 
-// ====== Phone View: show label above picture ======
-function updatePhoneView(group) {
-  if (!els.phoneLabel || !els.phoneCupid) return;
-  const progress = Math.floor(group.progress || 0);
-  els.phoneLabel.textContent = `Group ${group.name}: ${progress}%`;
-  // move phone cupid visually (if you have a track, else we just animate on shake)
-  // You can also adjust left % if phone-view has a horizontal track.
-}
-
 // ====== Global Listeners ======
 onValue(ref(db, "groups"), snap => {
   const groups = snap.val() || {};
-  renderTrackAndRankings(groups);
-
-  // also update lane cupid positions on desktop
-  Object.entries(groups).forEach(([gid, g]) => {
-    const lane = document.querySelector(`.lane[data-group-id="${gid}"]`);
-    const cupid = lane?.querySelector(".cupid");
-    const label = lane?.querySelector(".progress-label");
-    if (cupid) cupid.style.left = `${Math.min(g.progress || 0, 95)}%`;
-    if (label) label.textContent = `${Math.floor(g.progress || 0)}%`;
-  });
+  // Desktop renders the board
+  if (!isPhone) {
+    renderTrackAndRankings(groups);
+    // keep cupid positions synced
+    Object.entries(groups).forEach(([gid, g]) => {
+      const lane  = document.querySelector(`.lane[data-group-id="${gid}"]`);
+      const cupid = lane?.querySelector(".cupid");
+      const label = lane?.querySelector(".progress-label");
+      if (cupid) cupid.style.left = `${Math.min(g.progress || 0, 95)}%`;
+      if (label) label.textContent = `${Math.floor(g.progress || 0)}%`;
+    });
+  }
 });
 
 onValue(ref(db, "gameState"), snap => {
   const state = snap.val() || "lobby";
   if (isPhone) {
-    // phones stay in phone-only UI once joined
     if (currentGroupId) showPhoneOnly();
     else showSetup();
   } else {
@@ -300,13 +301,12 @@ onValue(ref(db, "gameState"), snap => {
 
 onValue(ref(db, "winner"), snap => {
   const name = snap.val();
-  if (els.winnerPopup && els.winnerMsg) {
-    if (name) {
-      els.winnerMsg.textContent = `🏆 Winner: Group ${name}!`;
-      els.winnerPopup.style.display = "flex";
-    } else {
-      els.winnerPopup.style.display = "none";
-    }
+  if (!els.winnerPopup || !els.winnerMsg) return;
+  if (name) {
+    els.winnerMsg.textContent = `🏆 Winner: Group ${name}!`;
+    els.winnerPopup.style.display = "flex";
+  } else {
+    els.winnerPopup.style.display = "none";
   }
 });
 
@@ -315,22 +315,43 @@ els.winnerExit?.addEventListener("click", async () => {
   await set(ref(db, "gameState"), "lobby");
 });
 
-// ====== Start Game (password-protected on desktop) ======
+// ====== Start / Reset / Exit ======
 function startGame() {
   set(ref(db, "gameState"), "playing");
 }
 
 if (isPhone) {
-  // hide start button on phones
   if (els.startBtn) els.startBtn.style.display = "none";
 } else {
-  els.startBtn?.addEventListener("click", async () => {
+  els.startBtn?.addEventListener("click", () => {
     const password = prompt("請輸入管理密碼才能開始遊戲:");
-    if (password === "1234") { // TODO: change to a secure secret in production
-      startGame();
-    } else {
-      alert("密碼錯誤，無法開始遊戲！");
-    }
+    if (password === "1234") startGame();
+    else alert("密碼錯誤，無法開始遊戲！");
   });
 }
 
+els.resetBtn?.addEventListener("click", async () => {
+  if (!confirm("Reset ALL groups and players?")) return;
+  await ensureGroups(); // creates if missing
+  for (let i = 1; i <= 6; i++) {
+    await update(ref(db, `groups/${i}`), { shakes: 0, progress: 0, members: {} });
+  }
+  await remove(ref(db, "winner"));
+  await set(ref(db, "gameState"), "lobby");
+  currentGroupId = null;
+  showSetup();
+});
+
+els.exitBtn?.addEventListener("click", async () => {
+  if (currentPlayerId && currentGroupId) {
+    await remove(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`));
+  }
+  currentGroupId = null;
+  showSetup();
+});
+
+// ====== Boot ======
+ensureGroups().then(() => {
+  // Default to setup screen until gameState says otherwise
+  showSetup();
+});
