@@ -299,13 +299,19 @@ onValue(ref(db, "gameState"), snap => {
   }
 });
 
-onValue(ref(db, "winner"), snap => {
-  const name = snap.val();
+// === Winner Listener ===
+import { get, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+onValue(ref(db, "winner"), async (snap) => {
+  const winnerGroupId = snap.val();
   if (!els.winnerPopup || !els.winnerMsg) return;
-  if (name) {
-    els.winnerMsg.textContent = `🏆 Winner: Group ${name}!`;
-     // 🔹 Get group info to pick its cupid
-    get(ref(db, `groups/${name}`)).then(groupSnap => {
+
+  if (winnerGroupId) {
+    els.winnerMsg.textContent = `🏆 Winner: Group ${winnerGroupId}!`;
+
+    // 🔹 Get group info to pick its cupid
+    try {
+      const groupSnap = await get(ref(db, `groups/${winnerGroupId}`));
       const group = groupSnap.val() || {};
       const cupidIndex = group.cupidIndex || 0;
       const cupidSrc = cupidVariants[cupidIndex];
@@ -313,17 +319,31 @@ onValue(ref(db, "winner"), snap => {
       // 🔹 Update winner scene images
       const winnerCupid = document.getElementById("winner-cupid");
       const winnerGoal  = document.getElementById("winner-goal");
-      if (winnerCupid) winnerCupid.src = cupidSrc;
-      if (winnerGoal)  winnerGoal.src  = "img/goal.png";
+
+      if (winnerCupid) {
+        winnerCupid.src = cupidSrc;
+
+        // reset animation if re-triggered
+        winnerCupid.classList.remove("land");
+        void winnerCupid.offsetWidth; // force reflow
+        winnerCupid.classList.add("land");
+      }
+      if (winnerGoal) {
+        winnerGoal.src = "img/goal.png";
+      }
 
       // show popup
       els.winnerPopup.style.display = "flex";
-    });
+
+    } catch (err) {
+      console.error("Error fetching winner group:", err);
+    }
 
   } else {
     els.winnerPopup.style.display = "none";
   }
 });
+
 
 els.winnerExit?.addEventListener("click", async () => {
   await remove(ref(db, "winner"));
@@ -370,4 +390,5 @@ ensureGroups().then(() => {
   // Default to setup screen until gameState says otherwise
   showSetup();
 });
+
 
