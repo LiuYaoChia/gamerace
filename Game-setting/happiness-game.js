@@ -304,7 +304,22 @@ onValue(ref(db, "winner"), snap => {
   if (!els.winnerPopup || !els.winnerMsg) return;
   if (name) {
     els.winnerMsg.textContent = `🏆 Winner: Group ${name}!`;
-    els.winnerPopup.style.display = "flex";
+     // 🔹 Get group info to pick its cupid
+    get(ref(db, `groups/${name}`)).then(groupSnap => {
+      const group = groupSnap.val() || {};
+      const cupidIndex = group.cupidIndex || 0;
+      const cupidSrc = cupidVariants[cupidIndex];
+
+      // 🔹 Update winner scene images
+      const winnerCupid = document.getElementById("winner-cupid");
+      const winnerGoal  = document.getElementById("winner-goal");
+      if (winnerCupid) winnerCupid.src = cupidSrc;
+      if (winnerGoal)  winnerGoal.src  = "img/goal.png";
+
+      // show popup
+      els.winnerPopup.style.display = "flex";
+    });
+
   } else {
     els.winnerPopup.style.display = "none";
   }
@@ -355,3 +370,4 @@ ensureGroups().then(() => {
   // Default to setup screen until gameState says otherwise
   showSetup();
 });
+
