@@ -207,12 +207,14 @@ body {
   color: #333;
 }
 
-/* === Cupid Jump === */
-.cupid.jump { animation: jumpAnim 0.6s cubic-bezier(0.68,-0.55,0.27,1.55); }
-@keyframes jumpAnim {
-  0%   { transform: translateY(-50%) scale(1); }
-  25%  { transform: translateY(-100%) scale(1.1); }
-  50%  { transform: translateY(-60%)  scale(0.95); }
-  75%  { transform: translateY(-80%)  scale(1.05); }
-  100% { transform: translateY(-50%)  scale(1); }
+/* Jump landing animation */
+.winner-cupid.land {
+  animation: cupidLand 1s ease-out forwards;
+}
+
+@keyframes cupidLand {
+  0%   { transform: translate(-50%, -150%) scale(1.2); opacity: 0; }
+  50%  { transform: translate(-50%, -80%) scale(1.1); opacity: 1; }
+  70%  { transform: translate(-50%, -60%) scale(0.95); }
+  100% { transform: translate(-50%, -30%) scale(1); }
 }
