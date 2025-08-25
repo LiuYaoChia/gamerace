@@ -177,12 +177,12 @@ els.form?.addEventListener("submit", async (e)=>{
     if (snap.val() === "playing") {
       showPhoneOnly();
       onValue(groupRef, s => updatePhoneView(s.val() || {}));
-    }
-  });
-} else {
+      }
+    });
+  } else {
   els.startBtn.disabled = false; // enable Start Game on computer
-}
-
+  }
+});
 // ====== Shake Handling ======
 els.motionBtn?.addEventListener("click",()=>{
   if(typeof DeviceMotionEvent!=="undefined" &&
@@ -315,6 +315,7 @@ els.exitBtn?.addEventListener("click",async()=>{
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
 
 
 
