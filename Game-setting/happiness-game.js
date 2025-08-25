@@ -167,14 +167,22 @@ els.form?.addEventListener("submit", async (e)=>{
   onDisconnect(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`)).remove();
   els.nameInput.value="";
 
-  if(isPhone) {
-    els.startBtn.style.display="none";
-    showPhoneOnly();
-    onValue(groupRef,s=>updatePhoneView(s.val()||{}));
-  } else {
-    showGame();
-  }
-});
+  if (isPhone) {
+  els.startBtn.style.display = "none";
+
+  // ✅ Show a waiting message until the host starts the game
+  document.getElementById("phone-label").textContent = "等待遊戲開始...";
+
+  // Listen for game state changes
+  onValue(ref(db, "gameState"), snap => {
+    if (snap.val() === "running") {
+      showPhoneOnly();
+      onValue(groupRef, s => updatePhoneView(s.val() || {}));
+    }
+  });
+} else {
+  els.startGame.disabled = false; // enable Start Game on computer
+}
 
 // ====== Shake Handling ======
 els.motionBtn?.addEventListener("click",()=>{
@@ -308,3 +316,4 @@ els.exitBtn?.addEventListener("click",async()=>{
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
