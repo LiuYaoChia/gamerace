@@ -67,7 +67,6 @@ function showSetup() {
   els.phoneView.style.display   = "none";
 }
 function showGame() {
-  els.setupScreen.style.display = "none";
   els.gameScreen.style.display  = "block";
   els.phoneView.style.display   = "none";
 }
@@ -316,5 +315,6 @@ els.exitBtn?.addEventListener("click",async()=>{
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
 
 
