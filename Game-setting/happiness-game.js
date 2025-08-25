@@ -8,7 +8,7 @@ const firebaseConfig = {
   authDomain: "happiness-game-e6bf1.firebaseapp.com",
   databaseURL: "https://happiness-game-e6bf1-default-rtdb.asia-southeast1.firebasedatabase.app/",
   projectId: "happiness-game-e6bf1",
-  storageBucket: "happiness-game-e6bf1.firebasestorage.app",
+  storageBucket: "happiness-game-e6bf1.appspot.com",
   messagingSenderId: "714276517910",
   appId: "1:714276517910:web:3fe25271b371e639fb1d37",
   measurementId: "G-3JL827HV8Q"
@@ -388,6 +388,7 @@ ensureGroups().then(() => {
   // Default to setup screen until gameState says otherwise
   showSetup();
 });
+
 
 
 
