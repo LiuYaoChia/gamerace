@@ -175,13 +175,13 @@ els.form?.addEventListener("submit", async (e)=>{
 
   // Listen for game state changes
   onValue(ref(db, "gameState"), snap => {
-    if (snap.val() === "running") {
+    if (snap.val() === "playing") {
       showPhoneOnly();
       onValue(groupRef, s => updatePhoneView(s.val() || {}));
     }
   });
 } else {
-  els.startGame.disabled = false; // enable Start Game on computer
+  els.startBtn.disabled = false; // enable Start Game on computer
 }
 
 // ====== Shake Handling ======
@@ -316,4 +316,5 @@ els.exitBtn?.addEventListener("click",async()=>{
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
 
