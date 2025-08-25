@@ -180,7 +180,7 @@ els.form?.addEventListener("submit", async (e)=>{
       }
     });
   } else {
-  els.startBtn.disabled = false; // enable Start Game on computer
+    els.startBtn.disabled = false; // enable Start Game on computer
   }
 });
 // ====== Shake Handling ======
@@ -315,6 +315,7 @@ els.exitBtn?.addEventListener("click",async()=>{
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
 
 
 
