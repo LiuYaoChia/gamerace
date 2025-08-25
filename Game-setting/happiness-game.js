@@ -300,8 +300,6 @@ onValue(ref(db, "gameState"), snap => {
 });
 
 // === Winner Listener ===
-import { get, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
 onValue(ref(db, "winner"), async (snap) => {
   const winnerGroupId = snap.val();
   if (!els.winnerPopup || !els.winnerMsg) return;
@@ -390,5 +388,6 @@ ensureGroups().then(() => {
   // Default to setup screen until gameState says otherwise
   showSetup();
 });
+
 
 
