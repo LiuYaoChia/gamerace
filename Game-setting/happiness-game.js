@@ -109,7 +109,11 @@ async function renameGroup(newName) {
     return;
   }
 
+  // Update group name
   await update(ref(db, `groups/${currentGroupId}`), { name: newName });
+
+  // ✅ Show success feedback
+  alert("組別名稱已更新！");
 }
 
 // ====== Render Track + Rankings (Desktop) ======
@@ -322,16 +326,6 @@ onValue(ref(db,"groups"),snap=>{
   }
 });
 
-
-onValue(ref(db,"gameState"),snap=>{
-  const state=snap.val()||"lobby";
-  if(isPhone) {
-    if(currentGroupId) showPhoneOnly(); else showSetup();
-  } else {
-    state==="lobby"?showSetup():showGame();
-  }
-});
-
 // ====== Winner ======
 onValue(ref(db,"winner"),async(snap)=>{
   const winnerId=snap.val();
@@ -412,15 +406,27 @@ els.leaveBtn?.addEventListener("click", async () => {
     }
   }
 
-  // 3️⃣ Reset local vars
+  // 3️⃣ Auto-reset empty group
+  const groupSnap = await get(ref(db, `groups/${currentGroupId}/members`));
+  const remainingMembers = groupSnap.val();
+  if (!remainingMembers || Object.keys(remainingMembers).length === 0) {
+    await update(ref(db, `groups/${currentGroupId}`), {
+      members: {},
+      shakes: 0,
+      progress: 0
+    });
+  }
+
+  // 4️⃣ Reset local vars
   currentGroupId = null;
 
-  // 4️⃣ Switch back to lobby view
+  // 5️⃣ Switch back to lobby view
   els.phoneView.style.display = "none";
   els.form.style.display = "block";
   els.leaveBtn.style.display = "none"; 
   els.renameBtn.style.display = "none";
 });
+
 
 
 els.resetBtn?.addEventListener("click",async()=>{
@@ -454,6 +460,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
 
 
 
