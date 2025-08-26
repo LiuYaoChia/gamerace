@@ -54,6 +54,7 @@ const els = {
   phoneView:   document.getElementById("phone-view"),
   phoneCupid:  document.getElementById("phone-cupid"),
   phoneLabel:  document.getElementById("phone-label"),
+  leaveBtn:    document.getElementById("leave-group-btn"),
 };
 
 let currentPlayerId = null;
@@ -148,25 +149,36 @@ function renderTrackAndRankings(groups) {
 
 // ====== Phone View ======
 async function updatePhoneView(group) {
-  els.phoneLabel.textContent = `Group ${group.name}: ${Math.floor(group.progress||0)}%`;
+  if (!group) return;
 
+  // Show group name + progress
+  const progressText = `組別「${group.name || currentGroupId}」進度: ${Math.floor(group.progress||0)}%`;
+
+  // Build members list
+  const members = group.members ? Object.values(group.members) : [];
+  let membersHtml = "<div style='margin-top:8px; font-size:14px; text-align:left;'>";
+  members.forEach(m => {
+    membersHtml += `• ${m.name}${m.isOwner ? " 👑" : ""}<br>`;
+  });
+  membersHtml += "</div>";
+
+  // Update phone label with group + members
+  els.phoneLabel.innerHTML = progressText + membersHtml;
+
+  // Owner check → show/hide rename button
   if (currentGroupId && currentPlayerId) {
     const memberSnap = await get(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`));
     const member = memberSnap.val();
-    if (member?.isOwner) {
-      renameBtn.style.display = "block";
-    } else {
-      renameBtn.style.display = "none";
-    }
+    renameBtn.style.display = member?.isOwner ? "block" : "none";
   }
 }
-
 
 // ====== Auth ======
 signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
 onAuthStateChanged(auth,(user)=>{ if(user) currentPlayerId=user.uid; });
 
 // ====== Join Group ======
+onValue(groupRef, s => updatePhoneView(s.val() || {}));
 els.form?.addEventListener("submit", async (e)=>{
   e.preventDefault();
   const name=(els.nameInput.value||"").trim();
@@ -205,6 +217,7 @@ els.form?.addEventListener("submit", async (e)=>{
 
   if (isPhone) {
     els.startBtn.style.display = "none";
+    els.leaveBtn.style.display = "block"; // show the leave button when joined
 
     // ✅ Immediately switch to phone view (hide form, show waiting screen)
     showPhoneOnly();
@@ -374,6 +387,40 @@ if (isPhone) {
   });
 }
 
+leaveBtn?.addEventListener("click", async () => {
+  if (!currentGroupId || !currentPlayerId) return;
+
+  const memberRef = ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`);
+  const memberSnap = await get(memberRef);
+  const member = memberSnap.val();
+
+  // 1️⃣ Remove this player from Firebase
+  await remove(memberRef);
+
+  // 2️⃣ If this player was the owner → transfer ownership
+  if (member?.isOwner) {
+    const groupSnap = await get(ref(db, `groups/${currentGroupId}/members`));
+    const members = groupSnap.val();
+
+    if (members) {
+      const firstKey = Object.keys(members)[0];
+      if (firstKey) {
+        await update(ref(db, `groups/${currentGroupId}/members/${firstKey}`), {
+          isOwner: true
+        });
+      }
+    }
+  }
+
+  // 3️⃣ Reset local vars
+  currentGroupId = null;
+
+  // 4️⃣ Switch back to lobby view
+  els.phoneView.style.display = "none";
+  els.form.style.display = "block";
+  leaveBtn.style.display = "none"; 
+  renameBtn.style.display = "none";
+});
 
 
 els.resetBtn?.addEventListener("click",async()=>{
@@ -407,6 +454,7 @@ renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
 
 
 
