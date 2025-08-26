@@ -204,22 +204,27 @@ els.form?.addEventListener("submit", async (e)=>{
   els.nameInput.value="";
 
   if (isPhone) {
-  els.startBtn.style.display = "none";
+    els.startBtn.style.display = "none";
 
-  // ✅ Show a waiting message until the host starts the game
-  document.getElementById("phone-label").textContent = "等待遊戲開始...";
+    // ✅ Immediately switch to phone view (hide form, show waiting screen)
+    showPhoneOnly();
+    els.phoneLabel.textContent = "等待遊戲開始...";
 
-  // Listen for game state changes
-  onValue(ref(db, "gameState"), snap => {
-    if (snap.val() === "playing") {
-      showPhoneOnly();
-      onValue(groupRef, s => updatePhoneView(s.val() || {}));
+    // ✅ Always listen to your group → update name/progress/owner status
+    onValue(groupRef, s => updatePhoneView(s.val() || {}));
+
+    // ✅ Also listen for game state → if playing, keep phone view active
+    onValue(ref(db, "gameState"), snap => {
+      if (snap.val() === "playing") {
+        showPhoneOnly();
       }
     });
   } else {
     els.startBtn.disabled = false; // enable Start Game on computer
   }
 });
+
+ 
 // ====== Shake Handling ======
 els.motionBtn?.addEventListener("click",()=>{
   if(typeof DeviceMotionEvent!=="undefined" &&
@@ -402,6 +407,7 @@ renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
 
 
 
