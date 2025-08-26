@@ -55,6 +55,7 @@ const els = {
   phoneCupid:  document.getElementById("phone-cupid"),
   phoneLabel:  document.getElementById("phone-label"),
   leaveBtn:    document.getElementById("leave-group-btn"),
+  renameBtn: document.getElementById("rename-group-btn");
 };
 
 let currentPlayerId = null;
@@ -169,7 +170,7 @@ async function updatePhoneView(group) {
   if (currentGroupId && currentPlayerId) {
     const memberSnap = await get(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`));
     const member = memberSnap.val();
-    renameBtn.style.display = member?.isOwner ? "block" : "none";
+    els.renameBtn.style.display = member?.isOwner ? "block" : "none";
   }
 }
 
@@ -178,7 +179,6 @@ signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
 onAuthStateChanged(auth,(user)=>{ if(user) currentPlayerId=user.uid; });
 
 // ====== Join Group ======
-onValue(groupRef, s => updatePhoneView(s.val() || {}));
 els.form?.addEventListener("submit", async (e)=>{
   e.preventDefault();
   const name=(els.nameInput.value||"").trim();
@@ -387,7 +387,7 @@ if (isPhone) {
   });
 }
 
-leaveBtn?.addEventListener("click", async () => {
+els.leaveBtn?.addEventListener("click", async () => {
   if (!currentGroupId || !currentPlayerId) return;
 
   const memberRef = ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`);
@@ -418,8 +418,8 @@ leaveBtn?.addEventListener("click", async () => {
   // 4️⃣ Switch back to lobby view
   els.phoneView.style.display = "none";
   els.form.style.display = "block";
-  leaveBtn.style.display = "none"; 
-  renameBtn.style.display = "none";
+  els.leaveBtn.style.display = "none"; 
+  els.renameBtn.style.display = "none";
 });
 
 
@@ -442,9 +442,9 @@ els.exitBtn?.addEventListener("click",async()=>{
   currentGroupId=null; showSetup();
 });
 
-const renameBtn = document.getElementById("rename-group-btn");
 
-renameBtn?.addEventListener("click", async () => {
+
+els.renameBtn?.addEventListener("click", async () => {
   const newName = prompt("請輸入新的組別名稱:");
   if (newName) {
     await renameGroup(newName);
@@ -454,6 +454,7 @@ renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
 
 
 
