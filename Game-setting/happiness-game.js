@@ -232,23 +232,41 @@ function animateCupidJump(groupId) {
 }
 
 // ====== Global Listeners ======
-onValue(ref(db,"groups"),snap=>{
-  const groups=snap.val()||{};
-  if(!isPhone) {
-    renderTrackAndRankings(groups);
+let currentGameState = "lobby"; // track state
 
-    // update player list (ALL groups with members)
-    els.playerList.innerHTML="";
-    Object.entries(groups).forEach(([gid,g])=>{
-      const members=Object.values(g.members||{}).map(m=>`<li>${m.name}</li>`).join("");
-      els.playerList.innerHTML+=`
-        <div class="group">
-          <h3>Group ${g.name}</h3>
-          <ul>${members}</ul>
-        </div>`;
-    });
+onValue(ref(db,"gameState"), snap=>{
+  currentGameState = snap.val() || "lobby";
+  if (isPhone) {
+    if (currentGroupId) showPhoneOnly(); else showSetup();
+  } else {
+    currentGameState==="lobby" ? showSetup() : showGame();
   }
 });
+
+onValue(ref(db,"groups"),snap=>{
+  const groups = snap.val() || {};
+
+  if (!isPhone) {
+    renderTrackAndRankings(groups);
+
+    if (currentGameState === "lobby") {
+      // show player list
+      els.playerList.innerHTML = "";
+      Object.entries(groups).forEach(([gid,g])=>{
+        const members = Object.values(g.members||{}).map(m=>`<li>${m.name}</li>`).join("");
+        els.playerList.innerHTML += `
+          <div class="group">
+            <h3>Group ${g.name}</h3>
+            <ul>${members}</ul>
+          </div>`;
+      });
+    } else {
+      // clear player list when game started
+      els.playerList.innerHTML = "";
+    }
+  }
+});
+
 
 onValue(ref(db,"gameState"),snap=>{
   const state=snap.val()||"lobby";
@@ -286,13 +304,35 @@ els.winnerExit?.addEventListener("click",async()=>{
 });
 
 // ====== Start / Reset / Exit ======
-function startGame(){ set(ref(db,"gameState"),"playing"); }
+async function startGame() {
+  // remove empty groups before starting
+  const snap = await get(ref(db, "groups"));
+  const groups = snap.val() || {};
 
-if(isPhone) els.startBtn.style.display="none";
-else els.startBtn?.addEventListener("click",()=>{
-  const pw=prompt("請輸入管理密碼才能開始遊戲:");
-  if(pw==="1234") startGame(); else alert("密碼錯誤！");
-});
+  for (const [gid, g] of Object.entries(groups)) {
+    if (!g.members || Object.keys(g.members).length === 0) {
+      await remove(ref(db, `groups/${gid}`));
+    }
+  }
+
+  // then start the game
+  await set(ref(db, "gameState"), "playing");
+}
+
+if (isPhone) {
+  els.startBtn.style.display = "none";
+} else {
+  els.startBtn?.addEventListener("click", async () => {
+    const pw = prompt("請輸入管理密碼才能開始遊戲:");
+    if (pw === "1234") {
+      await startGame(); 
+    } else {
+      alert("密碼錯誤！");
+    }
+  });
+}
+
+
 
 els.resetBtn?.addEventListener("click",async()=>{
   if(!confirm("Reset ALL groups and players?")) return;
@@ -315,6 +355,7 @@ els.exitBtn?.addEventListener("click",async()=>{
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
 
 
 
