@@ -93,6 +93,23 @@ async function ensureGroups() {
   }
 }
 
+// ===== Add rename function =========
+async function renameGroup(newName) {
+  if (!currentGroupId || !currentPlayerId) return;
+
+  // Get current player info
+  const memberSnap = await get(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`));
+  const member = memberSnap.val();
+
+  // Only owner can rename
+  if (!member || !member.isOwner) {
+    alert("只有第一位玩家可以更改組別名稱！");
+    return;
+  }
+
+  await update(ref(db, `groups/${currentGroupId}`), { name: newName });
+}
+
 // ====== Render Track + Rankings (Desktop) ======
 function renderTrackAndRankings(groups) {
   els.track.innerHTML = "";
@@ -130,9 +147,20 @@ function renderTrackAndRankings(groups) {
 }
 
 // ====== Phone View ======
-function updatePhoneView(group) {
+async function updatePhoneView(group) {
   els.phoneLabel.textContent = `Group ${group.name}: ${Math.floor(group.progress||0)}%`;
+
+  if (currentGroupId && currentPlayerId) {
+    const memberSnap = await get(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`));
+    const member = memberSnap.val();
+    if (member?.isOwner) {
+      renameBtn.style.display = "block";
+    } else {
+      renameBtn.style.display = "none";
+    }
+  }
 }
+
 
 // ====== Auth ======
 signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
@@ -162,7 +190,16 @@ els.form?.addEventListener("submit", async (e)=>{
   }
 
   currentGroupId=groupId;
-  await update(groupRef,{[`members/${currentPlayerId}`]:{name,joinedAt:Date.now()}});
+  // Check if group is empty → first player = owner
+  const isFirstPlayer = !group.members || Object.keys(group.members).length === 0;
+
+  await update(groupRef, {
+    [`members/${currentPlayerId}`]: {
+      name,
+      joinedAt: Date.now(),
+      isOwner: isFirstPlayer // ✅ mark owner if first player
+    }
+  });
   onDisconnect(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`)).remove();
   els.nameInput.value="";
 
@@ -353,8 +390,19 @@ els.exitBtn?.addEventListener("click",async()=>{
   currentGroupId=null; showSetup();
 });
 
+const renameBtn = document.getElementById("rename-group-btn");
+
+renameBtn?.addEventListener("click", async () => {
+  const newName = prompt("請輸入新的組別名稱:");
+  if (newName) {
+    await renameGroup(newName);
+  }
+});
+
+
 // ====== Boot ======
 ensureGroups().then(showSetup);
+
 
 
 
