@@ -56,6 +56,7 @@ const els = {
   phoneLabel:  document.getElementById("phone-label"),
   leaveBtn:    document.getElementById("leave-group-btn"),
   renameBtn:   document.getElementById("rename-group-btn"),
+  qrEl:        document.getElementById("qr-code");
 };
 
 let currentPlayerId = null;
@@ -379,6 +380,10 @@ async function startGame() {
    // ✅ hide the lobby/setup UI
   els.setupScreen.style.display = "none";  
   els.playerList.innerHTML = "";            // ✅ clear player list
+  // ✅ hide QR code
+  els.qrEl.style.display = "none";
+  // ✅ hide phone QR view for all phones
+  if (isPhone) showPhoneOnly(); // phone still sees the game but not QR
 }
 
 if (isPhone) {
@@ -462,6 +467,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
