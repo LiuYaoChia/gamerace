@@ -56,7 +56,7 @@ const els = {
   phoneLabel:  document.getElementById("phone-label"),
   leaveBtn:    document.getElementById("leave-group-btn"),
   renameBtn:   document.getElementById("rename-group-btn"),
-  qrEl:        document.getElementById("qr-code");
+  qrEl:        document.getElementById("qr-code"),
 };
 
 let currentPlayerId = null;
@@ -467,6 +467,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
