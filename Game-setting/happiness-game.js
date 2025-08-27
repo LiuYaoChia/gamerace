@@ -77,6 +77,8 @@ function showPhoneOnly() {
   els.setupScreen.style.display = "none";
   els.gameScreen.style.display  = "none";
   els.phoneView.style.display   = "block";
+   // hide QR code safely
+  if (els.qrEl) els.qrEl.style.display = "none";
 }
 
 // ====== Ensure Groups ======
@@ -302,12 +304,12 @@ onValue(ref(db,"gameState"), snap=>{
     if (currentGameState === "lobby") {
       showSetup();
       els.setupScreen.style.display = "block";// 👈 make sure it's visible
-      els.gameContainer.style.display = "none";
+      els.gameScreen.style.display = "none";
       showSetup();
     } else if (currentGameState === "playing") {
       // ✅ show race view
       els.setupScreen.style.display = "none";// 👈 hide lobby box when playing
-      els.gameContainer.style.display = "block";
+      els.gameScreen.style.display = "block";
       showGame();    
     }
   }
@@ -381,7 +383,7 @@ async function startGame() {
   els.setupScreen.style.display = "none";  
   els.playerList.innerHTML = "";            // ✅ clear player list
   // ✅ hide QR code
-  els.qrEl.style.display = "none";
+  if (els.qrEl) els.qrEl.style.display = "none";
   // ✅ hide phone QR view for all phones
   if (isPhone) showPhoneOnly(); // phone still sees the game but not QR
 }
@@ -467,6 +469,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
