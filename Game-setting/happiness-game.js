@@ -300,10 +300,14 @@ onValue(ref(db,"gameState"), snap=>{
   } else {
     if (currentGameState === "lobby") {
       showSetup();
-      els.setupScreen.style.display = "block";   // 👈 make sure it's visible
-    } else {
-      showGame();
-      els.setupScreen.style.display = "none";    // 👈 hide lobby box when playing
+      els.setupScreen.style.display = "block";// 👈 make sure it's visible
+      els.gameContainer.style.display = "none";
+      showSetup();
+    } else if (currentGameState === "playing") {
+      // ✅ show race view
+      els.setupScreen.style.display = "none";// 👈 hide lobby box when playing
+      els.gameContainer.style.display = "block";
+      showGame();    
     }
   }
 });
@@ -442,6 +446,7 @@ els.exitBtn?.addEventListener("click",async()=>{
   if(currentPlayerId&&currentGroupId) {
     await remove(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`));
   }
+  await set(ref(db,"gameState"),"lobby");
   currentGroupId=null; showSetup();
 });
 
@@ -457,6 +462,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
