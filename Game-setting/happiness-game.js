@@ -298,7 +298,13 @@ onValue(ref(db,"gameState"), snap=>{
   if (isPhone) {
     if (currentGroupId) showPhoneOnly(); else showSetup();
   } else {
-    currentGameState==="lobby" ? showSetup() : showGame();
+    if (currentGameState === "lobby") {
+      showSetup();
+      els.setupScreen.style.display = "block";   // 👈 make sure it's visible
+    } else {
+      showGame();
+      els.setupScreen.style.display = "none";    // 👈 hide lobby box when playing
+    }
   }
 });
 
@@ -367,8 +373,8 @@ async function startGame() {
   // then start the game
   await set(ref(db, "gameState"), "playing");
    // ✅ hide the lobby/setup UI
-  const setup = document.getElementById("player-setup");
-  if (setup) setup.style.display = "none";
+  els.setupScreen.style.display = "none";  
+  els.playerList.innerHTML = "";            // ✅ clear player list
 }
 
 if (isPhone) {
@@ -451,6 +457,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
