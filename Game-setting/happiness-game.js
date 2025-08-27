@@ -68,7 +68,6 @@ function showSetup() {
   els.setupScreen.style.display = "block";
   els.gameScreen.style.display  = "none";
   els.phoneView.style.display   = "none";
-  if (els.qrEl) els.qrEl.style.display = "none"; // hide QR code safely
 }
 function showGame() {
   els.gameScreen.style.display  = "block";
@@ -470,6 +469,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
