@@ -78,7 +78,7 @@ function showPhoneOnly() {
   els.gameScreen.style.display  = "none";
   els.phoneView.style.display   = "block";
    // hide QR code safely
-  if (els.qrEl) els.qrEl.style.display = "none";
+  els.qrEl?.style.display        = "none";
 }
 
 // ====== Ensure Groups ======
@@ -171,13 +171,13 @@ async function updatePhoneView(group) {
   membersHtml += "</div>";
 
   // Update phone label with group + members
-  els.phoneLabel.innerHTML = progressText + membersHtml;
+  if (els.phoneLabel) els.phoneLabel.innerHTML = progressText + membersHtml;
 
   // Owner check → show/hide rename button
   if (currentGroupId && currentPlayerId) {
     const memberSnap = await get(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`));
     const member = memberSnap.val();
-    els.renameBtn.style.display = member?.isOwner ? "block" : "none";
+    if (els.renameBtn) els.renameBtn.style.display = member?.isOwner ? "block" : "none";
   }
 }
 
@@ -284,12 +284,13 @@ function addGroupShakeTx(groupId) {
 
 // ====== Animation ======
 function animateCupidJump(groupId) {
-  const lane=document.querySelector(`.lane[data-group-id="${groupId}"]`);
-  const cupid=lane?.querySelector(".cupid");
-  if(cupid) { cupid.classList.add("jump"); setTimeout(()=>cupid.classList.remove("jump"),600); }
-  if(els.phoneCupid&&els.phoneView.style.display==="block") {
+  const lane = document.querySelector(`.lane[data-group-id="${groupId}"]`);
+  const cupid = lane?.querySelector(".cupid");
+  if (cupid) { cupid.classList.add("jump"); setTimeout(() => cupid.classList.remove("jump"), 600); }
+
+  if (els.phoneCupid && els.phoneView?.style.display === "block") {
     els.phoneCupid.classList.add("jump");
-    setTimeout(()=>els.phoneCupid.classList.remove("jump"),600);
+    setTimeout(() => els.phoneCupid.classList.remove("jump"), 600);
   }
 }
 
@@ -356,7 +357,7 @@ onValue(ref(db,"winner"),async(snap)=>{
       winnerCupid.classList.add("land");
     }
     if(winnerGoal) winnerGoal.src="img/goal.png";
-    els.winnerPopup.style.display="flex";
+    if (els.winnerPopup) els.winnerPopup.style.display = "flex";
   } catch(err) { console.error("Winner fetch failed:",err); }
 });
 
@@ -469,6 +470,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
