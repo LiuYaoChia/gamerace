@@ -366,6 +366,9 @@ async function startGame() {
 
   // then start the game
   await set(ref(db, "gameState"), "playing");
+   // ✅ hide the lobby/setup UI
+  const setup = document.getElementById("setup-screen");
+  if (setup) setup.style.display = "none";
 }
 
 if (isPhone) {
@@ -448,4 +451,5 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
