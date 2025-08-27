@@ -388,33 +388,26 @@ els.leaveBtn?.addEventListener("click", async () => {
   const memberSnap = await get(memberRef);
   const member = memberSnap.val();
 
-  // 1️⃣ Remove this player from Firebase
+  // 1️⃣ Remove this player
   await remove(memberRef);
 
-  // 2️⃣ If this player was the owner → transfer ownership
-  if (member?.isOwner) {
-    const groupSnap = await get(ref(db, `groups/${currentGroupId}/members`));
-    const members = groupSnap.val();
+  // 2️⃣ If this player was the owner → transfer ownership if members remain
+  const groupMembersRef = ref(db, `groups/${currentGroupId}/members`);
+  const groupSnap = await get(groupMembersRef);
+  const members = groupSnap.val();
 
-    if (members) {
-      const firstKey = Object.keys(members)[0];
-      if (firstKey) {
-        await update(ref(db, `groups/${currentGroupId}/members/${firstKey}`), {
-          isOwner: true
-        });
-      }
+  if (member?.isOwner && members) {
+    const firstKey = Object.keys(members)[0];
+    if (firstKey) {
+      await update(ref(db, `groups/${currentGroupId}/members/${firstKey}`), {
+        isOwner: true
+      });
     }
   }
 
-  // 3️⃣ Auto-reset empty group
-  const groupSnap = await get(ref(db, `groups/${currentGroupId}/members`));
-  const remainingMembers = groupSnap.val();
-  if (!remainingMembers || Object.keys(remainingMembers).length === 0) {
-    await update(ref(db, `groups/${currentGroupId}`), {
-      members: {},
-      shakes: 0,
-      progress: 0
-    });
+  // 3️⃣ If no members left → remove the whole group
+  if (!members || Object.keys(members).length === 0) {
+    await remove(ref(db, `groups/${currentGroupId}`));
   }
 
   // 4️⃣ Reset local vars
@@ -423,11 +416,9 @@ els.leaveBtn?.addEventListener("click", async () => {
   // 5️⃣ Switch back to lobby view
   els.phoneView.style.display = "none";
   els.form.style.display = "block";
-  els.leaveBtn.style.display = "none"; 
+  els.leaveBtn.style.display = "none";
   els.renameBtn.style.display = "none";
 });
-
-
 
 els.resetBtn?.addEventListener("click",async()=>{
   if(!confirm("Reset ALL groups and players?")) return;
@@ -460,14 +451,3 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 ensureGroups().then(showSetup);
-
-
-
-
-
-
-
-
-
-
-
