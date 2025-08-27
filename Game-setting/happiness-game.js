@@ -367,7 +367,7 @@ async function startGame() {
   // then start the game
   await set(ref(db, "gameState"), "playing");
    // ✅ hide the lobby/setup UI
-  const setup = document.getElementById("setup-screen");
+  const setup = document.getElementById("player-setup");
   if (setup) setup.style.display = "none";
 }
 
@@ -451,5 +451,6 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
