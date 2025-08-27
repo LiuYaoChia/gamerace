@@ -422,10 +422,7 @@ els.leaveBtn?.addEventListener("click", async () => {
 
 els.resetBtn?.addEventListener("click",async()=>{
   if(!confirm("Reset ALL groups and players?")) return;
-  await ensureGroups();
-  for(let i=1;i<=6;i++) {
-    await update(ref(db,`groups/${i}`),{shakes:0,progress:0,members:{}});
-  }
+  await remove(ref(db, "groups"));
   await remove(ref(db,"winner"));
   await set(ref(db,"gameState"),"lobby");
   currentGroupId=null;
@@ -450,4 +447,4 @@ els.renameBtn?.addEventListener("click", async () => {
 
 
 // ====== Boot ======
-ensureGroups().then(showSetup);
+showSetup();
