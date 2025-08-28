@@ -23,6 +23,7 @@ const db   = getDatabase(app);
 const auth = getAuth(app);
 
 const isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isHost = !isPhone; // desktop can be host
 
 // ====== Config ======
 const STEP_PERCENT       = 3;
@@ -64,6 +65,15 @@ let currentGroupId  = null;
 let lastShakeTime   = 0;
 
 // ====== UI Helpers ======
+if (isHost) {
+  if (els.form) els.form.style.display = "none"; // hide the join form
+  els.startBtn.style.display = "inline-block";   // show Start Game button
+  els.resetBtn.style.display = "inline-block";   // show Reset button
+} else {
+  els.startBtn.style.display = "none"; // phone doesn't show start button
+  els.resetBtn.style.display = "none";
+}
+
 function showSetup() {
   els.setupScreen.style.display = "block";
   els.gameScreen.style.display  = "none";
@@ -207,65 +217,66 @@ signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
 onAuthStateChanged(auth,(user)=>{ if(user) currentPlayerId=user.uid; });
 
 // ====== Join Group ======
-els.form?.addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  const name=(els.nameInput.value||"").trim();
-  const groupId=els.groupSelect.value||"";
-  if(!name||!groupId) return;
+if (!isHost) {
+  els.form?.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    const name=(els.nameInput.value||"").trim();
+    const groupId=els.groupSelect.value||"";
+    if(!name||!groupId) return;
 
-  const groupRef=ref(db,`groups/${groupId}`);
-  const snap=await get(groupRef);
-  if(!snap.exists()) {
-    await set(groupRef,{
-      name:groupId.toString(),members:{},shakes:0,progress:0,
-      cupidIndex:(Number(groupId)-1)%cupidVariants.length
-    });
-  }
-  const group=(await get(groupRef)).val();
-
-  // prevent dup names
-  if(Object.values(group.members||{}).some(m=>m?.name===name)) {
-    alert("Name already taken in this group!");
-    return;
-  }
-
-  currentGroupId=groupId;
-  // Check if group is empty → first player = owner
-  const isFirstPlayer = !group.members || Object.keys(group.members).length === 0;
-
-  await update(groupRef, {
-    [`members/${currentPlayerId}`]: {
-      name,
-      joinedAt: Date.now(),
-      isOwner: isFirstPlayer // ✅ mark owner if first player
+    const groupRef=ref(db,`groups/${groupId}`);
+    const snap=await get(groupRef);
+    if(!snap.exists()) {
+      await set(groupRef,{
+        name:groupId.toString(),members:{},shakes:0,progress:0,
+        cupidIndex:(Number(groupId)-1)%cupidVariants.length
+      });
     }
-  });
-  onDisconnect(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`)).remove();
-  els.nameInput.value="";
+    const group=(await get(groupRef)).val();
 
-  if (isPhone) {
-    els.startBtn.style.display = "none";
-    els.resetBtn.style.display = "none";
-    els.leaveBtn.style.display = "block"; // show the leave button when joined
+    // prevent dup names
+    if(Object.values(group.members||{}).some(m=>m?.name===name)) {
+      alert("Name already taken in this group!");
+      return;
+    }
 
-    // ✅ Immediately switch to phone view (hide form, show waiting screen)
-    showPhoneOnly();
-    els.phoneLabel.textContent = "等待遊戲開始...";
+    currentGroupId=groupId;
+    // Check if group is empty → first player = owner
+    const isFirstPlayer = !group.members || Object.keys(group.members).length === 0;
 
-    // ✅ Always listen to your group → update name/progress/owner status
-    onValue(groupRef, s => updatePhoneView(s.val() || {}));
-
-    // ✅ Also listen for game state → if playing, keep phone view active
-    onValue(ref(db, "gameState"), snap => {
-      if (snap.val() === "playing") {
-        showPhoneOnly();
+    await update(groupRef, {
+      [`members/${currentPlayerId}`]: {
+        name,
+        joinedAt: Date.now(),
+        isOwner: isFirstPlayer // ✅ mark owner if first player
       }
     });
-  } else {
-    els.startBtn.disabled = false; // enable Start Game on computer
-  }
-});
+    onDisconnect(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`)).remove();
+    els.nameInput.value="";
 
+    if (isPhone) {
+      els.startBtn.style.display = "none";
+      els.resetBtn.style.display = "none";
+      els.leaveBtn.style.display = "block"; // show the leave button when joined
+
+      // ✅ Immediately switch to phone view (hide form, show waiting screen)
+      showPhoneOnly();
+      els.phoneLabel.textContent = "等待遊戲開始...";
+
+      // ✅ Always listen to your group → update name/progress/owner status
+      onValue(groupRef, s => updatePhoneView(s.val() || {}));
+
+      // ✅ Also listen for game state → if playing, keep phone view active
+      onValue(ref(db, "gameState"), snap => {
+        if (snap.val() === "playing") {
+          showPhoneOnly();
+        }
+      });
+    } else {
+      els.startBtn.disabled = false; // enable Start Game on computer
+    }
+  });
+}
  
 // ====== Shake Handling ======
 els.motionBtn?.addEventListener("click",()=>{
@@ -436,6 +447,11 @@ if (isPhone) {
   els.phoneLabel.textContent = "等待遊戲開始...";
 }
 
+// If on desktop, enable Start Game immediately
+if (!isPhone && els.startBtn) {
+  els.startBtn.disabled = false;
+}
+
 els.leaveBtn?.addEventListener("click", async () => {
   if (!currentGroupId || !currentPlayerId) return;
 
@@ -505,3 +521,4 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup(); 
+
