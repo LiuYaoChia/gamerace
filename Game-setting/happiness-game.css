@@ -218,3 +218,65 @@ body {
   70%  { transform: translate(-50%, -60%) scale(0.95); }
   100% { transform: translate(-50%, -30%) scale(1); }
 }
+
+/* Phone overlay container */
+#phone-view{
+  position: fixed;
+  inset: 0;
+  display: none;                /* JS sets to flex */
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 999;                 /* above background/QR */
+  pointer-events: auto;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI",
+               Roboto, "Noto Sans", "PingFang TC", "Heiti TC", "Microsoft JhengHei", sans-serif;
+}
+
+/* Glass panel */
+#phone-panel.glass{
+  width: min(92vw, 420px);
+  border-radius: 16px;
+  padding: 16px 18px;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  color: #fff;
+  text-align: center;
+}
+
+/* Clear, readable label */
+#phone-view .phone-label{
+  font-size: 18px;
+  line-height: 1.45;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-shadow: 0 1px 2px rgba(0,0,0,.5);
+}
+
+/* Make sure the cupid is visible and not absolutely positioned */
+#phone-view .phone-cupid{
+  display: block;
+  height: 120px;
+  margin: 6px auto 12px;
+  position: static;             /* override any absolute rules elsewhere */
+  transform: none;
+}
+
+/* Buttons */
+#phone-view .btn-row{ display:flex; gap:10px; justify-content:center; }
+#phone-view .btn{
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  backdrop-filter: blur(4px);
+}
+#phone-view .btn.secondary{ background: rgba(255,255,255,.15); color:#fff; }
+#phone-view .btn.danger{ background: #e74c3c; color:#fff; }
+
+/* If you still use .progress-label elsewhere, ensure the phone label doesn't inherit it */
+#phone-view .progress-label{ position: static !important; right:auto; top:auto; }
