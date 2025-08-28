@@ -80,49 +80,23 @@
 </div>
   
 <!-- 📱 Phone-only view -->
-<div id="phone-view" style="display:none; text-align:center; margin-top:40px;">
-  <div style="
-    position:relative; 
-    display:inline-block; 
-    background:rgba(0,0,0,0.5); 
-    padding:20px; 
-    border-radius:20px; 
-    backdrop-filter:blur(10px);
-    box-shadow:0 4px 12px rgba(0,0,0,0.3);
-    color:white;
-    font-family:'Segoe UI', 'Helvetica Neue', sans-serif;
-    ">
-    
-    <div id="phone-label" 
-         class="progress-label" 
-         style="font-size:18px; font-weight:600; margin-bottom:15px;">
-      Waiting...
+<div id="phone-view" style="display:none;">
+  <div id="phone-panel" class="glass">
+    <div id="phone-label" class="phone-label">Waiting...</div>
+    <img id="phone-cupid" alt="Cupid" class="phone-cupid" />
+    <div class="btn-row">
+      <button id="rename-group-btn" class="btn secondary" style="display:none;">重新命名組別</button>
+      <button id="leave-group-btn"  class="btn danger"    style="display:none;">離開組別</button>
     </div>
-
-    <img id="phone-cupid" 
-         src="img/transparent.png" 
-         class="cupid" 
-         style="height:120px; margin:10px auto; display:block;" />
-
-    <button id="rename-group-btn" 
-            style="margin-top:12px; padding:10px 16px; border:none; border-radius:12px; 
-                   background:#3498db; color:white; font-size:16px; font-weight:600; display:none;">
-      ✏️ 重新命名組別
-    </button>
-
-    <button id="leave-group-btn" 
-            style="margin-top:12px; padding:10px 16px; border:none; border-radius:12px; 
-                   background:#e74c3c; color:white; font-size:16px; font-weight:600; display:none;">
-      🚪 離開組別
-    </button>
-
   </div>
 </div>
+
 
 
 <script type="module" src="happiness-game.js"></script>
 </body>
 </html>
+
 
 
 
