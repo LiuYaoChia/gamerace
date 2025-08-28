@@ -407,7 +407,7 @@ async function startGame() {
 
 if (isPhone) {
   els.startBtn.style.display = "none";
-  els.resetBtn.style.display = "none"
+  els.resetBtn.style.display = "none";
 } else {
   els.startBtn?.addEventListener("click", async () => {
     const pw = prompt("請輸入管理密碼才能開始遊戲:");
@@ -488,6 +488,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
