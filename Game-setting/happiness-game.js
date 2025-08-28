@@ -84,6 +84,7 @@ function showPhoneOnly() {
   if (els.qrEl)        els.qrEl.style.display       = "none";
   if (els.phoneLabel)  els.phoneLabel.style.display = "block";
   if (els.phoneCupid)  els.phoneCupid.style.display = "block";
+  if (els.resetBtn) els.resetBtn.style.display = "none";
 }
 
 
@@ -449,6 +450,7 @@ els.leaveBtn?.addEventListener("click", async () => {
   // 5️⃣ Switch back to lobby view
   els.phoneView.style.display = "none";
   els.form.style.display = "block";
+  els.setupScreen.style.display = "block";  // ✅ go back to lobby
   els.leaveBtn.style.display = "none";
   els.renameBtn.style.display = "none";
 });
@@ -482,6 +484,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
