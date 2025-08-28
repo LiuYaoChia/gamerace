@@ -453,6 +453,8 @@ els.leaveBtn?.addEventListener("click", async () => {
   els.setupScreen.style.display = "block";  // ✅ go back to lobby
   els.leaveBtn.style.display = "none";
   els.renameBtn.style.display = "none";
+  // ✅ hide phone QR view for all phones
+  if (isPhone) showPhoneOnly(); 
 });
 
 els.resetBtn?.addEventListener("click",async()=>{
@@ -484,6 +486,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
