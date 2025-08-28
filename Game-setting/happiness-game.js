@@ -426,6 +426,11 @@ if (isPhone) {
   });
 }
 
+if (isPhone) {
+  showPhoneOnly();
+  els.phoneLabel.textContent = "等待遊戲開始...";
+}
+
 els.leaveBtn?.addEventListener("click", async () => {
   if (!currentGroupId || !currentPlayerId) return;
 
@@ -495,6 +500,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
