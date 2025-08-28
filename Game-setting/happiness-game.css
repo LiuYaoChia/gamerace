@@ -280,3 +280,7 @@ body {
 
 /* If you still use .progress-label elsewhere, ensure the phone label doesn't inherit it */
 #phone-view .progress-label{ position: static !important; right:auto; top:auto; }
+
+/* playful hop */
+@keyframes hop { 0%{transform:translateY(0)} 30%{transform:translateY(-10px)} 60%{transform:translateY(0)} 100%{transform:translateY(0)} }
+#phone-view .phone-cupid.jump{ animation: hop 0.6s ease; }
