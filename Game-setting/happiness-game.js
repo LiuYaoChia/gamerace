@@ -105,6 +105,8 @@ async function ensureGroups() {
   }
 }
 
+
+
 // ===== Add rename function =========
 async function renameGroup(newName) {
   if (!currentGroupId || !currentPlayerId) return;
@@ -237,6 +239,7 @@ els.form?.addEventListener("submit", async (e)=>{
 
   if (isPhone) {
     els.startBtn.style.display = "none";
+    els.resetBtn.style.display = "none";
     els.leaveBtn.style.display = "block"; // show the leave button when joined
 
     // ✅ Immediately switch to phone view (hide form, show waiting screen)
@@ -484,6 +487,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
