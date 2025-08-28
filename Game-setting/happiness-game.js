@@ -295,6 +295,11 @@ if(!isPhone){
   });
 }
 
+// If on desktop, enable Start Game immediately
+if (!isPhone && els.startBtn) {
+  els.startBtn.disabled = false;
+}
+
 // ==================== Leave / Reset / Exit ====================
 els.leaveBtn?.addEventListener("click", async ()=>{
   if(!currentGroupId || !currentPlayerId) return;
@@ -331,4 +336,5 @@ els.renameBtn?.addEventListener("click", async ()=>{
 
 // ==================== Boot ====================
 showSetup();
+
 
