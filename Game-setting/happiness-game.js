@@ -74,13 +74,18 @@ function showGame() {
   els.phoneView.style.display   = "none";
 }
 function showPhoneOnly() {
-  els.setupScreen.style.display = "none";
-  els.gameScreen.style.display  = "none";
-  els.phoneView.style.display   = "block";
-  if (els.qrEl) {
-    els.qrEl.style.display = "none";   // ✅ fixed
-  }   // 🔥 force hide QR on phone
+  if (els.setupScreen) els.setupScreen.style.display = "none";
+  if (els.gameScreen)  els.gameScreen.style.display  = "none";
+
+  if (els.phoneView) {
+    els.phoneView.style.display = "flex";   // center with flex (matches CSS)
+  }
+
+  if (els.qrEl)        els.qrEl.style.display       = "none";
+  if (els.phoneLabel)  els.phoneLabel.style.display = "block";
+  if (els.phoneCupid)  els.phoneCupid.style.display = "block";
 }
+
 
 // ====== Ensure Groups ======
 async function ensureGroups() {
@@ -179,6 +184,12 @@ async function updatePhoneView(group) {
     const memberSnap = await get(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`));
     const member = memberSnap.val();
     if (els.renameBtn) els.renameBtn.style.display = member?.isOwner ? "block" : "none";
+  }
+  // Set phone cupid image based on group's cupidIndex
+  if (els.phoneCupid) {
+    const idx = group.cupidIndex ?? 0;
+    els.phoneCupid.src = cupidVariants[idx];       // ← key fix
+    els.phoneCupid.alt = `Cupid of group ${group.name || currentGroupId}`;
   }
 }
 
@@ -471,6 +482,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
