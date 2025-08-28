@@ -77,6 +77,7 @@ function showPhoneOnly() {
   els.setupScreen.style.display = "none";
   els.gameScreen.style.display  = "none";
   els.phoneView.style.display   = "block";
+  els.qrEl?.style.display        = "none";   // 🔥 force hide QR on phone
 }
 
 // ====== Ensure Groups ======
@@ -468,6 +469,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
