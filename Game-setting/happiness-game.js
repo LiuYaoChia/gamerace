@@ -68,7 +68,12 @@ function showSetup() {
   els.setupScreen.style.display = "block";
   els.gameScreen.style.display  = "none";
   els.phoneView.style.display   = "none";
-  els.qrEl.style.display       = "block";
+  // only show QR code on desktop
+  if (!isPhone && els.qrEl) {
+    els.qrEl.style.display = "block";
+  } else if (els.qrEl) {
+    els.qrEl.style.display = "none";
+  }
 }
 function showGame() {
   els.gameScreen.style.display  = "block";
@@ -490,6 +495,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
