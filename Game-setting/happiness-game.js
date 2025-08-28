@@ -465,7 +465,7 @@ els.resetBtn?.addEventListener("click",async()=>{
   await set(ref(db,"gameState"),"lobby");
   currentGroupId=null;
   showSetup();
-  if (isPhone) {
+  if (isPhone && els.resetBtn) {
   els.resetBtn.style.display = "none";
   }
 });
@@ -490,6 +490,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
