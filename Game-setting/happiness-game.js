@@ -453,10 +453,6 @@ els.leaveBtn?.addEventListener("click", async () => {
   els.setupScreen.style.display = "block";  // ✅ go back to lobby
   els.leaveBtn.style.display = "none";
   els.renameBtn.style.display = "none";
-
-  if (isPhone) {
-  els.leaveBtn.style.display = "none";
-  }
 });
 
 els.resetBtn?.addEventListener("click",async()=>{
@@ -488,6 +484,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
+
 
 
 
