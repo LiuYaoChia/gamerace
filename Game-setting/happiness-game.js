@@ -85,6 +85,7 @@ function showPhoneOnly() {
   if (els.phoneLabel) els.phoneLabel.style.display = "block";
   if (els.phoneCupid) els.phoneCupid.style.display = "block";
   if (els.resetBtn) els.resetBtn.style.display = "none";
+  if (els.resetBtn) els.leaveBtn.style.display = "block";
 }
 
 // ==================== Firebase Helpers ====================
@@ -330,3 +331,4 @@ els.renameBtn?.addEventListener("click", async ()=>{
 
 // ==================== Boot ====================
 showSetup();
+
