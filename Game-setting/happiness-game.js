@@ -585,9 +585,10 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
-if (isPhone) {
-  ensureGroups().then(() => renderGroupChoices());
-}
+ensureGroups().then(() => {
+  if (!isHost) renderGroupChoices(); // phones can select groups
+});
+
 
 
 
