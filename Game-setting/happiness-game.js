@@ -515,8 +515,8 @@ if (isHost) {
 }
 
 // ====== Exit for Phones ======
-if (!isHost) {
-  els.leaveBtn?.addEventListener("click", async () => {
+if (isHost) {
+  els.exitBtn?.addEventListener("click", async () => {
     if (currentGroupId && currentPlayerId) {
       await remove(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`));
     }
@@ -540,6 +540,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup(); 
+
 
 
 
