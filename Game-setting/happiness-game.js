@@ -58,6 +58,7 @@ const els = {
   leaveBtn:    document.getElementById("leave-group-btn"),
   renameBtn:   document.getElementById("rename-group-btn"),
   qrEl:        document.getElementById("qr-code"),
+  waitingMsg:  document.getElementById("waiting-msg"),
 };
 
 let currentPlayerId = null;
@@ -257,7 +258,7 @@ if (!isHost) {
     els.setupScreen.style.display = "none";
     els.form.style.display = "none";
     els.phoneView.style.display = "flex";
-    els.phoneLabel.textContent = "等待遊戲開始...";
+    if (els.waitingMsg) els.waitingMsg.style.display = "block";
     els.leaveBtn.style.display = "block";
     els.renameBtn.style.display = "block";
     
@@ -266,7 +267,10 @@ if (!isHost) {
     onValue(ref(db,"gameState"),snap=>{
       currentGameState = snap.val() || "lobby";
       if (currentGameState === "playing") {
+        if (els.waitingMsg) els.waitingMsg.style.display = "none";
         els.phoneLabel.textContent = "比賽開始！搖動手機！";
+      } else if (currentGameState === "waiting") {
+        if (els.waitingMsg) els.waitingMsg.style.display = "block";
       }
     });
 
@@ -539,6 +543,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup(); 
+
 
 
 
