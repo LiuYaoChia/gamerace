@@ -122,6 +122,48 @@ async function ensureGroups() {
   }
 }
 
+// ====== Render Groups as Avatar Buttons ======
+async function renderGroupChoices() {
+  const groupsSnap = await get(ref(db, "groups"));
+  const groups = groupsSnap.val() || {};
+
+  const container = document.getElementById("group-choices");
+  container.innerHTML = "";
+
+  Object.entries(groups)
+    .sort((a, b) => Number(a[0]) - Number(b[0]))
+    .forEach(([gid, group]) => {
+      const idx = group.cupidIndex ?? 0;
+
+      const btn = document.createElement("div");
+      btn.className = "group-choice";
+      btn.style.cssText = `
+        cursor:pointer;
+        text-align:center;
+        padding:8px;
+        border:2px solid transparent;
+        border-radius:10px;
+      `;
+
+      btn.innerHTML = `
+        <img src="${cupidVariants[idx]}" style="height:60px;"><br>
+        Group ${group.name}
+      `;
+
+      btn.addEventListener("click", () => {
+        // Highlight selection
+        document.querySelectorAll(".group-choice").forEach(el => {
+          el.style.borderColor = "transparent";
+        });
+        btn.style.borderColor = "#4f46e5"; // highlight border (purple)
+
+        // Set hidden field
+        document.getElementById("group-select").value = gid;
+      });
+
+      container.appendChild(btn);
+    });
+}
 
 
 // ===== Add rename function =========
@@ -543,6 +585,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup(); 
+
 
 
 
