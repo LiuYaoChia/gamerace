@@ -524,8 +524,7 @@ els.exitBtn?.addEventListener("click", async () => {
   // Back to join form
   els.phoneView.style.display = "none";
   els.setupScreen.style.display = "block";
- });
-}
+});
 
 
 
@@ -539,6 +538,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup(); 
+
 
 
 
