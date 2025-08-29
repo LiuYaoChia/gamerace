@@ -254,9 +254,13 @@ if (!isHost) {
     els.nameInput.value="";
 
     // Switch to waiting screen
+    els.setupScreen.style.display = "none";
     els.form.style.display = "none";
     els.phoneView.style.display = "flex";
     els.phoneLabel.textContent = "等待遊戲開始...";
+    els.leaveBtn.style.display = "block";
+    els.renameBtn.style.display = "block";
+    
 
     // Listen for game state
     onValue(ref(db,"gameState"),snap=>{
@@ -536,5 +540,6 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup(); 
+
 
 
