@@ -20,14 +20,8 @@
   <h2>💘 蚵仔，你心底的名字</h2>
   <form id="name-form">
     <input type="text" id="player-name" placeholder="Enter your name" required />
-    <select id="group-select">
-      <option value="1">Group 1</option>
-      <option value="2">Group 2</option>
-      <option value="3">Group 3</option>
-      <option value="4">Group 4</option>
-      <option value="5">Group 5</option>
-      <option value="6">Group 6</option>
-    </select>
+    <div id="group-choices" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;"></div>
+    <input type="hidden" id="group-select">
     <button type="submit">Join Race</button>
   </form>
   
@@ -98,6 +92,7 @@
 <script type="module" src="happiness-game.js"></script>
 </body>
 </html>
+
 
 
 
