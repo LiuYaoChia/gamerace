@@ -234,47 +234,40 @@ if (!isHost) {
     }
     const group=(await get(groupRef)).val();
 
-    // prevent dup names
+    // prevent duplicate names
     if(Object.values(group.members||{}).some(m=>m?.name===name)) {
       alert("Name already taken in this group!");
       return;
     }
 
     currentGroupId=groupId;
-    // Check if group is empty → first player = owner
     const isFirstPlayer = !group.members || Object.keys(group.members).length === 0;
 
     await update(groupRef, {
       [`members/${currentPlayerId}`]: {
         name,
         joinedAt: Date.now(),
-        isOwner: isFirstPlayer // ✅ mark owner if first player
+        isOwner: isFirstPlayer
       }
     });
     onDisconnect(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`)).remove();
     els.nameInput.value="";
 
-    if (isPhone) {
-      els.startBtn.style.display = "none";
-      els.resetBtn.style.display = "none";
-      els.leaveBtn.style.display = "block"; // show the leave button when joined
+    // Switch to waiting screen
+    els.form.style.display = "none";
+    els.phoneView.style.display = "flex";
+    els.phoneLabel.textContent = "等待遊戲開始...";
 
-      // ✅ Immediately switch to phone view (hide form, show waiting screen)
-      showPhoneOnly();
-      els.phoneLabel.textContent = "等待遊戲開始...";
+    // Listen for game state
+    onValue(ref(db,"gameState"),snap=>{
+      currentGameState = snap.val() || "lobby";
+      if (currentGameState === "playing") {
+        els.phoneLabel.textContent = "比賽開始！搖動手機！";
+      }
+    });
 
-      // ✅ Always listen to your group → update name/progress/owner status
-      onValue(groupRef, s => updatePhoneView(s.val() || {}));
-
-      // ✅ Also listen for game state → if playing, keep phone view active
-      onValue(ref(db, "gameState"), snap => {
-        if (snap.val() === "playing") {
-          showPhoneOnly();
-        }
-      });
-    } else {
-      els.startBtn.disabled = false; // enable Start Game on computer
-    }
+    // Listen for group updates
+    onValue(groupRef, s => updatePhoneView(s.val() || {}));
   });
 }
  
@@ -401,37 +394,26 @@ els.winnerExit?.addEventListener("click",async()=>{
 
 // ====== Start / Reset / Exit ======
 async function startGame() {
-  // remove empty groups before starting
-  const snap = await get(ref(db, "groups"));
+  // Reset progress to 0 for all groups
+  const snap = await get(ref(db,"groups"));
   const groups = snap.val() || {};
-
-  for (const [gid, g] of Object.entries(groups)) {
-    if (!g.members || Object.keys(g.members).length === 0) {
-      await remove(ref(db, `groups/${gid}`));
-    }
-    // calculate initial progress (example: 10% + 5% per member)
-    const memberCount = g.members ? Object.keys(g.members).length : 0;
-    const initialProgress = Math.min(100, 10 + memberCount * 5);
-
-    await update(ref(db, `groups/${gid}`), { progress: initialProgress });
+  const updates = {};
+  for (const gid in groups) {
+    updates[`groups/${gid}/progress`] = 0;
+    updates[`groups/${gid}/shakes`] = 0;
   }
+  await update(ref(db), updates);
 
-  // then start the game
-  await set(ref(db, "gameState"), "playing");
-   // ✅ hide the lobby/setup UI
-  els.setupScreen.style.display = "none";  
-  els.playerList.innerHTML = "";            // ✅ clear player list
-  // ✅ hide QR code
-  if (els.qrEl) els.qrEl.style.display = "none";
-  // ✅ hide phone QR view for all phones
-  if (isPhone) showPhoneOnly(); // phone still sees the game but not QR
+  // Clear winner + set game state
+  await remove(ref(db,"winner"));
+  await set(ref(db,"gameState"),"playing");
+
+  // Switch UI
+  els.setupScreen.style.display = "none";
+  els.gameScreen.style.display = "block";
 }
 
-if (isPhone) {
-  els.startBtn.style.display = "none";
-  els.resetBtn.style.display = "none";
-  els.qrEl.style.display     = "none";
-} else {
+if (isHost) {
   els.startBtn?.addEventListener("click", async () => {
     const pw = prompt("請輸入管理密碼才能開始遊戲:");
     if (pw === "1234") {
@@ -442,9 +424,12 @@ if (isPhone) {
   });
 }
 
+
 if (isPhone) {
   showPhoneOnly();
-  els.phoneLabel.textContent = "等待遊戲開始...";
+  els.startBtn.style.display = "none";
+  els.resetBtn.style.display = "none";
+  els.qrEl.style.display     = "none";
 }
 
 // If on desktop, enable Start Game immediately
@@ -492,22 +477,52 @@ els.leaveBtn?.addEventListener("click", async () => {
   els.renameBtn.style.display = "none";
 });
 
-els.resetBtn?.addEventListener("click",async()=>{
-  if(!confirm("Reset ALL groups and players?")) return;
-  await remove(ref(db, "groups"));
+// ====== Reset Game (Host Only) ======
+async function resetGame() {
+  // Clear all groups
+  const snap = await get(ref(db,"groups"));
+  const groups = snap.val() || {};
+  const updates = {};
+  for (const gid in groups) {
+    updates[`groups/${gid}/members`] = {};
+    updates[`groups/${gid}/progress`] = 0;
+    updates[`groups/${gid}/shakes`] = 0;
+  }
+  await update(ref(db), updates);
+
+  // Clear winner + set gameState to lobby
   await remove(ref(db,"winner"));
   await set(ref(db,"gameState"),"lobby");
-  currentGroupId=null;
-  showSetup();
-});
 
-els.exitBtn?.addEventListener("click",async()=>{
-  if(currentPlayerId&&currentGroupId) {
-    await remove(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`));
-  }
-  await set(ref(db,"gameState"),"lobby");
-  currentGroupId=null; showSetup();
-});
+  // Switch UI (host side)
+  els.gameScreen.style.display = "none";
+  els.setupScreen.style.display = "block";
+}
+
+if (isHost) {
+  els.resetBtn?.addEventListener("click", async () => {
+    const pw = prompt("請輸入管理密碼才能重置遊戲:");
+    if (pw === "123") {
+      await resetGame();
+    } else {
+      alert("密碼錯誤！");
+    }
+  });
+}
+
+// ====== Exit for Phones ======
+if (!isHost) {
+  els.leaveBtn?.addEventListener("click", async () => {
+    if (currentGroupId && currentPlayerId) {
+      await remove(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`));
+    }
+    currentGroupId = null;
+
+    // Back to join form
+    els.phoneView.style.display = "none";
+    els.form.style.display = "block";
+  });
+}
 
 
 
@@ -521,4 +536,5 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup(); 
+
 
