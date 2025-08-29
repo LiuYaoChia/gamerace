@@ -515,17 +515,16 @@ if (isHost) {
 }
 
 // ====== Exit for Phones ======
-if (isHost) {
-  els.exitBtn?.addEventListener("click", async () => {
-    if (currentGroupId && currentPlayerId) {
-      await remove(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`));
-    }
-    currentGroupId = null;
+els.exitBtn?.addEventListener("click", async () => {
+  if (currentGroupId && currentPlayerId) {
+    await remove(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`));
+  }
+  currentGroupId = null;
 
-    // Back to join form
-    els.phoneView.style.display = "none";
-    els.form.style.display = "block";
-  });
+  // Back to join form
+  els.phoneView.style.display = "none";
+  els.setupScreen.style.display = "block";
+ });
 }
 
 
@@ -540,6 +539,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup(); 
+
 
 
 
