@@ -69,6 +69,7 @@ if (isHost) {
   if (els.form) els.form.style.display = "none"; // hide the join form
   els.startBtn.style.display = "inline-block";   // show Start Game button
   els.resetBtn.style.display = "inline-block";   // show Reset button
+  els.gameScreen.style.display = "none";   // show Reset button
 } else {
   els.startBtn.style.display = "none"; // phone doesn't show start button
   els.resetBtn.style.display = "none";
@@ -538,6 +539,7 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup(); 
+
 
 
 
