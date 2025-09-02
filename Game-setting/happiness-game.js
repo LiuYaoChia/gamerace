@@ -260,7 +260,6 @@ signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
 onAuthStateChanged(auth,(user)=>{ if(user) currentPlayerId=user.uid; });
 
 // ====== Join Group ======
-// ====== Join Group ======
 if (!isHost) {
   els.form?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -601,6 +600,8 @@ els.renameBtn?.addEventListener("click", async () => {
 // ====== Boot ======
 showSetup();
 if (!isHost) renderGroupChoices(); // phones can select groups
+// ✅ 確保一開始有 6 個組別存在
+ensureGroups();
 
 
 
