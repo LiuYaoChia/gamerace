@@ -260,30 +260,44 @@ signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
 onAuthStateChanged(auth,(user)=>{ if(user) currentPlayerId=user.uid; });
 
 // ====== Join Group ======
+// ====== Join Group ======
 if (!isHost) {
-  els.form?.addEventListener("submit", async (e)=>{
+  els.form?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const name=(els.nameInput.value||"").trim();
-    const groupId=els.groupSelect.value||"";
-    if(!name||!groupId) return;
+    const name = (els.nameInput.value || "").trim();
+    const groupId = els.groupSelect.value || "";
+    if (!name || !groupId) return;
 
-    const groupRef=ref(db,`groups/${groupId}`);
-    const snap=await get(groupRef);
-    if(!snap.exists()) {
-      await set(groupRef,{
-        name:groupId.toString(),members:{},shakes:0,progress:0,
-        cupidIndex:(Number(groupId)-1)%cupidVariants.length
+    const groupRef = ref(db, `groups/${groupId}`);
+    let snap = await get(groupRef);
+    let group = snap.val();
+
+    // if group does not exist → create it
+    if (!snap.exists()) {
+      await set(groupRef, {
+        name: groupId.toString(),
+        members: {},
+        shakes: 0,
+        progress: 0,
+        cupidIndex: (Number(groupId) - 1) % cupidVariants.length
       });
+      group = (await get(groupRef)).val();
     }
-    const group=(await get(groupRef)).val();
 
-    // prevent duplicate names
-    if(Object.values(group.members||{}).some(m=>m?.name===name)) {
-      alert("Name already taken in this group!");
+    // ✅ limit group size (max 6 players)
+    const memberCount = group.members ? Object.keys(group.members).length : 0;
+    if (memberCount >= 6) {
+      alert("此組別已滿 6 人，請選擇其他組別！");
       return;
     }
 
-    currentGroupId=groupId;
+    // prevent duplicate names
+    if (Object.values(group.members || {}).some(m => m?.name === name)) {
+      alert("此名字已有人使用！");
+      return;
+    }
+
+    currentGroupId = groupId;
     const isFirstPlayer = !group.members || Object.keys(group.members).length === 0;
 
     await update(groupRef, {
@@ -293,8 +307,9 @@ if (!isHost) {
         isOwner: isFirstPlayer
       }
     });
-    onDisconnect(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`)).remove();
-    els.nameInput.value="";
+
+    onDisconnect(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`)).remove();
+    els.nameInput.value = "";
 
     // Switch to waiting screen
     els.setupScreen.style.display = "none";
@@ -303,10 +318,9 @@ if (!isHost) {
     if (els.waitingMsg) els.waitingMsg.style.display = "block";
     els.leaveBtn.style.display = "block";
     els.renameBtn.style.display = "block";
-    
 
     // Listen for game state
-    onValue(ref(db,"gameState"),snap=>{
+    onValue(ref(db, "gameState"), snap => {
       currentGameState = snap.val() || "lobby";
       if (currentGameState === "playing") {
         if (els.waitingMsg) els.waitingMsg.style.display = "none";
@@ -320,6 +334,7 @@ if (!isHost) {
     onValue(groupRef, s => updatePhoneView(s.val() || {}));
   });
 }
+
  
 // ====== Shake Handling ======
 els.motionBtn?.addEventListener("click",()=>{
@@ -585,9 +600,8 @@ els.renameBtn?.addEventListener("click", async () => {
 
 // ====== Boot ======
 showSetup();
-ensureGroups().then(() => {
-  if (!isHost) renderGroupChoices(); // phones can select groups
-});
+if (!isHost) renderGroupChoices(); // phones can select groups
+
 
 
 
