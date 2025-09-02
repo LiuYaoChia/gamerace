@@ -35,6 +35,16 @@ const cupidVariants = [
   "img/groom4.png","img/groom5.png","img/groom6.png","img/groom7.png"
 ];
 
+// ====== Custom Group Names ======
+const customGroupNames = {
+  1: "粉色蚵仔",
+  2: "黃色蚵仔",
+  3: "紅色蚵仔",
+  4: "藍色蚵仔",
+  5: "黑色蚵仔",
+  6: "白色蚵仔"
+};
+
 // ====== DOM ======
 const els = {
   form:        document.getElementById("name-form"),
@@ -147,7 +157,7 @@ async function renderGroupChoices() {
 
       btn.innerHTML = `
         <img src="${cupidVariants[idx]}" style="height:60px;"><br>
-        Group ${group.name}
+        ${customGroupNames[gid] || `Group ${group.name}`}
       `;
 
       btn.addEventListener("click", () => {
@@ -218,7 +228,7 @@ function renderTrackAndRankings(groups) {
     .sort(([,a],[,b])=>(b.progress||0)-(a.progress||0))
     .forEach(([gid,group],idx)=>{
       const li=document.createElement("li");
-      li.textContent=`${idx+1}️⃣ Group ${group.name}: ${Math.floor(group.progress||0)}%`;
+      li.textContent = `${idx+1}️⃣ ${customGroupNames[gid] || `Group ${group.name}`}: ${Math.floor(group.progress||0)}%`;
       els.rankList.appendChild(li);
     });
 }
@@ -435,7 +445,7 @@ onValue(ref(db,"winner"),async(snap)=>{
   const winnerId=snap.val();
   if(!winnerId) { els.winnerPopup.style.display="none"; return; }
 
-  els.winnerMsg.textContent=`🏆 Winner: Group ${winnerId}!`;
+  els.winnerMsg.textContent=`🏆 Winner: ${customGroupNames[winnerId] || `Group ${winnerId}`}!`;
   try {
     const g=(await get(ref(db,`groups/${winnerId}`))).val()||{};
     const cupidSrc=cupidVariants[g.cupidIndex||0];
@@ -602,6 +612,7 @@ showSetup();
 if (!isHost) renderGroupChoices(); // phones can select groups
 // ✅ 確保一開始有 6 個組別存在
 ensureGroups();
+
 
 
 
