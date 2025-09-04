@@ -578,7 +578,7 @@ async function resetGame() {
   for (const gid in groups) {
     updates[`groups/${gid}/members`] = {};
     updates[`groups/${gid}/progress`] = 0;
-    updates[`groups/${gid}/shakes`] = 0;
+    updates[`groups/${gid}/name`] = customGroupNames[gid] || `Group ${gid}`; // 👈 force reset to custom name
   }
   await update(ref(db), updates);
 
@@ -630,6 +630,7 @@ showSetup();
 if (!isHost) renderGroupChoices(); // phones can select groups
 // ✅ 確保一開始有 6 個組別存在
 ensureGroups();
+
 
 
 
