@@ -122,7 +122,7 @@ async function ensureGroups() {
     const snap = await get(gRef);
     if (!snap.exists()) {
       await set(gRef, {
-        name: i.toString(),
+        name: customGroupNames[i] || i.toString(),
         members: {},
         shakes: 0,
         progress: 0,
@@ -213,7 +213,7 @@ function renderTrackAndRankings(groups) {
       .sort(([,a],[,b]) => (b.progress||0) - (a.progress||0))
       .forEach(([gid, group], idx) => {
         const li = document.createElement("li");
-        li.textContent = `${idx+1}️⃣ ${customGroupNames[gid] || `Group ${group.name}`}: ${Math.floor(group.progress||0)}%`;
+        li.textContent = `${idx+1}️⃣ ${group.name || `Group ${gid}`}: ${Math.floor(group.progress||0)}%`;
         els.rankList.appendChild(li);
       });
   
@@ -225,7 +225,7 @@ function renderTrackAndRankings(groups) {
     lane.innerHTML = `
       <div class="lane-inner" style="position:relative;height:70px;">
         <span class="player-name" style="position:absolute;left:8px;top:6px;font-weight:bold;">
-          ${customGroupNames[gid] || `Group ${group.name}`}
+         ${group.name || `Group ${gid}`}
         </span>
         <img class="cupid" src="${cupidVariants[group.cupidIndex ?? 0]}" 
              style="height:50px;position:absolute;top:50%;transform:translateY(-50%);left:0%">
@@ -244,7 +244,7 @@ function renderTrackAndRankings(groups) {
     .sort(([,a],[,b])=>(b.progress||0)-(a.progress||0))
     .forEach(([gid,group],idx)=>{
       const li=document.createElement("li");
-      li.textContent = `${idx+1}️⃣ ${customGroupNames[gid] || `Group ${group.name}`}: ${Math.floor(group.progress||0)}%`;
+      li.textContent = `${idx+1}️⃣ ${group.name || `Group ${gid}`}: ${Math.floor(group.progress||0)}%`;
       els.rankList.appendChild(li);
     });
 }
@@ -462,7 +462,7 @@ onValue(ref(db,"winner"),async(snap)=>{
   const winnerId=snap.val();
   if(!winnerId) { els.winnerPopup.style.display="none"; return; }
 
-  els.winnerMsg.textContent=`🏆 Winner: ${customGroupNames[winnerId] || `Group ${winnerId}`}!`;
+  els.winnerMsg.textContent = `🏆 Winner: ${group.name || `Group ${winnerId}`}!`;
   try {
     const g=(await get(ref(db,`groups/${winnerId}`))).val()||{};
     const cupidSrc=cupidVariants[g.cupidIndex||0];
@@ -502,6 +502,7 @@ async function startGame() {
   // Switch UI
   els.setupScreen.style.display = "none";
   els.gameScreen.style.display = "block";
+  els.qrEl.style.display     = "none";
 }
 
 if (isHost) {
@@ -629,6 +630,7 @@ showSetup();
 if (!isHost) renderGroupChoices(); // phones can select groups
 // ✅ 確保一開始有 6 個組別存在
 ensureGroups();
+
 
 
 
