@@ -85,17 +85,20 @@ body {
 }
 
 /* === GAME CONTAINER === */
-.game-container { max-width: 900px; margin: 2rem auto; }
-
+.game-container {
+  max-width: 1200px;   /* bigger console */
+  margin: 2rem auto;
+  padding: 0 1rem;     /* small padding so content never sticks to edge */
+}
 /* === TRACK (now auto-height and grouped) === */
 #track {
-  position: relative;
-  width: 100%;
-  border: 2px solid #005288;
+  width: 90%;         /* use more of the screen width */
+  max-width: 1200px;  /* prevent it from stretching too far */
+  margin: 20px auto;
+  padding: 20px;
   border-radius: 16px;
-  background: linear-gradient(90deg, #cceeff 0%, #aaddff 100%);
-  box-shadow: 0 0 12px rgba(0,0,0,0.2);
-  padding: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
 
 /* === GROUP TRACK CONTAINER === */
@@ -115,13 +118,17 @@ body {
 /* === LANE STYLING === */
 .track-lanes { position: relative; width: 100%; }
 .lane {
-  position: relative;
-  height: 60px;
-  margin: 8px 0;
-  background: #e0f7fa;
-  border-radius: 6px;
-  overflow: visible; /* allow label above */
-  border: 1px dashed #bde3e6;
+  height: 100px;
+  margin: 16px 0;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #d0ebff, #74c0fc);
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.2);
+}
+.lane .progress {
+  height: 100%;
+  background: linear-gradient(90deg, #4dabf7, #1864ab);
+  transition: width 0.8s ease-out;   /* smoother movement */
+  border-radius: inherit;
 }
 .lane span.player-name {
   position: absolute;
@@ -134,19 +141,20 @@ body {
 
 /* === RANKING PANEL === */
 .ranking-panel {
-  margin-top: 1rem;
-  background: rgba(255,255,255,0.9);
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.15);
-  font-size: 1.05em;
-  max-width: 520px;
-  margin-left: auto;
-  margin-right: auto;
+  margin-top: 2rem;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  font-size: 1.2rem;
+  line-height: 1.6;
 }
 .ranking-panel h3 { margin-bottom: 10px; color: #222; text-align: center; }
 #ranking-list { list-style: none; padding: 0; margin: 0; }
-#ranking-list > li { margin-bottom: 10px; }
+#ranking-list > li {
+  margin-bottom: 12px;
+  font-weight: 600;
+}
 #ranking-list ul { margin: 6px 0 0 16px; }
 
 /* === TIME UP OVERLAY === */
@@ -284,3 +292,4 @@ body {
 /* playful hop */
 @keyframes hop { 0%{transform:translateY(0)} 30%{transform:translateY(-10px)} 60%{transform:translateY(0)} 100%{transform:translateY(0)} }
 #phone-view .phone-cupid.jump{ animation: hop 0.6s ease; }
+
