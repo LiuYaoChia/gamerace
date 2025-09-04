@@ -201,16 +201,32 @@ async function renameGroup(newName) {
 function renderTrackAndRankings(groups) {
   els.track.innerHTML = "";
   els.rankList.innerHTML = "";
+  const entries = Object.entries(groups)
+    .filter(([, g]) => g.members && Object.keys(g.members).length > 0) // ← only non-empty
+    .sort((a,b)=> Number(a[0]) - Number(b[0]));
 
+    entries.forEach(([gid, group]) => {
+      // ... (same as before, with the updated player-name using customGroupNames)
+    });
+
+    entries
+      .sort(([,a],[,b]) => (b.progress||0) - (a.progress||0))
+      .forEach(([gid, group], idx) => {
+        const li = document.createElement("li");
+        li.textContent = `${idx+1}️⃣ ${customGroupNames[gid] || `Group ${group.name}`}: ${Math.floor(group.progress||0)}%`;
+        els.rankList.appendChild(li);
+      });
+  
   // lanes
   Object.entries(groups).sort((a,b)=>Number(a[0])-Number(b[0])).forEach(([gid, group]) => {
     const lane = document.createElement("div");
     lane.className = "lane";
     lane.dataset.groupId = gid;
-
     lane.innerHTML = `
       <div class="lane-inner" style="position:relative;height:70px;">
-        <span class="player-name" style="position:absolute;left:8px;top:6px;font-weight:bold;">Group ${group.name}</span>
+        <span class="player-name" style="position:absolute;left:8px;top:6px;font-weight:bold;">
+          ${customGroupNames[gid] || `Group ${group.name}`}
+        </span>
         <img class="cupid" src="${cupidVariants[group.cupidIndex ?? 0]}" 
              style="height:50px;position:absolute;top:50%;transform:translateY(-50%);left:0%">
         <img class="goal" src="img/goal.png" 
@@ -429,9 +445,10 @@ onValue(ref(db,"groups"),snap=>{
         const members = Object.values(g.members||{}).map(m=>`<li>${m.name}</li>`).join("");
         els.playerList.innerHTML += `
           <div class="group">
-            <h3>Group ${g.name}</h3>
+            <h3>${customGroupNames[gid] || `Group ${g.name}`}</h3>
             <ul>${members}</ul>
           </div>`;
+
       });
     } else {
       // clear player list when game started
@@ -612,6 +629,7 @@ showSetup();
 if (!isHost) renderGroupChoices(); // phones can select groups
 // ✅ 確保一開始有 6 個組別存在
 ensureGroups();
+
 
 
 
