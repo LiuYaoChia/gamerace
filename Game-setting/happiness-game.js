@@ -413,21 +413,25 @@ function animateCupidJump(groupId) {
 // ====== Global Listeners ======
 let currentGameState = "lobby"; // track state
 
-onValue(ref(db,"gameState"), snap=>{
+onValue(ref(db, "gameState"), snap => {
   currentGameState = snap.val() || "lobby";
+
   if (isPhone) {
-    if (currentGroupId) showPhoneOnly(); else showSetup();
+    if (!currentGroupId) {
+      // not joined yet → show setup
+      showSetup();
+    }
+    // else: already joined, handled by the join group listener
   } else {
+    // desktop host logic
     if (currentGameState === "lobby") {
       showSetup();
-      els.setupScreen.style.display = "block";// 👈 make sure it's visible
+      els.setupScreen.style.display = "block";
       els.gameScreen.style.display = "none";
-      showSetup();
     } else if (currentGameState === "playing") {
-      // ✅ show race view
-      els.setupScreen.style.display = "none";// 👈 hide lobby box when playing
+      els.setupScreen.style.display = "none";
       els.gameScreen.style.display = "block";
-      showGame();    
+      showGame();
     }
   }
 });
@@ -630,6 +634,7 @@ showSetup();
 if (!isHost) renderGroupChoices(); // phones can select groups
 // ✅ 確保一開始有 6 個組別存在
 ensureGroups();
+
 
 
 
