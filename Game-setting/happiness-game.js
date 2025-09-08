@@ -350,7 +350,7 @@ if (!isHost) {
       if (currentGameState === "playing") {
         if (els.waitingMsg) els.waitingMsg.style.display = "none";
         els.phoneLabel.textContent = "比賽開始！搖動手機！";
-      } else if (currentGameState === "waiting") {
+      } else
         if (els.waitingMsg) els.waitingMsg.style.display = "block";
       }
     });
@@ -404,7 +404,7 @@ function animateCupidJump(groupId) {
   const cupid = lane?.querySelector(".cupid");
   if (cupid) { cupid.classList.add("jump"); setTimeout(() => cupid.classList.remove("jump"), 600); }
 
-  if (els.phoneCupid && els.phoneView?.style.display === "block") {
+  if (els.phoneCupid && els.phoneView && els.phoneView.style.display !== "none") {
     els.phoneCupid.classList.add("jump");
     setTimeout(() => els.phoneCupid.classList.remove("jump"), 600);
   }
@@ -462,24 +462,31 @@ onValue(ref(db,"groups"),snap=>{
 });
 
 // ====== Winner ======
-onValue(ref(db,"winner"),async(snap)=>{
-  const winnerId=snap.val();
-  if(!winnerId) { els.winnerPopup.style.display="none"; return; }
+onValue(ref(db,"winner"), async (snap) => {
+  const winnerId = snap.val();
+  if (!winnerId) {
+    if (els.winnerPopup) els.winnerPopup.style.display = "none";
+    return;
+  }
 
-  els.winnerMsg.textContent = `🏆 Winner: ${group.name || `Group ${winnerId}`}!`;
   try {
-    const g=(await get(ref(db,`groups/${winnerId}`))).val()||{};
-    const cupidSrc=cupidVariants[g.cupidIndex||0];
-    const winnerCupid=document.getElementById("winner-cupid");
-    const winnerGoal=document.getElementById("winner-goal");
-    if(winnerCupid) {
-      winnerCupid.src=cupidSrc;
+    const g = (await get(ref(db, `groups/${winnerId}`))).val() || {};
+    const name = g.name || `Group ${winnerId}`;
+    if (els.winnerMsg) els.winnerMsg.textContent = `🏆 Winner: ${name}!`;
+
+    const cupidSrc = cupidVariants[g.cupidIndex || 0];
+    const winnerCupid = document.getElementById("winner-cupid");
+    const winnerGoal  = document.getElementById("winner-goal");
+    if (winnerCupid) {
+      winnerCupid.src = cupidSrc;
       winnerCupid.classList.remove("land"); void winnerCupid.offsetWidth;
       winnerCupid.classList.add("land");
     }
-    if(winnerGoal) winnerGoal.src="img/goal.png";
+    if (winnerGoal) winnerGoal.src = "img/goal.png";
     if (els.winnerPopup) els.winnerPopup.style.display = "flex";
-  } catch(err) { console.error("Winner fetch failed:",err); }
+  } catch (err) {
+    console.error("Winner fetch failed:", err);
+  }
 });
 
 els.winnerExit?.addEventListener("click",async()=>{
@@ -522,10 +529,11 @@ if (isHost) {
 
 
 if (isPhone) {
-  showPhoneOnly();
+  // Show the join screen first on phones
+  showSetup();
   els.startBtn.style.display = "none";
   els.resetBtn.style.display = "none";
-  els.qrEl.style.display     = "none";
+  if (els.qrEl) els.qrEl.style.display = "none";
 }
 
 // If on desktop, enable Start Game immediately
@@ -630,10 +638,12 @@ els.renameBtn?.addEventListener("click", async () => {
 
 
 // ====== Boot ======
-showSetup();
-if (!isHost) renderGroupChoices(); // phones can select groups
-// ✅ 確保一開始有 6 個組別存在
-ensureGroups();
+(async function boot() {
+  showSetup();
+  await ensureGroups();                  // make sure groups exist
+  if (!isHost) await renderGroupChoices(); // then render the choices for phones
+})();
+
 
 
 
