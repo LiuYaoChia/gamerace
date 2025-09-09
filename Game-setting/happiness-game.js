@@ -209,35 +209,27 @@ async function renameGroup(newName) {
   alert("組別名稱已更新！");
 }
 
-// ====== Render Track + Rankings (Desktop) ======
-function renderTrackAndRankings(groups) {
+// ====== Render Track + Rankings & Player List (Desktop) ======
+function renderGroupsUI(groups) {
+  // Clear previous UI
   els.track.innerHTML = "";
   els.rankList.innerHTML = "";
-  const entries = Object.entries(groups)
-    .filter(([, g]) => g.members && Object.keys(g.members).length > 0) // ← only non-empty
-    .sort((a,b)=> Number(a[0]) - Number(b[0]));
+  els.playerList.innerHTML = "";
 
-    entries.forEach(([gid, group]) => {
-      // ... (same as before, with the updated player-name using customGroupNames)
-    });
+  // Filter only groups that have members
+  const activeGroups = Object.entries(groups)
+    .filter(([, g]) => g.members && Object.keys(g.members).length > 0)
+    .sort((a, b) => Number(a[0]) - Number(b[0])); // optional: sort by group ID
 
-    entries
-      .sort(([,a],[,b]) => (b.progress||0) - (a.progress||0))
-      .forEach(([gid, group], idx) => {
-        const li = document.createElement("li");
-        li.textContent = `${idx+1}️⃣ ${group.name || `Group ${gid}`}: ${Math.floor(group.progress||0)}%`;
-        els.rankList.appendChild(li);
-      });
-  
-  // lanes
-  Object.entries(groups).sort((a,b)=>Number(a[0])-Number(b[0])).forEach(([gid, group]) => {
+  // Render lanes & track
+  activeGroups.forEach(([gid, group]) => {
     const lane = document.createElement("div");
     lane.className = "lane";
     lane.dataset.groupId = gid;
     lane.innerHTML = `
       <div class="lane-inner" style="position:relative;height:70px;">
         <span class="player-name" style="position:absolute;left:8px;top:6px;font-weight:bold;">
-         ${group.name || `Group ${gid}`}
+          ${group.name || customGroupNames[gid] || `Group ${gid}`}
         </span>
         <img class="cupid" src="${cupidVariants[group.cupidIndex ?? 0]}" 
              style="height:50px;position:absolute;top:50%;transform:translateY(-50%);left:0%">
@@ -247,18 +239,29 @@ function renderTrackAndRankings(groups) {
              style="position:absolute;top:-2px;right:10px;font-size:12px;font-weight:bold;color:#333">
              ${Math.floor(group.progress||0)}%</span>
       </div>`;
-    lane.querySelector(".cupid").style.left = `${Math.min(group.progress||0,95)}%`;
+    lane.querySelector(".cupid").style.left = `${Math.min(group.progress||0, 95)}%`;
     els.track.appendChild(lane);
   });
 
-  // rankings
-  Object.entries(groups)
-    .sort(([,a],[,b])=>(b.progress||0)-(a.progress||0))
-    .forEach(([gid,group],idx)=>{
-      const li=document.createElement("li");
-      li.textContent = `${idx+1}️⃣ ${group.name || `Group ${gid}`}: ${Math.floor(group.progress||0)}%`;
+  // Render ranking list
+  activeGroups
+    .sort(([, a], [, b]) => (b.progress || 0) - (a.progress || 0))
+    .forEach(([gid, group], idx) => {
+      const li = document.createElement("li");
+      li.textContent = `${idx + 1}️⃣ ${group.name || customGroupNames[gid] || `Group ${gid}`}: ${Math.floor(group.progress || 0)}%`;
       els.rankList.appendChild(li);
     });
+
+  // Render player list
+  activeGroups.forEach(([gid, group]) => {
+    const membersHtml = Object.values(group.members)
+      .map(m => `<li>${m.name}${m.isOwner ? " 👑" : ""}</li>`).join("");
+    els.playerList.innerHTML += `
+      <div class="group">
+        <h3>${group.name || customGroupNames[gid] || `Group ${gid}`}</h3>
+        <ul>${membersHtml}</ul>
+      </div>`;
+  });
 }
 
 // ====== Phone View ======
@@ -797,6 +800,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
