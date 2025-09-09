@@ -75,6 +75,18 @@ let currentPlayerId = null;
 let currentGroupId  = null;
 let lastShakeTime   = 0;
 
+// DEBUG: global error catcher + show element refs
+window.addEventListener("error", e => console.error("Global error:", e.error || e.message || e));
+console.log("DEBUG els:", {
+  setupScreen: !!els.setupScreen,
+  phoneView: !!els.phoneView,
+  waitingMsg: !!els.waitingMsg,
+  form: !!els.form,
+  nameInput: !!els.nameInput,
+  groupSelect: !!els.groupSelect
+});
+
+
 // ====== UI Helpers ======
 if (isHost) {
   if (els.form) els.form.style.display = "none"; // hide the join form
@@ -692,6 +704,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
