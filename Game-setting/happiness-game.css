@@ -237,7 +237,6 @@ body {
 #phone-view{
   position: fixed;
   inset: 0;
-  display: none;                /* JS sets to flex */
   align-items: center;
   justify-content: center;
   padding: 16px;
@@ -298,6 +297,7 @@ body {
 /* playful hop */
 @keyframes hop { 0%{transform:translateY(0)} 30%{transform:translateY(-10px)} 60%{transform:translateY(0)} 100%{transform:translateY(0)} }
 #phone-view .phone-cupid.jump{ animation: hop 0.6s ease; }
+
 
 
 
