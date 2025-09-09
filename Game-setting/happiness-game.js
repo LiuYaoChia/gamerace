@@ -337,12 +337,12 @@ if (!isHost) {
     els.nameInput.value = "";
 
     // Switch to waiting screen
-    els.setupScreen.style.display = "none";
-    els.form.style.display = "none";
-    els.phoneView.style.display = "flex";
+    if (els.setupScreen) els.setupScreen.style.display = "none";
+    if (els.form) els.form.style.display = "none";
+    if (els.phoneView) els.phoneView.style.display = "flex";
     if (els.waitingMsg) els.waitingMsg.style.display = "block";
-    els.leaveBtn.style.display = "block";
-    els.renameBtn.style.display = "block";
+    if (els.leaveBtn) els.leaveBtn.style.display = "block";
+    if (els.renameBtn) els.renameBtn.style.display = "block";
 
     // Listen for game state
     onValue(ref(db, "gameState"), snap => {
@@ -350,8 +350,9 @@ if (!isHost) {
       if (currentGameState === "playing") {
         if (els.waitingMsg) els.waitingMsg.style.display = "none";
         els.phoneLabel.textContent = "比賽開始！搖動手機！";
-      } else
+      } else {
         if (els.waitingMsg) els.waitingMsg.style.display = "block";
+      }
     });
 
     // Listen for group updates
@@ -642,6 +643,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
