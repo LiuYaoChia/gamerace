@@ -441,6 +441,7 @@ if (!isHost) {
         phonePanel.style.zIndex = "200002";
       }
 
+      if (els.setupScreen) els.setupScreen.style.display = "none";
       els.waitingMsg.style.display = "block";
       els.phoneLabel.style.display = "block";
       els.phoneLabel.textContent = "已加入 – 等待主持人開始";
@@ -796,6 +797,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
