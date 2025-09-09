@@ -390,13 +390,55 @@ if (!isHost) {
       // Clear the name input locally
       els.nameInput.value = "";
 
-      // Switch UI to waiting screen
-      if (els.setupScreen) els.setupScreen.style.display = "none";
-      if (els.form) els.form.style.display = "none";
-      if (els.phoneView) els.phoneView.style.display = "flex";
-      if (els.waitingMsg) els.waitingMsg.style.display = "block";
+     // ===== FORCE SHOW WAITING UI (debug patch) =====
+    try {
+      console.log("DEBUG: switching UI to waiting view");
+
+    // hide setup
+      if (els.setupScreen) {
+        els.setupScreen.style.display = "none";
+        // also ensure it doesn't block
+        els.setupScreen.style.pointerEvents = "none";
+      }
+      if (els.form) {
+        els.form.style.display = "none";
+        els.form.style.pointerEvents = "none";
+      }
+
+      // force phone view visible and on top
+      if (els.phoneView) {
+        Object.assign(els.phoneView.style, {
+          display: "flex",
+          position: "fixed",    // stay on top of everything
+          inset: "0",           // full viewport
+          zIndex: "9999",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "transparent" // optional overlay color
+        });
+      }
+
+      // make waiting message visible
+      if (els.waitingMsg) {
+        els.waitingMsg.style.display = "block";
+        els.waitingMsg.textContent = "等待遊戲開始..."; // ensure content
+      }
+
+      // ensure phone label and cupid visible
+      if (els.phoneLabel) { els.phoneLabel.style.display = "block"; els.phoneLabel.textContent = "已加入，等待主持人開始"; }
+      if (els.phoneCupid)  { els.phoneCupid.style.display = "block"; els.phoneCupid.style.height = "120px"; }
+
       if (els.leaveBtn) els.leaveBtn.style.display = "block";
       if (els.renameBtn) els.renameBtn.style.display = "block";
+
+      console.log("DEBUG UI states:", {
+        setupDisplay: els.setupScreen?.style.display,
+        phoneDisplay: els.phoneView?.style.display,
+        waitingDisplay: els.waitingMsg?.style.display
+      });
+    } catch (err) {
+      console.error("DEBUG: UI switch error", err);
+    }
 
       console.log("Joined group", groupId, "as", uid, name);
     } catch (err) {
@@ -704,6 +746,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
