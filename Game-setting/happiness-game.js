@@ -352,7 +352,6 @@ if (!isHost) {
         els.phoneLabel.textContent = "比賽開始！搖動手機！";
       } else
         if (els.waitingMsg) els.waitingMsg.style.display = "block";
-      }
     });
 
     // Listen for group updates
@@ -643,6 +642,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
