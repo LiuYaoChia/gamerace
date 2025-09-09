@@ -285,20 +285,56 @@ async function updatePhoneView(group) {
 signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
 onAuthStateChanged(auth,(user)=>{ if(user) currentPlayerId=user.uid; });
 
-// ====== Join Group ======
+// ====== Join Group (robust) ======
 if (!isHost) {
   els.form?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const name = (els.nameInput.value || "").trim();
-    const groupId = els.groupSelect.value || "";
-    if (!name || !groupId) return;
+    console.log("Join submit clicked");
 
+    const name = (els.nameInput.value || "").trim();
+    // Ensure a group is selected; default to 1 if none
+    let groupId = (els.groupSelect.value || "").toString();
+    if (!groupId) {
+      console.log("No group selected — defaulting to 1");
+      groupId = "1";
+      if (els.groupSelect) els.groupSelect.value = groupId;
+      // visually highlight first group if possible
+      const firstChoice = document.querySelector("#group-choices .group-choice");
+      if (firstChoice) firstChoice.style.borderColor = "#4f46e5";
+    }
+
+    if (!name) {
+      alert("請輸入名字！");
+      console.log("Join aborted: no name");
+      return;
+    }
+
+    // Wait for auth to provide currentPlayerId (timeout after 5s)
+    const waitForPlayerId = (timeoutMs = 5000) => new Promise((resolve) => {
+      const start = Date.now();
+      (function check() {
+        if (currentPlayerId) return resolve(currentPlayerId);
+        if (Date.now() - start > timeoutMs) return resolve(null);
+        setTimeout(check, 100);
+      })();
+    });
+
+    const uid = await waitForPlayerId(5000);
+    if (!uid) {
+      // If we don't have an auth uid, show helpful message instead of failing silently
+      alert("連線尚未完成，請稍等一秒再試一次（若持續發生，請重新整理頁面）。");
+      console.error("No currentPlayerId after waiting — auth may not be ready.");
+      return;
+    }
+
+    currentGroupId = groupId;
     const groupRef = ref(db, `groups/${groupId}`);
     let snap = await get(groupRef);
     let group = snap.val();
 
     // if group does not exist → create it
     if (!snap.exists()) {
+      console.log("Group not found — creating group", groupId);
       await set(groupRef, {
         name: groupId.toString(),
         members: {},
@@ -309,47 +345,59 @@ if (!isHost) {
       group = (await get(groupRef)).val();
     }
 
-    // ✅ limit group size (max 6 players)
+    // limit group size (max 6 players)
     const memberCount = group.members ? Object.keys(group.members).length : 0;
     if (memberCount >= 6) {
       alert("此組別已滿 6 人，請選擇其他組別！");
+      console.log("Join aborted: group full", groupId);
       return;
     }
 
     // prevent duplicate names
     if (Object.values(group.members || {}).some(m => m?.name === name)) {
       alert("此名字已有人使用！");
+      console.log("Join aborted: duplicate name", name);
       return;
     }
 
-    currentGroupId = groupId;
     const isFirstPlayer = !group.members || Object.keys(group.members).length === 0;
 
-    await update(groupRef, {
-      [`members/${currentPlayerId}`]: {
-        name,
-        joinedAt: Date.now(),
-        isOwner: isFirstPlayer
-      }
-    });
+    try {
+      // Write the new member under the authenticated UID
+      await update(groupRef, {
+        [`members/${uid}`]: {
+          name,
+          joinedAt: Date.now(),
+          isOwner: isFirstPlayer
+        }
+      });
 
-    onDisconnect(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`)).remove();
-    els.nameInput.value = "";
+      // ensure onDisconnect is set using the real uid
+      onDisconnect(ref(db, `groups/${groupId}/members/${uid}`)).remove();
 
-    // Switch to waiting screen
-    if (els.setupScreen) els.setupScreen.style.display = "none";
-    if (els.form) els.form.style.display = "none";
-    if (els.phoneView) els.phoneView.style.display = "flex";
-    if (els.waitingMsg) els.waitingMsg.style.display = "block";
-    if (els.leaveBtn) els.leaveBtn.style.display = "block";
-    if (els.renameBtn) els.renameBtn.style.display = "block";
+      // Clear the name input locally
+      els.nameInput.value = "";
 
-    // Listen for game state
+      // Switch UI to waiting screen
+      if (els.setupScreen) els.setupScreen.style.display = "none";
+      if (els.form) els.form.style.display = "none";
+      if (els.phoneView) els.phoneView.style.display = "flex";
+      if (els.waitingMsg) els.waitingMsg.style.display = "block";
+      if (els.leaveBtn) els.leaveBtn.style.display = "block";
+      if (els.renameBtn) els.renameBtn.style.display = "block";
+
+      console.log("Joined group", groupId, "as", uid, name);
+    } catch (err) {
+      console.error("Failed to join group:", err);
+      alert("加入組別失敗，請稍後再試。");
+    }
+
+    // Listen for game state (phone)
     onValue(ref(db, "gameState"), snap => {
       currentGameState = snap.val() || "lobby";
       if (currentGameState === "playing") {
         if (els.waitingMsg) els.waitingMsg.style.display = "none";
-        els.phoneLabel.textContent = "比賽開始！搖動手機！";
+        if (els.phoneLabel) els.phoneLabel.textContent = "比賽開始！搖動手機！";
       } else {
         if (els.waitingMsg) els.waitingMsg.style.display = "block";
       }
@@ -359,6 +407,7 @@ if (!isHost) {
     onValue(groupRef, s => updatePhoneView(s.val() || {}));
   });
 }
+
 
  
 // ====== Shake Handling ======
@@ -643,6 +692,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
