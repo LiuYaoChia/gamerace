@@ -297,32 +297,69 @@ async function updatePhoneView(group) {
 signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
 onAuthStateChanged(auth,(user)=>{ if(user) currentPlayerId=user.uid; });
 
-// ====== Join Group (robust) ======
+// ====== Join Group (debug & robust replacement) ======
 if (!isHost) {
   els.form?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    console.log("Join submit clicked");
 
-    const name = (els.nameInput.value || "").trim();
-    // Ensure a group is selected; default to 1 if none
-    let groupId = (els.groupSelect.value || "").toString();
+    // tiny helper: visible debug box at top
+    function showOverlayMsg(msg, timeout = 0) {
+      let o = document.getElementById("debug-overlay");
+      if (!o) {
+        o = document.createElement("div");
+        o.id = "debug-overlay";
+        Object.assign(o.style, {
+          position: "fixed",
+          left: "50%",
+          top: "6%",
+          transform: "translateX(-50%)",
+          zIndex: "200000",
+          background: "rgba(0,0,0,0.85)",
+          color: "white",
+          padding: "10px 14px",
+          borderRadius: "8px",
+          fontSize: "15px",
+          maxWidth: "90%",
+          textAlign: "center",
+          boxShadow: "0 6px 18px rgba(0,0,0,0.4)"
+        });
+        document.body.appendChild(o);
+      }
+      o.textContent = msg;
+      if (timeout > 0) setTimeout(() => { o.remove(); }, timeout);
+      console.log("DEBUG-OVERLAY:", msg);
+    }
+
+    showOverlayMsg("Join clicked — running checks...");
+
+    // gather values
+    const name = (els.nameInput?.value || "").trim();
+    let groupId = (els.groupSelect?.value || "").toString();
+
+    // check required elements exist
+    const required = ["setupScreen","phoneView","waitingMsg","form","nameInput","groupSelect"];
+    const missing = required.filter(k => !els[k]);
+    if (missing.length) {
+      showOverlayMsg("Missing elements: " + missing.join(", ") + " — check IDs in HTML", 8000);
+      console.error("Missing elements on page:", missing);
+      return;
+    }
+
+    // ensure group selection defaults to 1
     if (!groupId) {
-      console.log("No group selected — defaulting to 1");
       groupId = "1";
-      if (els.groupSelect) els.groupSelect.value = groupId;
-      // visually highlight first group if possible
+      els.groupSelect.value = groupId;
       const firstChoice = document.querySelector("#group-choices .group-choice");
       if (firstChoice) firstChoice.style.borderColor = "#4f46e5";
     }
 
     if (!name) {
-      alert("請輸入名字！");
-      console.log("Join aborted: no name");
+      showOverlayMsg("請輸入名字！", 3000);
       return;
     }
 
-    // Wait for auth to provide currentPlayerId (timeout after 5s)
-    const waitForPlayerId = (timeoutMs = 5000) => new Promise((resolve) => {
+    // Wait for auth uid (short)
+    const waitForPlayerId = (timeoutMs = 5000) => new Promise(resolve => {
       const start = Date.now();
       (function check() {
         if (currentPlayerId) return resolve(currentPlayerId);
@@ -331,22 +368,24 @@ if (!isHost) {
       })();
     });
 
+    showOverlayMsg("等待登入 (auth)...");
+
     const uid = await waitForPlayerId(5000);
     if (!uid) {
-      // If we don't have an auth uid, show helpful message instead of failing silently
-      alert("連線尚未完成，請稍等一秒再試一次（若持續發生，請重新整理頁面）。");
-      console.error("No currentPlayerId after waiting — auth may not be ready.");
+      showOverlayMsg("Auth 未完成 — 請等一秒後重試，或重新整理頁面。", 6000);
+      console.error("No currentPlayerId after waiting.");
       return;
     }
 
+    showOverlayMsg("Auth OK. Joining group " + groupId + "...");
+
+    // write to DB
     currentGroupId = groupId;
     const groupRef = ref(db, `groups/${groupId}`);
     let snap = await get(groupRef);
     let group = snap.val();
 
-    // if group does not exist → create it
     if (!snap.exists()) {
-      console.log("Group not found — creating group", groupId);
       await set(groupRef, {
         name: groupId.toString(),
         members: {},
@@ -357,25 +396,19 @@ if (!isHost) {
       group = (await get(groupRef)).val();
     }
 
-    // limit group size (max 6 players)
+    // checks
     const memberCount = group.members ? Object.keys(group.members).length : 0;
     if (memberCount >= 6) {
-      alert("此組別已滿 6 人，請選擇其他組別！");
-      console.log("Join aborted: group full", groupId);
+      showOverlayMsg("此組別已滿 6 人，請選擇其他組別！", 4000);
       return;
     }
-
-    // prevent duplicate names
     if (Object.values(group.members || {}).some(m => m?.name === name)) {
-      alert("此名字已有人使用！");
-      console.log("Join aborted: duplicate name", name);
+      showOverlayMsg("此名字已有人使用！", 3000);
       return;
     }
-
     const isFirstPlayer = !group.members || Object.keys(group.members).length === 0;
 
     try {
-      // Write the new member under the authenticated UID
       await update(groupRef, {
         [`members/${uid}`]: {
           name,
@@ -383,70 +416,87 @@ if (!isHost) {
           isOwner: isFirstPlayer
         }
       });
-
-      // ensure onDisconnect is set using the real uid
       onDisconnect(ref(db, `groups/${groupId}/members/${uid}`)).remove();
-
-      // Clear the name input locally
       els.nameInput.value = "";
 
-     // ===== FORCE SHOW WAITING UI (debug patch) =====
-    try {
-      console.log("DEBUG: switching UI to waiting view");
-
-    // hide setup
-      if (els.setupScreen) {
-        els.setupScreen.style.display = "none";
-        // also ensure it doesn't block
-        els.setupScreen.style.pointerEvents = "none";
-      }
-      if (els.form) {
-        els.form.style.display = "none";
-        els.form.style.pointerEvents = "none";
+      // move phoneView into body end (avoid being covered)
+      if (els.phoneView && els.phoneView.parentNode !== document.body) {
+        document.body.appendChild(els.phoneView);
       }
 
-      // force phone view visible and on top
-      if (els.phoneView) {
-        Object.assign(els.phoneView.style, {
-          display: "flex",
-          position: "fixed",    // stay on top of everything
-          inset: "0",           // full viewport
-          zIndex: "9999",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "transparent" // optional overlay color
-        });
-      }
-
-      // make waiting message visible
-      if (els.waitingMsg) {
-        els.waitingMsg.style.display = "block";
-        els.waitingMsg.textContent = "等待遊戲開始..."; // ensure content
-      }
-
-      // ensure phone label and cupid visible
-      if (els.phoneLabel) { els.phoneLabel.style.display = "block"; els.phoneLabel.textContent = "已加入，等待主持人開始"; }
-      if (els.phoneCupid)  { els.phoneCupid.style.display = "block"; els.phoneCupid.style.height = "120px"; }
-
-      if (els.leaveBtn) els.leaveBtn.style.display = "block";
-      if (els.renameBtn) els.renameBtn.style.display = "block";
-
-      console.log("DEBUG UI states:", {
-        setupDisplay: els.setupScreen?.style.display,
-        phoneDisplay: els.phoneView?.style.display,
-        waitingDisplay: els.waitingMsg?.style.display
+      // force show phone view and panel
+      Object.assign(els.phoneView.style, {
+        display: "flex",
+        position: "fixed",
+        inset: "0",
+        zIndex: "200001",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0,0,0,0.35)"
       });
-    } catch (err) {
-      console.error("DEBUG: UI switch error", err);
-    }
+
+      const phonePanel = document.getElementById("phone-panel") || els.phoneView.firstElementChild;
+      if (phonePanel) {
+        phonePanel.style.display = "block";
+        phonePanel.style.zIndex = "200002";
+      }
+
+      els.waitingMsg.style.display = "block";
+      els.phoneLabel.style.display = "block";
+      els.phoneLabel.textContent = "已加入 – 等待主持人開始";
+      els.phoneCupid && (els.phoneCupid.style.display = "block");
+      els.leaveBtn.style.display = "block";
+      els.renameBtn.style.display = "block";
+
+      // final verification: if still not visible, show fallback big overlay
+      const phoneViewVisible = window.getComputedStyle(els.phoneView).display !== "none" &&
+                                window.getComputedStyle(els.phoneView).visibility !== "hidden";
+      if (!phoneViewVisible) {
+        // fallback overlay
+        let fb = document.getElementById("joined-fallback");
+        if (!fb) {
+          fb = document.createElement("div");
+          fb.id = "joined-fallback";
+          Object.assign(fb.style, {
+            position: "fixed",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%,-50%)",
+            zIndex: "300000",
+            background: "#111",
+            color: "#fff",
+            padding: "18px 20px",
+            borderRadius: "12px",
+            textAlign: "center",
+            fontSize: "16px",
+            boxShadow: "0 8px 30px rgba(0,0,0,0.5)"
+          });
+          fb.innerHTML = `<div style="margin-bottom:10px;">已加入 ${groupId}！等待主持人開始。</div>
+                          <button id="joined-fallback-leave" style="padding:8px 12px;border-radius:8px;border:none;background:#e74c3c;color:#fff;">離開組別</button>`;
+          document.body.appendChild(fb);
+          document.getElementById("joined-fallback-leave").addEventListener("click", async () => {
+            try {
+              await remove(ref(db, `groups/${currentGroupId}/members/${uid}`));
+            } catch (err) { console.error(err); }
+            fb.remove();
+            // return UI
+            if (els.phoneView) els.phoneView.style.display = "none";
+            if (els.setupScreen) els.setupScreen.style.display = "block";
+          });
+        }
+      } else {
+        // show a short success message then remove debug overlay
+        showOverlayMsg("已加入！等待主持人開始。", 2500);
+        setTimeout(() => { const d = document.getElementById("debug-overlay"); if (d) d.remove(); }, 2600);
+      }
 
       console.log("Joined group", groupId, "as", uid, name);
     } catch (err) {
       console.error("Failed to join group:", err);
-      alert("加入組別失敗，請稍後再試。");
+      showOverlayMsg("加入組別失敗，請稍後再試。", 4000);
     }
 
-    // Listen for game state (phone)
+    // continue listening
     onValue(ref(db, "gameState"), snap => {
       currentGameState = snap.val() || "lobby";
       if (currentGameState === "playing") {
@@ -457,10 +507,10 @@ if (!isHost) {
       }
     });
 
-    // Listen for group updates
     onValue(groupRef, s => updatePhoneView(s.val() || {}));
   });
 }
+
 
 
  
@@ -746,6 +796,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
