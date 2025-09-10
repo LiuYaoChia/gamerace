@@ -243,14 +243,25 @@ function renderGroupsUI(groups) {
     els.track.appendChild(lane);
   });
 
-  // Render ranking list
-  activeGroups
+    // Render ranking list (clone before sorting to avoid mutating)
+  [...activeGroups]
     .sort(([, a], [, b]) => (b.progress || 0) - (a.progress || 0))
     .forEach(([gid, group], idx) => {
       const li = document.createElement("li");
       li.textContent = `${idx + 1}️⃣ ${group.name || customGroupNames[gid] || `Group ${gid}`}: ${Math.floor(group.progress || 0)}%`;
       els.rankList.appendChild(li);
     });
+
+  // dedupe the duplicate gid keys
+  const uniqueGroups = new Map();
+  Object.entries(groups).forEach(([gid, g]) => {
+    if (g.members && Object.keys(g.members).length > 0) {
+      uniqueGroups.set(gid, g);
+    }
+  });
+
+  const activeGroups = [...uniqueGroups.entries()]
+    .sort((a, b) => Number(a[0]) - Number(b[0]));
 
   // Render player list
   activeGroups.forEach(([gid, group]) => {
@@ -722,9 +733,15 @@ els.leaveBtn?.addEventListener("click", async () => {
     }
   }
 
-  // 3️⃣ If no members left → remove the whole group
+ 
+  // 3️⃣ If no members left → reset group to default state (keep default name)
   if (!members || Object.keys(members).length === 0) {
-    await remove(ref(db, `groups/${currentGroupId}`));
+    await update(ref(db, `groups/${currentGroupId}`), {
+      name: customGroupNames[currentGroupId] || `Group ${currentGroupId}`,
+      members: {},
+      shakes: 0,
+      progress: 0
+    });
   }
 
   // 4️⃣ Reset local vars
@@ -800,6 +817,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
