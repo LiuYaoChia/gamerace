@@ -609,7 +609,7 @@ onValue(ref(db,"groups"),snap=>{
   const groups = snap.val() || {};
 
   if (!isPhone) {
-    renderTrackAndRankings(groups);
+    renderGroupsUI(groups);
 
     if (currentGameState === "lobby") {
       // show player list
@@ -818,6 +818,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
