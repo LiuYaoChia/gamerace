@@ -260,13 +260,14 @@ function renderGroupsUI(groups) {
     }
   });
 
-  const activeGroups = [...uniqueGroups.entries()]
+  const uniqueActiveGroups = [...uniqueGroups.entries()]
     .sort((a, b) => Number(a[0]) - Number(b[0]));
 
   // Render player list
-  activeGroups.forEach(([gid, group]) => {
+  uniqueActiveGroups.forEach(([gid, group]) => {
     const membersHtml = Object.values(group.members)
-      .map(m => `<li>${m.name}${m.isOwner ? " 👑" : ""}</li>`).join("");
+      .map(m => `<li>${m.name}${m.isOwner ? " 👑" : ""}</li>`)
+      .join("");
     els.playerList.innerHTML += `
       <div class="group">
         <h3>${group.name || customGroupNames[gid] || `Group ${gid}`}</h3>
@@ -817,6 +818,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
