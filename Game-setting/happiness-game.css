@@ -95,9 +95,9 @@ body {
 }
 
 .game-container {
-  max-width: 1200px;   /* bigger console */
+  max-width: 1400px;   /* enlarge main area */
   margin: 2rem auto;
-  padding: 0 1rem;     /* small padding so content never sticks to edge */
+  padding: 0 2rem;
 }
 /* === TRACK (now auto-height and grouped) === */
 #track {
@@ -203,12 +203,61 @@ body {
 .player-name { font-size: 14px; }
 
 /* === Winner Scene === */
-.winner-scene { display:flex; align-items:center; justify-content:center; gap:20px; }
-.winner-cupid { height:80px; animation: float 2s infinite ease-in-out; }
-.winner-goal  { height:80px; }
+#winner-overlay {
+  position: fixed;
+  inset: 0; /* cover full screen */
+  background: rgba(0, 0, 0, 0.7); /* dim background */
+  display: none; /* hidden by default */
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+/* === Winner Window Panel === */
+.winner-window {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px 60px;
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  text-align: center;
+  max-width: 800px;
+  animation: popIn 0.5s ease;
+}
+/* Winner Title */
+.winner-window h2 {
+  font-size: 3rem;
+  font-weight: bold;
+  color: gold;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+/* Groom & Bride side by side */
+.winner-scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px; /* spacing between them */
+  margin: 20px 0;
+}
+
+/* Enlarge the characters */
+.winner-cupid,
+.winner-goal {
+  height: 150px;  /* bigger size */
+  flex-shrink: 0;
+}
 #winner-title { font-size:2rem; color:gold; margin-bottom:10px; }
-#winner-name  { margin-top:10px; font-size:1.5rem; font-weight:bold; color:white; }
-@keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
+/* Winner name */
+#winner-name {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-top: 20px;
+  color: #333;
+}
+/* Animation */
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
 
 /* === Progress Label Above Cupid === */
 .progress-label {
@@ -299,6 +348,7 @@ body {
 /* playful hop */
 @keyframes hop { 0%{transform:translateY(0)} 30%{transform:translateY(-10px)} 60%{transform:translateY(0)} 100%{transform:translateY(0)} }
 #phone-view .phone-cupid.jump{ animation: hop 0.6s ease; }
+
 
 
 
