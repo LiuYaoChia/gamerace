@@ -227,21 +227,23 @@ function renderGroupsUI(groups) {
     lane.className = "lane";
     lane.dataset.groupId = gid;
     lane.innerHTML = `
-      <div class="lane-inner" style="position:relative;height:70px;width: 100%;overflow: visible;">
+      <div class="lane-inner" style="position:relative;height:80px;width:100%;overflow: visible;">
         <span class="player-name" style="position:absolute;left:8px;top:6px;font-weight:bold;">
           ${group.name || customGroupNames[gid] || `Group ${gid}`}
         </span>
         <img class="cupid" src="${cupidVariants[group.cupidIndex ?? 0]}" 
-             style="height:50px;position:absolute;top:50%;transform:translateY(-50%);left:0%">
+             style="height:65px;position:absolute;top:50%;transform:translateY(-50%);left:0%">
         <img class="goal" src="img/goal.png" 
-             style="height:50px;position:absolute;right:5px;top:50%;transform:translateY(-50%)">
+             style="height:70px;position:absolute;right:5px;top:50%;transform:translateY(-50%)">
         <span class="progress-label" 
-             style="position:absolute;top:-2px;right:10px;font-size:12px;font-weight:bold;color:#333">
+             style="position:absolute;top:-16px;right:10px;font-size:13px;font-weight:bold;color:#333">
              ${Math.floor(group.progress||0)}%</span>
       </div>`;
+    const cupid = lane.querySelector(".cupid");
+    const goalOffset = 8; // how close cupid gets to the goal (px)
     const progress = Math.min(group.progress || 0, 100);
-    const adjusted = progress >= 100 ? 98 : progress;
-    lane.querySelector(".cupid").style.left = `${adjusted}%`;
+    const adjustedProgress = progress >= 100 ? 98 : progress; // so it doesn't overlap
+    cupid.style.left = `${adjustedProgress}%`;
     els.track.appendChild(lane);
   });
 
@@ -820,6 +822,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
