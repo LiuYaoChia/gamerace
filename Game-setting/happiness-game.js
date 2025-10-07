@@ -239,7 +239,9 @@ function renderGroupsUI(groups) {
              style="position:absolute;top:-2px;right:10px;font-size:12px;font-weight:bold;color:#333">
              ${Math.floor(group.progress||0)}%</span>
       </div>`;
-    lane.querySelector(".cupid").style.left = `${Math.min(group.progress||0, 95)}%`;
+    const progress = Math.min(group.progress || 0, 100);
+    const adjusted = progress >= 100 ? 98 : progress;
+    lane.querySelector(".cupid").style.left = `${adjusted}%`;
     els.track.appendChild(lane);
   });
 
@@ -818,6 +820,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
