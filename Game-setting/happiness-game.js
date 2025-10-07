@@ -227,7 +227,7 @@ function renderGroupsUI(groups) {
     lane.className = "lane";
     lane.dataset.groupId = gid;
     lane.innerHTML = `
-      <div class="lane-inner" style="position:relative;height:70px;">
+      <div class="lane-inner" style="position:relative;height:70px;width: 100%;overflow: visible;">
         <span class="player-name" style="position:absolute;left:8px;top:6px;font-weight:bold;">
           ${group.name || customGroupNames[gid] || `Group ${gid}`}
         </span>
@@ -820,6 +820,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
