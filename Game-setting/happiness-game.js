@@ -236,7 +236,7 @@ function renderGroupsUI(groups) {
         <img class="goal" src="img/goal.png" 
              style="height:70px;position:absolute;right:5px;top:50%;transform:translateY(-50%)">
         <span class="progress-label" 
-             style="position:absolute;top:-16px;right:10px;font-size:13px;font-weight:bold;color:#333">
+             style="position:absolute;top:-16px;right:5px;font-size:13px;font-weight:bold;color:#333">
              ${Math.floor(group.progress||0)}%</span>
       </div>`;
     const cupid = lane.querySelector(".cupid");
@@ -822,6 +822,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
