@@ -146,12 +146,12 @@ body {
   border-radius: inherit;
 }
 .lane .progress-label {
-  position: absolute ;
-  right: 10px;
-  left: auto;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 16px;
+  position: absolute !important;
+  right: 10px !important;
+  left: auto !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 16px !important;
   font-weight: bold;
   color: #333;
   white-space: nowrap;
@@ -415,6 +415,7 @@ body {
 /* playful hop */
 @keyframes hop { 0%{transform:translateY(0)} 30%{transform:translateY(-10px)} 60%{transform:translateY(0)} 100%{transform:translateY(0)} }
 #phone-view .phone-cupid.jump{ animation: hop 0.6s ease; }
+
 
 
 
