@@ -236,13 +236,12 @@ function renderGroupsUI(groups) {
         <img class="goal" src="img/goal.png" 
              style="height:70px;position:absolute;right:5px;top:50%;transform:translateY(-50%)">
         <span class="progress-label" 
-             style="position:absolute;top:-16px;right:5px;font-size:13px;font-weight:bold;color:#333">
+             style="position:absolute;top:50%;right:10px;transform:translateY(-50%);font-size:13px;font-weight:bold;color:#333">
              ${Math.floor(group.progress||0)}%</span>
       </div>`;
     const cupid = lane.querySelector(".cupid");
-    const goalOffset = 8; // how close cupid gets to the goal (px)
     const progress = Math.min(group.progress || 0, 100);
-    const adjustedProgress = progress >= 100 ? 98 : progress; // so it doesn't overlap
+    const adjustedProgress = progress >= 100 ? 94 : progress; // so it doesn't overlap
     cupid.style.left = `${adjustedProgress}%`;
     els.track.appendChild(lane);
   });
@@ -822,6 +821,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
