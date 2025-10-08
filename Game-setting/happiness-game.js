@@ -256,10 +256,22 @@ function renderGroupsUI(groups) {
           ${Math.floor(group.progress || 0)}%
         </span>
       </div>`;
-    const cupid = lane.querySelector(".cupid");
-    const progress = Math.min(group.progress || 0, 100);
-    const adjustedProgress = progress >= 100 ? 94 : progress; // so it doesn't overlap
-    cupid.style.left = `${adjustedProgress}%`;
+    function updateCupidPosition(groupId, progress) {
+      const lane = document.querySelector(`.lane[data-group-id="${groupId}"]`);
+      const cupid = lane?.querySelector(".cupid");
+      const goal = lane?.querySelector(".goal");
+      if (!cupid || !goal) return;
+
+      const laneWidth = lane.offsetWidth;
+      const goalWidth = goal.offsetWidth;
+
+      // Compute left so cupid touches the goal at 100%
+      const left = Math.min(progress, 100); // progress %
+      const maxLeftPx = laneWidth - goalWidth - 5; // 5px padding
+      const leftPx = (left / 100) * laneWidth;
+      cupid.style.left = `${Math.min(leftPx, maxLeftPx)}px`;
+    }
+    updateCupidPosition(gid, progress);
     els.track.appendChild(lane);
   });
 
@@ -838,6 +850,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
