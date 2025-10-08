@@ -227,17 +227,34 @@ function renderGroupsUI(groups) {
     lane.className = "lane";
     lane.dataset.groupId = gid;
     lane.innerHTML = `
-      <div class="lane-inner" style="position:relative;height:80px;width:100%;overflow: visible;">
-        <span class="player-name" style="position:absolute;left:8px;top:6px;font-weight:bold;">
+      <div class="lane-inner" 
+           style="position:relative;height:90px;width:100%;overflow:visible;">
+        
+        <!-- Group name -->
+        <span class="player-name" 
+              style="position:absolute;left:10px;top:10px;font-weight:bold;font-size:14px;">
           ${group.name || customGroupNames[gid] || `Group ${gid}`}
         </span>
-        <img class="cupid" src="${cupidVariants[group.cupidIndex ?? 0]}" 
-             style="height:65px;position:absolute;top:50%;transform:translateY(-50%);left:0%">
-        <img class="goal" src="img/goal.png" 
-             style="height:70px;position:absolute;right:5px;top:50%;transform:translateY(-50%)">
+
+        <!-- Cupid -->
+        <img class="cupid" 
+             src="${cupidVariants[group.cupidIndex ?? 0]}" 
+             style="height:75px;position:absolute;top:50%;
+                    transform:translateY(-50%);left:0%;">
+
+        <!-- Goal -->
+        <img class="goal" 
+             src="img/goal.png" 
+             style="height:75px;position:absolute;right:60px;
+                    top:50%;transform:translateY(-50%);">
+
+        <!-- Progress label (fixed near the goal) -->
         <span class="progress-label" 
-             style="position:absolute;top:50%;right:10px;transform:translateY(-50%);font-size:13px;font-weight:bold;color:#333">
-             ${Math.floor(group.progress||0)}%</span>
+              style="position:absolute;top:50%;right:10px;
+                     transform:translateY(-50%);
+                     font-size:16px;font-weight:bold;color:#333;">
+          ${Math.floor(group.progress || 0)}%
+        </span>
       </div>`;
     const cupid = lane.querySelector(".cupid");
     const progress = Math.min(group.progress || 0, 100);
@@ -821,6 +838,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
