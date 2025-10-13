@@ -690,9 +690,32 @@ onValue(ref(db,"winner"), async (snap) => {
   }
 });
 
-els.winnerExit?.addEventListener("click",async()=>{
-  await remove(ref(db,"winner"));
-  await set(ref(db,"gameState"),"lobby");
+els.winnerExit?.addEventListener("click", async () => {
+  // Get all groups
+  const snap = await get(ref(db, "groups"));
+  const groups = snap.val() || {};
+  const updates = {};
+
+  // Reset each group
+  for (const gid in groups) {
+    updates[`groups/${gid}/members`] = {};
+    updates[`groups/${gid}/progress`] = 0;
+    updates[`groups/${gid}/name`] = customGroupNames[gid] || `Group ${gid}`;
+  }
+
+  // Apply the reset to the database
+  await update(ref(db), updates);
+
+  // Remove winner and return to lobby
+  await remove(ref(db, "winner"));
+  await set(ref(db, "gameState"), "lobby");
+
+  // Update local UI (back to setup screen)
+  if (els.winnerPopup) els.winnerPopup.style.display = "none";
+  els.gameScreen.style.display = "none";
+  els.setupScreen.style.display = "block";
+
+  alert("遊戲已重置，回到大廳！");
 });
 
 // ====== Start / Reset / Exit ======
@@ -823,19 +846,27 @@ if (isHost) {
 
 // ====== Exit for Phones ======
 els.exitBtn?.addEventListener("click", async () => {
-  if (currentGroupId && currentPlayerId) {
-    await remove(ref(db,`groups/${currentGroupId}/members/${currentPlayerId}`));
-  }
-  currentGroupId = null;
+  const confirmExit = confirm("確定要結束遊戲並全部重置嗎？（所有玩家將被清除）");
+  if (!confirmExit) return;
 
-  // Back to join form
-  els.phoneView.style.display = "none";
-  els.setupScreen.style.display = "block";
-  els.gameScreen.style.display = "none";   
+  // Optional password prompt to prevent accidental reset
+  const pw = prompt("請輸入管理密碼才能重置遊戲:");
+  if (pw !== "1234") {
+    alert("密碼錯誤！");
+    return;
+  }
+
+  await resetGame();
+
+  currentGroupId = null;
+  if (els.phoneView) els.phoneView.style.display = "none";
+  if (els.gameScreen) els.gameScreen.style.display = "none";
+  if (els.setupScreen) els.setupScreen.style.display = "block";
+  alert("遊戲已重置！");
 });
 
 
-
+// ====== rename the group for Phones ======
 els.renameBtn?.addEventListener("click", async () => {
   const newName = prompt("請輸入新的組別名稱:");
   if (newName) {
@@ -850,6 +881,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
