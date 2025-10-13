@@ -271,7 +271,7 @@ function renderGroupsUI(groups) {
       const leftPx = (left / 100) * laneWidth;
       cupid.style.left = `${Math.min(leftPx, maxLeftPx)}px`;
     }
-    updateCupidPosition(gid, progress);
+    updateCupidPosition(gid, group.progress || 0);
     els.track.appendChild(lane);
   });
 
@@ -850,6 +850,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
