@@ -445,8 +445,8 @@ if (!isHost) {
 
     // checks
     const memberCount = group.members ? Object.keys(group.members).length : 0;
-    if (memberCount >= 6) {
-      showOverlayMsg("此組別已滿 6 人，請選擇其他組別！", 4000);
+    if (memberCount >= 8) {
+      showOverlayMsg("此組別已滿 8 人，請選擇其他組別！", 4000);
       return;
     }
     if (Object.values(group.members || {}).some(m => m?.name === name)) {
@@ -881,6 +881,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
