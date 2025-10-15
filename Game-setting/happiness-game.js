@@ -543,18 +543,6 @@ if (!isHost) {
       console.error("Failed to join group:", err);
       showOverlayMsg("加入組別失敗，請稍後再試。", 4000);
     }
-
-    // continue listening
-    onValue(ref(db, "gameState"), snap => {
-      currentGameState = snap.val() || "lobby";
-      if (currentGameState === "playing") {
-        if (els.waitingMsg) els.waitingMsg.style.display = "none";
-        if (els.phoneLabel) els.phoneLabel.textContent = "比賽開始！搖動手機！";
-      } else {
-        if (els.waitingMsg) els.waitingMsg.style.display = "block";
-      }
-    });
-
     onValue(groupRef, s => updatePhoneView(s.val() || {}));
   });
 }
@@ -617,25 +605,55 @@ let currentGameState = "lobby"; // track state
 onValue(ref(db, "gameState"), snap => {
   currentGameState = snap.val() || "lobby";
 
+  // Unified handling: make phones and host react to gameState changes
   if (isPhone) {
-    if (!currentGroupId) {
-      // not joined yet → show setup
-      showSetup();
+    if (currentGameState === "lobby") {
+      // Server returned to lobby: make sure phone UI returns to setup
+      // Clear local join state and hide the phone overlay / waiting UI
+      currentGroupId = null;
+
+      // hide phone overlay & waiting messages
+      if (els.phoneView) els.phoneView.style.display = "none";
+      if (els.waitingMsg) els.waitingMsg.style.display = "none";
+      if (els.phoneLabel) els.phoneLabel.style.display = "none";
+      if (els.phoneCupid) els.phoneCupid.style.display = "none";
+      if (els.leaveBtn) els.leaveBtn.style.display = "none";
+      if (els.renameBtn) els.renameBtn.style.display = "none";
+
+      // show the join form / setup screen
+      if (els.form) els.form.style.display = "block";
+      showSetup(); // keeps QR logic consistent
+    } else if (currentGameState === "playing") {
+      // game started -> hide waiting text, prompt user to shake
+      if (els.waitingMsg) els.waitingMsg.style.display = "none";
+      if (els.phoneLabel) els.phoneLabel.textContent = "比賽開始！搖動手機！";
+      // keep phoneView visible only if player already joined
+      if (currentGroupId && els.phoneView) {
+        els.phoneView.style.display = "flex";
+      }
+    } else {
+      // any other states - safe fallback to show waiting state (if joined)
+      if (currentGroupId) {
+        if (els.waitingMsg) els.waitingMsg.style.display = "block";
+        if (els.phoneLabel) els.phoneLabel.textContent = "等待主持人開始";
+      } else {
+        showSetup();
+      }
     }
-    // else: already joined, handled by the join group listener
   } else {
     // desktop host logic
     if (currentGameState === "lobby") {
       showSetup();
-      els.setupScreen.style.display = "block";
-      els.gameScreen.style.display = "none";
+      if (els.setupScreen) els.setupScreen.style.display = "block";
+      if (els.gameScreen) els.gameScreen.style.display = "none";
     } else if (currentGameState === "playing") {
-      els.setupScreen.style.display = "none";
-      els.gameScreen.style.display = "block";
+      if (els.setupScreen) els.setupScreen.style.display = "none";
+      if (els.gameScreen) els.gameScreen.style.display = "block";
       showGame();
     }
   }
 });
+
 
 onValue(ref(db,"groups"),snap=>{
   const groups = snap.val() || {};
@@ -857,6 +875,7 @@ els.exitBtn?.addEventListener("click", async () => {
   }
 
   await resetGame();
+  await set(ref(db, "gameState"), "lobby");
 
   currentGroupId = null;
   if (els.phoneView) els.phoneView.style.display = "none";
@@ -881,3 +900,4 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
