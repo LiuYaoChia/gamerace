@@ -211,71 +211,65 @@ async function renameGroup(newName) {
 
 // ====== Render Track + Rankings & Player List (Desktop) ======
 function renderGroupsUI(groups) {
-  // Clear previous UI
+  // defensive guard
+  if (!groups || typeof groups !== "object") {
+    els.track.innerHTML = "";
+    els.rankList.innerHTML = "";
+    els.playerList.innerHTML = "";
+    return;
+  }
+
   els.track.innerHTML = "";
   els.rankList.innerHTML = "";
   els.playerList.innerHTML = "";
 
-  // Filter only groups that have members
   const activeGroups = Object.entries(groups)
     .filter(([, g]) => g.members && Object.keys(g.members).length > 0)
-    .sort((a, b) => Number(a[0]) - Number(b[0])); // optional: sort by group ID
+    .sort((a, b) => Number(a[0]) - Number(b[0]));
 
-  // Render lanes & track
+  // helper moved outside loop
+  function updateCupidPositionForLane(laneEl, progress) {
+    const cupid = laneEl?.querySelector(".cupid");
+    const goal = laneEl?.querySelector(".goal");
+    if (!cupid || !goal) return;
+    const laneWidth = laneEl.offsetWidth;
+    const goalWidth = goal.offsetWidth;
+    const left = Math.min(progress, 100);
+    const maxLeftPx = laneWidth - goalWidth - 5;
+    const leftPx = (left / 100) * laneWidth;
+    cupid.style.left = `${Math.min(leftPx, maxLeftPx)}px`;
+  }
+
+  const trackFrag = document.createDocumentFragment();
   activeGroups.forEach(([gid, group]) => {
     const lane = document.createElement("div");
     lane.className = "lane";
     lane.dataset.groupId = gid;
     lane.innerHTML = `
-      <div class="lane-inner" 
-           style="position:relative;height:90px;width:100%;overflow:visible;">
-        
-        <!-- Group name -->
-        <span class="player-name" 
-              style="position:absolute;left:10px;top:10px;font-weight:bold;font-size:14px;">
+      <div class="lane-inner" style="position:relative;height:90px;width:100%;overflow:visible;">
+        <span class="player-name" style="position:absolute;left:10px;top:10px;font-weight:bold;font-size:14px;">
           ${group.name || customGroupNames[gid] || `Group ${gid}`}
         </span>
-
-        <!-- Cupid -->
-        <img class="cupid" 
-             src="${cupidVariants[group.cupidIndex ?? 0]}" 
-             style="height:75px;position:absolute;top:50%;
-                    transform:translateY(-50%);left:0%;">
-
-        <!-- Goal -->
-        <img class="goal" 
-             src="img/goal.png" 
-             style="height:75px;position:absolute;right:60px;
-                    top:50%;transform:translateY(-50%);">
-
-        <!-- Progress label (fixed near the goal) -->
-        <span class="progress-label" 
-              style="position:absolute;top:50%;right:10px;
-                     transform:translateY(-50%);
-                     font-size:16px;font-weight:bold;color:#333;">
+        <img class="cupid" src="${cupidVariants[group.cupidIndex ?? 0]}" style="height:75px;position:absolute;top:50%;transform:translateY(-50%);left:0%;">
+        <img class="goal" src="img/goal.png" style="height:75px;position:absolute;right:60px;top:50%;transform:translateY(-50%);">
+        <span class="progress-label" style="position:absolute;top:50%;right:10px;transform:translateY(-50%);font-size:16px;font-weight:bold;color:#333;">
           ${Math.floor(group.progress || 0)}%
         </span>
       </div>`;
-    function updateCupidPosition(groupId, progress) {
-      const lane = document.querySelector(`.lane[data-group-id="${groupId}"]`);
-      const cupid = lane?.querySelector(".cupid");
-      const goal = lane?.querySelector(".goal");
-      if (!cupid || !goal) return;
+    trackFrag.appendChild(lane);
 
-      const laneWidth = lane.offsetWidth;
-      const goalWidth = goal.offsetWidth;
+    // update cupid position after appended (safe)
+    // We will call position after appending to DOM
+  });
+  els.track.appendChild(trackFrag);
 
-      // Compute left so cupid touches the goal at 100%
-      const left = Math.min(progress, 100); // progress %
-      const maxLeftPx = laneWidth - goalWidth - 5; // 5px padding
-      const leftPx = (left / 100) * laneWidth;
-      cupid.style.left = `${Math.min(leftPx, maxLeftPx)}px`;
-    }
-    updateCupidPosition(gid, group.progress || 0);
-    els.track.appendChild(lane);
+  // After DOM appended, update positions
+  activeGroups.forEach(([gid, group]) => {
+    const laneEl = document.querySelector(`.lane[data-group-id="${gid}"]`);
+    updateCupidPositionForLane(laneEl, group.progress || 0);
   });
 
-    // Render ranking list (clone before sorting to avoid mutating)
+  // Ranking list
   [...activeGroups]
     .sort(([, a], [, b]) => (b.progress || 0) - (a.progress || 0))
     .forEach(([gid, group], idx) => {
@@ -284,29 +278,19 @@ function renderGroupsUI(groups) {
       els.rankList.appendChild(li);
     });
 
-  // dedupe the duplicate gid keys
-  const uniqueGroups = new Map();
+  // Player list
+  const playerFrag = document.createDocumentFragment();
   Object.entries(groups).forEach(([gid, g]) => {
-    if (g.members && Object.keys(g.members).length > 0) {
-      uniqueGroups.set(gid, g);
-    }
+    if (!g.members || Object.keys(g.members).length === 0) return;
+    const wrap = document.createElement("div");
+    wrap.className = "group";
+    const membersHtml = Object.values(g.members).map(m => `<li>${m.name}${m.isOwner ? " 👑" : ""}</li>`).join("");
+    wrap.innerHTML = `<h3>${g.name || customGroupNames[gid] || `Group ${gid}`}</h3><ul>${membersHtml}</ul>`;
+    playerFrag.appendChild(wrap);
   });
-
-  const uniqueActiveGroups = [...uniqueGroups.entries()]
-    .sort((a, b) => Number(a[0]) - Number(b[0]));
-
-  // Render player list
-  uniqueActiveGroups.forEach(([gid, group]) => {
-    const membersHtml = Object.values(group.members)
-      .map(m => `<li>${m.name}${m.isOwner ? " 👑" : ""}</li>`)
-      .join("");
-    els.playerList.innerHTML += `
-      <div class="group">
-        <h3>${group.name || customGroupNames[gid] || `Group ${gid}`}</h3>
-        <ul>${membersHtml}</ul>
-      </div>`;
-  });
+  els.playerList.appendChild(playerFrag);
 }
+
 
 // ====== Phone View ======
 async function updatePhoneView(group) {
@@ -599,20 +583,18 @@ function animateCupidJump(groupId) {
   }
 }
 
-// ====== Global Listeners ======
-let currentGameState = "lobby"; // track state
+// ====== Global Game State Listener (Host + Phone unified) ======
+let currentGameState = "lobby";
 
 onValue(ref(db, "gameState"), snap => {
   currentGameState = snap.val() || "lobby";
 
-  // Unified handling: make phones and host react to gameState changes
+  // PHONE (player) handling
   if (isPhone) {
     if (currentGameState === "lobby") {
-      // Server returned to lobby: make sure phone UI returns to setup
-      // Clear local join state and hide the phone overlay / waiting UI
+      // Clear local join state & hide phone overlay
       currentGroupId = null;
 
-      // hide phone overlay & waiting messages
       if (els.phoneView) els.phoneView.style.display = "none";
       if (els.waitingMsg) els.waitingMsg.style.display = "none";
       if (els.phoneLabel) els.phoneLabel.style.display = "none";
@@ -622,17 +604,17 @@ onValue(ref(db, "gameState"), snap => {
 
       // show the join form / setup screen
       if (els.form) els.form.style.display = "block";
-      showSetup(); // keeps QR logic consistent
+      showSetup();
+
+      // Refresh group choices for phones (safe if function exists)
+      if (typeof renderGroupChoices === "function") renderGroupChoices().catch(()=>{});
     } else if (currentGameState === "playing") {
-      // game started -> hide waiting text, prompt user to shake
       if (els.waitingMsg) els.waitingMsg.style.display = "none";
       if (els.phoneLabel) els.phoneLabel.textContent = "比賽開始！搖動手機！";
-      // keep phoneView visible only if player already joined
-      if (currentGroupId && els.phoneView) {
-        els.phoneView.style.display = "flex";
-      }
+      // Keep phone overlay visible only for joined users
+      if (currentGroupId && els.phoneView) els.phoneView.style.display = "flex";
     } else {
-      // any other states - safe fallback to show waiting state (if joined)
+      // fallback/waiting state
       if (currentGroupId) {
         if (els.waitingMsg) els.waitingMsg.style.display = "block";
         if (els.phoneLabel) els.phoneLabel.textContent = "等待主持人開始";
@@ -640,19 +622,21 @@ onValue(ref(db, "gameState"), snap => {
         showSetup();
       }
     }
-  } else {
-    // desktop host logic
-    if (currentGameState === "lobby") {
-      showSetup();
-      if (els.setupScreen) els.setupScreen.style.display = "block";
-      if (els.gameScreen) els.gameScreen.style.display = "none";
-    } else if (currentGameState === "playing") {
-      if (els.setupScreen) els.setupScreen.style.display = "none";
-      if (els.gameScreen) els.gameScreen.style.display = "block";
-      showGame();
-    }
+    return;
+  }
+
+  // HOST (desktop) handling
+  if (currentGameState === "lobby") {
+    showSetup();
+    if (els.setupScreen) els.setupScreen.style.display = "block";
+    if (els.gameScreen) els.gameScreen.style.display = "none";
+  } else if (currentGameState === "playing") {
+    if (els.setupScreen) els.setupScreen.style.display = "none";
+    if (els.gameScreen) els.gameScreen.style.display = "block";
+    showGame();
   }
 });
+
 
 
 onValue(ref(db,"groups"),snap=>{
@@ -900,4 +884,5 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
