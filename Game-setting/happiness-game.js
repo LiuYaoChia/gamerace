@@ -692,33 +692,60 @@ onValue(ref(db,"winner"), async (snap) => {
   }
 });
 
+if (winnerId) {
+  await push(ref(db, "winnerHistory"), {
+    groupId: winnerId,
+    name: groups[winnerId]?.name || `Group ${winnerId}`,
+    timestamp: Date.now()
+  });
+}
+
+// ====== Winner Exit: remove only the winning group, keep others ======
 els.winnerExit?.addEventListener("click", async () => {
-  // Get all groups
-  const snap = await get(ref(db, "groups"));
-  const groups = snap.val() || {};
-  const updates = {};
+  try {
+    // 1️⃣ Get the winner info
+    const winnerSnap = await get(ref(db, "winner"));
+    const winnerData = winnerSnap.val();
+    const winnerId = winnerData?.groupId || null;
 
-  // Reset each group
-  for (const gid in groups) {
-    updates[`groups/${gid}/members`] = {};
-    updates[`groups/${gid}/progress`] = 0;
-    updates[`groups/${gid}/name`] = customGroupNames[gid] || `Group ${gid}`;
+    // 2️⃣ Get all groups
+    const snap = await get(ref(db, "groups"));
+    const groups = snap.val() || {};
+
+    const updates = {};
+
+    for (const gid in groups) {
+      if (gid === winnerId) {
+        // 3️⃣ Remove the winner group completely
+        await remove(ref(db, `groups/${gid}`));
+      } else {
+        // 4️⃣ Reset other groups
+        updates[`groups/${gid}/members`] = {};
+        updates[`groups/${gid}/progress`] = 0;
+        updates[`groups/${gid}/shakes`] = 0;
+        updates[`groups/${gid}/name`] = customGroupNames[gid] || `Group ${gid}`;
+      }
+    }
+
+    // 5️⃣ Apply resets, clear winner, and go back to lobby
+    if (Object.keys(updates).length > 0) await update(ref(db), updates);
+    await remove(ref(db, "winner"));
+    await set(ref(db, "gameState"), "lobby");
+
+    // 6️⃣ Local UI cleanup
+    currentGroupId = null;
+    if (els.winnerPopup) els.winnerPopup.style.display = "none";
+    if (els.gameScreen) els.gameScreen.style.display = "none";
+    if (els.setupScreen) els.setupScreen.style.display = "block";
+    if (els.phoneView) els.phoneView.style.display = "none";
+
+    alert("已返回大廳！贏家組別已刪除，其餘組別保留。");
+  } catch (err) {
+    console.error("Winner exit reset failed:", err);
+    alert("重置過程出現錯誤，請稍後再試。");
   }
-
-  // Apply the reset to the database
-  await update(ref(db), updates);
-
-  // Remove winner and return to lobby
-  await remove(ref(db, "winner"));
-  await set(ref(db, "gameState"), "lobby");
-
-  // Update local UI (back to setup screen)
-  if (els.winnerPopup) els.winnerPopup.style.display = "none";
-  els.gameScreen.style.display = "none";
-  els.setupScreen.style.display = "block";
-
-  alert("遊戲已重置，回到大廳！");
 });
+
 
 // ====== Start / Reset / Exit ======
 async function startGame() {
@@ -884,5 +911,6 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
