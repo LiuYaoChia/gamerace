@@ -665,40 +665,102 @@ onValue(ref(db,"groups"),snap=>{
 });
 
 // ====== Winner ======
-onValue(ref(db,"winner"), async (snap) => {
+onValue(ref(db, "winner"), async (snap) => {
   const winnerId = snap.val();
+
+  // Hide popup if no winner
   if (!winnerId) {
     if (els.winnerPopup) els.winnerPopup.style.display = "none";
     return;
   }
 
   try {
-    const g = (await get(ref(db, `groups/${winnerId}`))).val() || {};
+    // ====== Fetch winner group info ======
+    const gSnap = await get(ref(db, `groups/${winnerId}`));
+    const g = gSnap.val() || {};
     const name = g.name || `Group ${winnerId}`;
+
+    // ====== Show current winner ======
     if (els.winnerMsg) els.winnerMsg.textContent = `🏆 Winner: ${name}!`;
 
     const cupidSrc = cupidVariants[g.cupidIndex || 0];
     const winnerCupid = document.getElementById("winner-cupid");
-    const winnerGoal  = document.getElementById("winner-goal");
+    const winnerGoal = document.getElementById("winner-goal");
     if (winnerCupid) {
       winnerCupid.src = cupidSrc;
-      winnerCupid.classList.remove("land"); void winnerCupid.offsetWidth;
+      winnerCupid.classList.remove("land");
+      void winnerCupid.offsetWidth;
       winnerCupid.classList.add("land");
     }
     if (winnerGoal) winnerGoal.src = "img/goal.png";
+
     if (els.winnerPopup) els.winnerPopup.style.display = "flex";
+
+    // ====== Show member list ======
+    let listContainer = document.getElementById("winner-members");
+    if (!listContainer) {
+      listContainer = document.createElement("div");
+      listContainer.id = "winner-members";
+      listContainer.style.marginTop = "15px";
+      listContainer.style.textAlign = "center";
+      listContainer.style.fontSize = "17px";
+      els.winnerPopup.appendChild(listContainer);
+    }
+
+    const membersSnap = await get(ref(db, `groups/${winnerId}/members`));
+    const members = membersSnap.val() || {};
+
+    let html = `<h3 style="margin-bottom:8px;">👥 成員名單</h3><ul style="list-style:none;padding:0;">`;
+    if (Object.keys(members).length > 0) {
+      for (const m of Object.values(members)) {
+        html += `<li style="margin:4px 0;">${m.name}</li>`;
+      }
+    } else {
+      html += `<li>（無成員資料）</li>`;
+    }
+    html += `</ul>`;
+    listContainer.innerHTML = html;
+
+    // ====== Push new winner into Firebase history ======
+    await push(ref(db, "winnerHistory"), {
+      groupId: winnerId,
+      name,
+      timestamp: Date.now()
+    });
+
+    // ====== Render persistent winner history ======
+    const historyRef = ref(db, "winnerHistory");
+    onValue(historyRef, (histSnap) => {
+      const history = histSnap.val() || {};
+      let histContainer = document.getElementById("winner-history");
+      if (!histContainer) {
+        histContainer = document.createElement("div");
+        histContainer.id = "winner-history";
+        histContainer.style.marginTop = "25px";
+        histContainer.style.textAlign = "center";
+        histContainer.style.fontSize = "15px";
+        histContainer.style.maxHeight = "150px";
+        histContainer.style.overflowY = "auto";
+        histContainer.style.borderTop = "1px solid rgba(255,255,255,0.2)";
+        histContainer.style.paddingTop = "10px";
+        els.winnerPopup.appendChild(histContainer);
+      }
+
+      // sort newest first
+      const entries = Object.values(history).sort((a, b) => b.timestamp - a.timestamp);
+      let listHTML = `<h4 style="margin-bottom:6px;">🏅 歷屆優勝紀錄</h4><ul style="list-style:none;padding:0;margin:0;">`;
+      for (const h of entries) {
+        const date = new Date(h.timestamp).toLocaleString("zh-TW", { hour12: false });
+        listHTML += `<li style="margin:4px 0;">${h.name} <span style="opacity:0.7;font-size:13px;">(${date})</span></li>`;
+      }
+      listHTML += `</ul>`;
+      histContainer.innerHTML = listHTML;
+    });
+
   } catch (err) {
     console.error("Winner fetch failed:", err);
   }
 });
-
-if (winnerId) {
-  await push(ref(db, "winnerHistory"), {
-    groupId: winnerId,
-    name: groups[winnerId]?.name || `Group ${winnerId}`,
-    timestamp: Date.now()
-  });
-}
 
 // ====== Winner Exit: remove only the winning group, keep others ======
 els.winnerExit?.addEventListener("click", async () => {
@@ -911,6 +973,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
