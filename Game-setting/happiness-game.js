@@ -40,7 +40,7 @@ const customGroupNames = {
   1: "粉色蚵仔",
   2: "藍色蚵仔",
   3: "白色蚵仔",
-  4: "黑色蚵仔",
+  4: "紅色蚵仔",
   5: "黑色蚵仔",
   6: "黃色蚵仔"
 };
@@ -973,6 +973,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
