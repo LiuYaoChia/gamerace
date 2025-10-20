@@ -665,38 +665,37 @@ onValue(ref(db,"groups"),snap=>{
 });
 
 // ====== Winner ======
+// ====== Winner (Persistent Winner History) ======
+import { push, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
 onValue(ref(db, "winner"), async (snap) => {
   const winnerId = snap.val();
-
-  // Hide popup if no winner
   if (!winnerId) {
     if (els.winnerPopup) els.winnerPopup.style.display = "none";
     return;
   }
 
   try {
-    // ====== Fetch winner group info ======
+    // --- Fetch current winner info ---
     const gSnap = await get(ref(db, `groups/${winnerId}`));
     const g = gSnap.val() || {};
     const name = g.name || `Group ${winnerId}`;
 
-    // ====== Show current winner ======
+    // --- Update popup display ---
     if (els.winnerMsg) els.winnerMsg.textContent = `🏆 Winner: ${name}!`;
 
     const cupidSrc = cupidVariants[g.cupidIndex || 0];
     const winnerCupid = document.getElementById("winner-cupid");
-    const winnerGoal = document.getElementById("winner-goal");
     if (winnerCupid) {
       winnerCupid.src = cupidSrc;
       winnerCupid.classList.remove("land");
       void winnerCupid.offsetWidth;
       winnerCupid.classList.add("land");
     }
-    if (winnerGoal) winnerGoal.src = "img/goal.png";
 
     if (els.winnerPopup) els.winnerPopup.style.display = "flex";
 
-    // ====== Show member list ======
+    // --- Member list ---
     let listContainer = document.getElementById("winner-members");
     if (!listContainer) {
       listContainer = document.createElement("div");
@@ -709,7 +708,6 @@ onValue(ref(db, "winner"), async (snap) => {
 
     const membersSnap = await get(ref(db, `groups/${winnerId}/members`));
     const members = membersSnap.val() || {};
-
     let html = `<h3 style="margin-bottom:8px;">👥 成員名單</h3><ul style="list-style:none;padding:0;">`;
     if (Object.keys(members).length > 0) {
       for (const m of Object.values(members)) {
@@ -721,15 +719,21 @@ onValue(ref(db, "winner"), async (snap) => {
     html += `</ul>`;
     listContainer.innerHTML = html;
 
-    // ====== Push new winner into Firebase history ======
-    await push(ref(db, "winnerHistory"), {
-      groupId: winnerId,
-      name,
-      timestamp: Date.now()
-    });
-
-    // ====== Render persistent winner history ======
+    // --- Only add to history if not already recorded ---
     const historyRef = ref(db, "winnerHistory");
+    const histSnap = await get(historyRef);
+    const history = histSnap.val() || {};
+    const alreadyExists = Object.values(history).some(h => h.groupId === winnerId && h.name === name);
+
+    if (!alreadyExists) {
+      await push(historyRef, {
+        groupId: winnerId,
+        name,
+        timestamp: Date.now()
+      });
+    }
+
+    // --- Persistent winner history display ---
     onValue(historyRef, (histSnap) => {
       const history = histSnap.val() || {};
       let histContainer = document.getElementById("winner-history");
@@ -746,7 +750,6 @@ onValue(ref(db, "winner"), async (snap) => {
         els.winnerPopup.appendChild(histContainer);
       }
 
-      // sort newest first
       const entries = Object.values(history).sort((a, b) => b.timestamp - a.timestamp);
       let listHTML = `<h4 style="margin-bottom:6px;">🏅 歷屆優勝紀錄</h4><ul style="list-style:none;padding:0;margin:0;">`;
       for (const h of entries) {
@@ -973,6 +976,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
