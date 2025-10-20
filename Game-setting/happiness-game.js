@@ -32,17 +32,17 @@ const SHAKE_THRESHOLD    = 15;
 
 const cupidVariants = [
   "img/groom1.png","img/groom2.png","img/groom3.png",
-  "img/groom4.png","img/groom5.png","img/groom6.png","img/groom7.png"
+  "img/groom7.png","img/groom5.png","img/groom6.png"
 ];
 
 // ====== Custom Group Names ======
 const customGroupNames = {
   1: "粉色蚵仔",
-  2: "黃色蚵仔",
-  3: "紅色蚵仔",
-  4: "藍色蚵仔",
+  2: "藍色蚵仔",
+  3: "白色蚵仔",
+  4: "黑色蚵仔",
   5: "黑色蚵仔",
-  6: "白色蚵仔"
+  6: "黃色蚵仔"
 };
 
 // ====== DOM ======
@@ -973,6 +973,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
