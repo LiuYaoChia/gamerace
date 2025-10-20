@@ -1,7 +1,7 @@
 // ====== Firebase Setup ======
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
-  getDatabase, ref, set, onValue, get, remove, update, runTransaction, onDisconnect 
+  getDatabase, ref, set, onValue, get, push, remove, update, runTransaction, onDisconnect 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { 
   getAuth, signInAnonymously, onAuthStateChanged 
@@ -664,10 +664,7 @@ onValue(ref(db,"groups"),snap=>{
   }
 });
 
-// ====== Winner ======
 // ====== Winner (Persistent Winner History) ======
-import { push, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
 onValue(ref(db, "winner"), async (snap) => {
   const winnerId = snap.val();
   if (!winnerId) {
@@ -976,6 +973,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
