@@ -564,24 +564,19 @@ function handleMotion(e) {
 }
 
 function addGroupShakeTx(groupId) {
-  const gRef=ref(db,`groups/${groupId}`);
-  runTransaction(gRef,(g)=>{
-    if(!g) return g;
-    return {...g,
-      shakes:(g.shakes||0)+1,
-      progress:Math.min(100,(g.progress||0)+STEP_PERCENT)};
-  }).then(async(res)=>{
-    const g=res.snapshot?.val();
+  const gRef = ref(db, `groups/${groupId}`);
+  runTransaction(gRef, (g) => {
+    if (!g) return g;
+    return {
+      ...g,
+      shakes: (g.shakes || 0) + 1,
+      progress: Math.min(100, (g.progress || 0) + STEP_PERCENT),
+    };
+  }).then(async (res) => {
+    const g = res.snapshot?.val();
     if (g && g.progress >= 100) {
-      // Save the groupId instead of the group name
+      // ✅ store the groupId only
       await set(ref(db, "winner"), groupId);
-
-      // Optional: log to history right here
-      await push(ref(db, "winnerHistory"), {
-        groupId,
-        name: g.name || `Group ${groupId}`,
-        timestamp: Date.now(),
-      });
     }
   });
 }
@@ -688,14 +683,13 @@ onValue(ref(db, "winner"), async (snap) => {
   }
 
   try {
-    // --- Fetch current winner info ---
     const gSnap = await get(ref(db, `groups/${winnerId}`));
     const g = gSnap.val() || {};
     const name = g.name || `Group ${winnerId}`;
 
-    // --- Update popup display ---
     if (els.winnerMsg) els.winnerMsg.textContent = `🏆 Winner: ${name}!`;
 
+    // --- Correct cupid image ---
     const cupidSrc = cupidVariants[g.cupidIndex ?? 0];
     const winnerCupid = document.getElementById("winner-cupid");
     if (winnerCupid) {
@@ -707,7 +701,7 @@ onValue(ref(db, "winner"), async (snap) => {
 
     if (els.winnerPopup) els.winnerPopup.style.display = "flex";
 
-    // --- Member list display ---
+    // --- Member list ---
     let listContainer = document.getElementById("winner-members");
     if (!listContainer) {
       listContainer = document.createElement("div");
@@ -716,6 +710,8 @@ onValue(ref(db, "winner"), async (snap) => {
       listContainer.style.textAlign = "center";
       listContainer.style.fontSize = "17px";
       els.winnerPopup.appendChild(listContainer);
+    } else {
+      listContainer.innerHTML = "";
     }
 
     const members = g.members || {};
@@ -726,19 +722,13 @@ onValue(ref(db, "winner"), async (snap) => {
     html += `</ul>`;
     listContainer.innerHTML = html;
 
-    // --- Add to history (if not already logged) ---
+    // --- Winner history logging ---
     const historyRef = ref(db, "winnerHistory");
     const histSnap = await get(historyRef);
     const history = histSnap.val() || {};
-    const alreadyExists = Object.values(history).some(
-      h => h.groupId === winnerId && h.name === name
-    );
+    const alreadyExists = Object.values(history).some(h => h.groupId === winnerId);
     if (!alreadyExists) {
-      await push(historyRef, {
-        groupId: winnerId,
-        name,
-        timestamp: Date.now(),
-      });
+      await push(historyRef, { groupId: winnerId, name, timestamp: Date.now() });
     }
 
   } catch (err) {
@@ -986,6 +976,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
