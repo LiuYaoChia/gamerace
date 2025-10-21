@@ -572,7 +572,17 @@ function addGroupShakeTx(groupId) {
       progress:Math.min(100,(g.progress||0)+STEP_PERCENT)};
   }).then(async(res)=>{
     const g=res.snapshot?.val();
-    if(g&&g.progress>=100) await set(ref(db,"winner"),g.name||groupId.toString());
+    if (g && g.progress >= 100) {
+      // Save the groupId instead of the group name
+      await set(ref(db, "winner"), groupId);
+
+      // Optional: log to history right here
+      await push(ref(db, "winnerHistory"), {
+        groupId,
+        name: g.name || `Group ${groupId}`,
+        timestamp: Date.now(),
+      });
+    }
   });
 }
 
@@ -669,7 +679,7 @@ onValue(ref(db,"groups"),snap=>{
   }
 });
 
-// ====== Winner (Persistent Winner History) ======
+// ====== Winner popup logic ======
 onValue(ref(db, "winner"), async (snap) => {
   const winnerId = snap.val();
   if (!winnerId) {
@@ -686,7 +696,7 @@ onValue(ref(db, "winner"), async (snap) => {
     // --- Update popup display ---
     if (els.winnerMsg) els.winnerMsg.textContent = `🏆 Winner: ${name}!`;
 
-    const cupidSrc = cupidVariants[g.cupidIndex || 0];
+    const cupidSrc = cupidVariants[g.cupidIndex ?? 0];
     const winnerCupid = document.getElementById("winner-cupid");
     if (winnerCupid) {
       winnerCupid.src = cupidSrc;
@@ -697,7 +707,7 @@ onValue(ref(db, "winner"), async (snap) => {
 
     if (els.winnerPopup) els.winnerPopup.style.display = "flex";
 
-    // --- Member list ---
+    // --- Member list display ---
     let listContainer = document.getElementById("winner-members");
     if (!listContainer) {
       listContainer = document.createElement("div");
@@ -708,64 +718,62 @@ onValue(ref(db, "winner"), async (snap) => {
       els.winnerPopup.appendChild(listContainer);
     }
 
-    const membersSnap = await get(ref(db, `groups/${winnerId}/members`));
-    const members = membersSnap.val() || {};
+    const members = g.members || {};
     let html = `<h3 style="margin-bottom:8px;">👥 成員名單</h3><ul style="list-style:none;padding:0;">`;
-    if (Object.keys(members).length > 0) {
-      for (const m of Object.values(members)) {
-        html += `<li style="margin:4px 0;">${m.name}</li>`;
-      }
-    } else {
-      html += `<li>（無成員資料）</li>`;
-    }
+    html += Object.values(members)
+      .map(m => `<li style="margin:4px 0;">${m.name}${m.isOwner ? " 👑" : ""}</li>`)
+      .join("") || `<li>（無成員資料）</li>`;
     html += `</ul>`;
     listContainer.innerHTML = html;
 
-    // --- Only add to history if not already recorded ---
+    // --- Add to history (if not already logged) ---
     const historyRef = ref(db, "winnerHistory");
     const histSnap = await get(historyRef);
     const history = histSnap.val() || {};
-    const alreadyExists = Object.values(history).some(h => h.groupId === winnerId && h.name === name);
-
+    const alreadyExists = Object.values(history).some(
+      h => h.groupId === winnerId && h.name === name
+    );
     if (!alreadyExists) {
       await push(historyRef, {
         groupId: winnerId,
         name,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
     }
-
-    // --- Persistent winner history display ---
-    onValue(historyRef, (histSnap) => {
-      const history = histSnap.val() || {};
-      let histContainer = document.getElementById("winner-history");
-      if (!histContainer) {
-        histContainer = document.createElement("div");
-        histContainer.id = "winner-history";
-        histContainer.style.marginTop = "25px";
-        histContainer.style.textAlign = "center";
-        histContainer.style.fontSize = "15px";
-        histContainer.style.maxHeight = "150px";
-        histContainer.style.overflowY = "auto";
-        histContainer.style.borderTop = "1px solid rgba(255,255,255,0.2)";
-        histContainer.style.paddingTop = "10px";
-        els.winnerPopup.appendChild(histContainer);
-      }
-
-      const entries = Object.values(history).sort((a, b) => b.timestamp - a.timestamp);
-      let listHTML = `<h4 style="margin-bottom:6px;">🏅 歷屆優勝紀錄</h4><ul style="list-style:none;padding:0;margin:0;">`;
-      for (const h of entries) {
-        const date = new Date(h.timestamp).toLocaleString("zh-TW", { hour12: false });
-        listHTML += `<li style="margin:4px 0;">${h.name} <span style="opacity:0.7;font-size:13px;">(${date})</span></li>`;
-      }
-      listHTML += `</ul>`;
-      histContainer.innerHTML = listHTML;
-    });
 
   } catch (err) {
     console.error("Winner fetch failed:", err);
   }
 });
+
+// ====== Persistent winner history (runs once) ======
+const historyRef = ref(db, "winnerHistory");
+onValue(historyRef, (histSnap) => {
+  const history = histSnap.val() || {};
+  let histContainer = document.getElementById("winner-history");
+  if (!histContainer) {
+    histContainer = document.createElement("div");
+    histContainer.id = "winner-history";
+    histContainer.style.marginTop = "25px";
+    histContainer.style.textAlign = "center";
+    histContainer.style.fontSize = "15px";
+    histContainer.style.maxHeight = "150px";
+    histContainer.style.overflowY = "auto";
+    histContainer.style.borderTop = "1px solid rgba(255,255,255,0.2)";
+    histContainer.style.paddingTop = "10px";
+    els.winnerPopup.appendChild(histContainer);
+  }
+
+  const entries = Object.values(history).sort((a, b) => b.timestamp - a.timestamp);
+  let listHTML = `<h4 style="margin-bottom:6px;">🏅 歷屆優勝紀錄</h4><ul style="list-style:none;padding:0;margin:0;">`;
+  for (const h of entries) {
+    const date = new Date(h.timestamp).toLocaleString("zh-TW", { hour12: false });
+    listHTML += `<li style="margin:4px 0;">${h.name} <span style="opacity:0.7;font-size:13px;">(${date})</span></li>`;
+  }
+  listHTML += `</ul>`;
+  histContainer.innerHTML = listHTML;
+});
+
 
 // ====== Winner Exit: remove only the winning group, keep others ======
 els.winnerExit?.addEventListener("click", async () => {
@@ -978,6 +986,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
