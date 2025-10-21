@@ -227,18 +227,23 @@ function renderGroupsUI(groups) {
     .filter(([, g]) => g.members && Object.keys(g.members).length > 0)
     .sort((a, b) => Number(a[0]) - Number(b[0]));
 
-  // helper moved outside loop
   function updateCupidPositionForLane(laneEl, progress) {
     const cupid = laneEl?.querySelector(".cupid");
     const goal = laneEl?.querySelector(".goal");
     if (!cupid || !goal) return;
+
     const laneWidth = laneEl.offsetWidth;
-    const goalWidth = goal.offsetWidth;
+    const cupidWidth = cupid.offsetWidth;
+    const goalLeft = goal.offsetLeft;
+
+    // Compute how far along the lane the cupid should go
     const left = Math.min(progress, 100);
-    const maxLeftPx = laneWidth - goalWidth - 5;
-    const leftPx = (left / 100) * laneWidth;
+    const maxLeftPx = goalLeft - cupidWidth; // stop exactly touching the goal
+    const leftPx = (left / 100) * (laneWidth - cupidWidth);
+
     cupid.style.left = `${Math.min(leftPx, maxLeftPx)}px`;
   }
+
 
   const trackFrag = document.createDocumentFragment();
   activeGroups.forEach(([gid, group]) => {
@@ -973,6 +978,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
