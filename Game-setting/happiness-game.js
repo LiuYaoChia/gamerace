@@ -787,48 +787,59 @@ onValue(ref(db, "winner"), async (snap) => {
 
 
 
-// ====== Winner Exit: remove only the winning group, keep others ======
+// ====== Winner Exit: keep winner player in their group, remove others ======
 els.winnerExit?.addEventListener("click", async () => {
   try {
-    // 1️⃣ Get the winner info
-    const winnerSnap = await get(ref(db, "winner"));
-    const winnerData = winnerSnap.val();
-    const winnerId = winnerData?.groupId || null;
+    // 1️⃣ Get winner group ID
+    const winnerId = await get(ref(db, "winner")).then(snap => snap.val());
+    if (!winnerId) {
+      alert("沒有找到勝利組別！");
+      return;
+    }
 
     // 2️⃣ Get all groups
     const snap = await get(ref(db, "groups"));
     const groups = snap.val() || {};
 
+    // 3️⃣ Remove all other groups, reset winner group members if needed
     const updates = {};
-
     for (const gid in groups) {
       if (gid === winnerId) {
-        // 3️⃣ Remove the winner group completely
-        await remove(ref(db, `groups/${gid}`));
-      } else {
-        // 4️⃣ Reset other groups
-        updates[`groups/${gid}/members`] = {};
+        // ✅ Keep winner group members intact
         updates[`groups/${gid}/progress`] = 0;
         updates[`groups/${gid}/shakes`] = 0;
-        updates[`groups/${gid}/name`] = customGroupNames[gid] || `Group ${gid}`;
+        // optionally reset name to custom name if you want
+        updates[`groups/${gid}/name`] = groups[gid].name || customGroupNames[gid] || `Group ${gid}`;
+      } else {
+        // Remove other groups entirely
+        await remove(ref(db, `groups/${gid}`));
       }
     }
 
-    // 5️⃣ Apply resets, clear winner, and go back to lobby
-    if (Object.keys(updates).length > 0) await update(ref(db), updates);
+    // 4️⃣ Apply updates for winner group
+    if (Object.keys(updates).length > 0) await update(ref(db, updates));
+
+    // 5️⃣ Clear winner and reset game state for host
     await remove(ref(db, "winner"));
     await set(ref(db, "gameState"), "lobby");
 
-    // 6️⃣ Local UI cleanup
-    currentGroupId = null;
-    if (els.winnerPopup) els.winnerPopup.style.display = "none";
-    if (els.gameScreen) els.gameScreen.style.display = "none";
-    if (els.setupScreen) els.setupScreen.style.display = "block";
-    if (els.phoneView) els.phoneView.style.display = "none";
+    // 6️⃣ Host UI: go back to lobby
+    if (!isPhone) {
+      if (els.gameScreen) els.gameScreen.style.display = "none";
+      if (els.setupScreen) els.setupScreen.style.display = "block";
+    }
 
-    alert("已返回大廳！贏家組別已刪除，其餘組別保留。");
+    // 7️⃣ Winner phone: stay in the group view (do not reset)
+    if (isPhone && currentGroupId === winnerId) {
+      // ensure phone view shows the winner's group info
+      const gSnap = await get(ref(db, `groups/${winnerId}`));
+      updatePhoneView(gSnap.val() || {});
+    }
+
+    alert("已返回大廳！其他組別已刪除，勝利組別保留。");
+
   } catch (err) {
-    console.error("Winner exit reset failed:", err);
+    console.error("Winner exit failed:", err);
     alert("重置過程出現錯誤，請稍後再試。");
   }
 });
@@ -1014,6 +1025,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
