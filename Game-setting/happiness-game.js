@@ -649,23 +649,31 @@ onValue(ref(db, "gameState"), snap => {
 
 
 
-onValue(ref(db,"groups"),snap=>{
+onValue(ref(db, "groups"), (snap) => {
   const groups = snap.val() || {};
 
   if (!isPhone) {
-    renderGroupsUI(groups);
+    // only render valid groups
+    const validGroups = Object.entries(groups)
+      .filter(([_, g]) => g && typeof g === "object" && g.name); // ✅ skip null or empty
+
+    renderGroupsUI(Object.fromEntries(validGroups));
 
     if (currentGameState === "lobby") {
       // show player list
       els.playerList.innerHTML = "";
-      Object.entries(groups).forEach(([gid,g])=>{
-        const members = Object.values(g.members||{}).map(m=>`<li>${m.name}</li>`).join("");
+      validGroups.forEach(([gid, g]) => {
+        const members = Object.values(g.members || {})
+          .map((m) => `<li>${m.name}</li>`)
+          .join("");
+
+        const groupName = customGroupNames[gid] || g.name; // ✅ safer naming
+
         els.playerList.innerHTML += `
           <div class="group">
-            <h3>${customGroupNames[gid] || `Group ${g.name}`}</h3>
+            <h3>${groupName}</h3>
             <ul>${members}</ul>
           </div>`;
-
       });
     } else {
       // clear player list when game started
@@ -673,6 +681,7 @@ onValue(ref(db,"groups"),snap=>{
     }
   }
 });
+
 
 // ====== Winner popup logic (with ranking, no duplicate history, no old list) ======
 onValue(ref(db, "winner"), async (snap) => {
@@ -979,3 +988,4 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
