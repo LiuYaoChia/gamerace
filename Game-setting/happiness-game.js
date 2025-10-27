@@ -648,6 +648,16 @@ onValue(ref(db, "gameState"), snap => {
 });
 
 
+const groupsRef = ref(db, "groups");
+get(groupsRef).then((snap) => {
+  const groups = snap.val() || {};
+  for (const [gid, g] of Object.entries(groups)) {
+    if (!g || typeof g !== "object" || !g.name) {
+      console.log("Removing invalid group:", gid);
+      remove(ref(db, `groups/${gid}`));
+    }
+  }
+});
 
 onValue(ref(db, "groups"), (snap) => {
   const groups = snap.val() || {};
@@ -988,4 +998,5 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
