@@ -674,7 +674,7 @@ onValue(ref(db,"groups"),snap=>{
   }
 });
 
-// ====== Winner popup logic ======
+// ====== Winner popup logic (with ranking, no duplicate history, no old list) ======
 onValue(ref(db, "winner"), async (snap) => {
   const winnerId = snap.val();
   if (!winnerId) {
@@ -722,7 +722,7 @@ onValue(ref(db, "winner"), async (snap) => {
     html += `</ul>`;
     listContainer.innerHTML = html;
 
-    // --- Winner history logging ---
+    // --- Winner history (unique logging only, no display) ---
     const historyRef = ref(db, "winnerHistory");
     const histSnap = await get(historyRef);
     const history = histSnap.val() || {};
@@ -731,10 +731,41 @@ onValue(ref(db, "winner"), async (snap) => {
       await push(historyRef, { groupId: winnerId, name, timestamp: Date.now() });
     }
 
+    // --- Ranking (Top 3 by progress) ---
+    const groupsSnap = await get(ref(db, "groups"));
+    const groups = groupsSnap.val() || {};
+    const ranked = Object.entries(groups)
+      .map(([id, g]) => ({
+        id,
+        name: g.name || `Group ${id}`,
+        progress: g.progress || 0
+      }))
+      .sort((a, b) => b.progress - a.progress)
+      .slice(0, 3);
+
+    let rankContainer = document.getElementById("winner-ranking");
+    if (!rankContainer) {
+      rankContainer = document.createElement("div");
+      rankContainer.id = "winner-ranking";
+      rankContainer.style.marginTop = "20px";
+      rankContainer.style.textAlign = "center";
+      rankContainer.style.fontSize = "16px";
+      els.winnerPopup.appendChild(rankContainer);
+    }
+
+    let rankHTML = `<h3 style="margin-bottom:8px;">🏁 最終排名</h3><ul style="list-style:none;padding:0;">`;
+    ranked.forEach((r, i) => {
+      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉";
+      rankHTML += `<li style="margin:4px 0;">${medal} ${r.name} — ${r.progress}%</li>`;
+    });
+    rankHTML += `</ul>`;
+    rankContainer.innerHTML = rankHTML;
+
   } catch (err) {
     console.error("Winner fetch failed:", err);
   }
 });
+
 
 // ====== Persistent winner history (runs once) ======
 const historyRef = ref(db, "winnerHistory");
@@ -976,6 +1007,7 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
+
 
 
 
