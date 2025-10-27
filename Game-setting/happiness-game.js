@@ -992,11 +992,28 @@ els.renameBtn?.addEventListener("click", async () => {
 });
 
 
+async function removeRedundantGroups() {
+  const snap = await get(ref(db, "groups"));
+  const groups = snap.val() || {};
+
+  for (const [gid, g] of Object.entries(groups)) {
+    const hasMembers = g.members && Object.keys(g.members).length > 0;
+    const validName  = g.name && g.name.trim() !== "" && g.name !== "null";
+
+    if (!hasMembers || !validName) {
+      console.log("Removing redundant group:", gid, g);
+      await remove(ref(db, `groups/${gid}`));
+    }
+  }
+}
+
 // ====== Boot ======
 (async function boot() {
   showSetup();
   await ensureGroups();                  // make sure groups exist
-  if (!isHost) await renderGroupChoices(); // then render the choices for phones
+  await removeRedundantGroups();         // remove any empty/redundant groups
+  if (!isHost) await renderGroupChoices();
 })();
+
 
 
