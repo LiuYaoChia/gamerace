@@ -767,34 +767,6 @@ onValue(ref(db, "winner"), async (snap) => {
 });
 
 
-// ====== Persistent winner history (runs once) ======
-const historyRef = ref(db, "winnerHistory");
-onValue(historyRef, (histSnap) => {
-  const history = histSnap.val() || {};
-  let histContainer = document.getElementById("winner-history");
-  if (!histContainer) {
-    histContainer = document.createElement("div");
-    histContainer.id = "winner-history";
-    histContainer.style.marginTop = "25px";
-    histContainer.style.textAlign = "center";
-    histContainer.style.fontSize = "15px";
-    histContainer.style.maxHeight = "150px";
-    histContainer.style.overflowY = "auto";
-    histContainer.style.borderTop = "1px solid rgba(255,255,255,0.2)";
-    histContainer.style.paddingTop = "10px";
-    els.winnerPopup.appendChild(histContainer);
-  }
-
-  const entries = Object.values(history).sort((a, b) => b.timestamp - a.timestamp);
-  let listHTML = `<h4 style="margin-bottom:6px;">🏅 歷屆優勝紀錄</h4><ul style="list-style:none;padding:0;margin:0;">`;
-  for (const h of entries) {
-    const date = new Date(h.timestamp).toLocaleString("zh-TW", { hour12: false });
-    listHTML += `<li style="margin:4px 0;">${h.name} <span style="opacity:0.7;font-size:13px;">(${date})</span></li>`;
-  }
-  listHTML += `</ul>`;
-  histContainer.innerHTML = listHTML;
-});
-
 
 // ====== Winner Exit: remove only the winning group, keep others ======
 els.winnerExit?.addEventListener("click", async () => {
@@ -1007,15 +979,3 @@ els.renameBtn?.addEventListener("click", async () => {
   await ensureGroups();                  // make sure groups exist
   if (!isHost) await renderGroupChoices(); // then render the choices for phones
 })();
-
-
-
-
-
-
-
-
-
-
-
-
