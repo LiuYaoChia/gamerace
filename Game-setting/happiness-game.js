@@ -1004,15 +1004,20 @@ els.renameBtn?.addEventListener("click", async () => {
 
 
 async function removeRedundantGroups() {
+  // Wait a bit to ensure groups have loaded properly
+  await new Promise(res => setTimeout(res, 1500));
+
   const snap = await get(ref(db, "groups"));
   const groups = snap.val() || {};
 
   for (const [gid, g] of Object.entries(groups)) {
-    const hasMembers = g.members && Object.keys(g.members).length > 0;
-    const validName  = g.name && g.name.trim() !== "" && g.name !== "null";
+    const members = g.members ? Object.keys(g.members) : [];
+    const hasMembers = members.length > 0;
+    const name = (g.name || "").trim();
 
-    if (!hasMembers || !validName) {
-      console.log("Removing redundant group:", gid, g);
+    // Only remove groups that truly have no data
+    if ((!hasMembers && name === "") || name === "null" || gid === "null") {
+      console.log("🗑 Removing redundant group:", gid, g);
       await remove(ref(db, `groups/${gid}`));
     }
   }
@@ -1025,6 +1030,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
