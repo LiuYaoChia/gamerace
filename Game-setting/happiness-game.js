@@ -536,9 +536,12 @@ if (!isHost) {
   });
 }
 
+if (isPhone && currentGroupId) {
+  // keep alive: reset presence on reconnect
+  onDisconnect(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`))
+    .cancel(); // cancel auto-remove if they were the winner
+}
 
-
- 
 // ====== Shake Handling ======
 els.motionBtn?.addEventListener("click",()=>{
   if(typeof DeviceMotionEvent!=="undefined" &&
@@ -790,7 +793,7 @@ onValue(ref(db, "winner"), async (snap) => {
 // ====== Winner Exit: keep winner player in their group, remove others ======
 els.winnerExit?.addEventListener("click", async () => {
   try {
-    // 1️⃣ Get the winner ID safely (handles both formats)
+    // 1️⃣ Get winner ID safely
     const winnerSnap = await get(ref(db, "winner"));
     const winnerVal = winnerSnap.val();
     const winnerId =
@@ -809,29 +812,28 @@ els.winnerExit?.addEventListener("click", async () => {
     const snap = await get(ref(db, "groups"));
     const groups = snap.val() || {};
 
-    // 3️⃣ Remove all other groups, keep the winner
+    // 3️⃣ Remove all other groups
     const updates = {};
     for (const gid in groups) {
       if (gid === winnerId) {
-        // ✅ Keep winner group and reset progress only
+        // ✅ Keep winner group members intact
         updates[`groups/${gid}/progress`] = 0;
         updates[`groups/${gid}/shakes`] = 0;
         updates[`groups/${gid}/name`] =
           groups[gid].name || customGroupNames?.[gid] || `Group ${gid}`;
       } else {
-        console.log("🗑 Removing group:", gid);
         await remove(ref(db, `groups/${gid}`));
       }
     }
 
-    // 4️⃣ Apply updates for winner group
+    // 4️⃣ Apply updates
     if (Object.keys(updates).length > 0) await update(ref(db), updates);
 
-    // 5️⃣ Reset game state for next round
+    // 5️⃣ Reset state
     await remove(ref(db, "winner"));
     await set(ref(db, "gameState"), "lobby");
 
-    // 6️⃣ Host (computer): return to lobby ready state
+    // 6️⃣ Host UI back to lobby
     if (!isPhone) {
       els.winnerPopup?.style.setProperty("display", "none");
       els.gameScreen?.style.setProperty("display", "none");
@@ -839,13 +841,33 @@ els.winnerExit?.addEventListener("click", async () => {
       console.log("🎮 Host returned to lobby.");
     }
 
-    // 7️⃣ Winner phone: stay in the waiting scene
+    // 7️⃣ Winner phone stays in waiting scene
     if (isPhone && currentGroupId === winnerId) {
-      console.log("📱 Winner stays in group:", winnerId);
-      const gSnap = await get(ref(db, `groups/${winnerId}`));
-      updatePhoneView(gSnap.val() || {});
-      els.waitingMsg.style.display = "block";
-      els.phoneLabel.textContent = "已加入 – 等待主持人開始";
+      const gRef = ref(db, `groups/${winnerId}`);
+
+      // Re-subscribe in case previous listeners were lost
+      onValue(gRef, (s) => {
+        const g = s.val() || {};
+        updatePhoneView(g);
+        if (els.waitingMsg) els.waitingMsg.style.display = "block";
+        if (els.phoneLabel) {
+          els.phoneLabel.style.display = "block";
+          els.phoneLabel.textContent = "已加入 – 等待主持人開始";
+        }
+        if (els.phoneView) {
+          Object.assign(els.phoneView.style, {
+            display: "flex",
+            position: "fixed",
+            inset: "0",
+            zIndex: "200001",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.35)",
+          });
+        }
+        if (els.phoneCupid) els.phoneCupid.style.display = "block";
+        if (els.leaveBtn) els.leaveBtn.style.display = "block";
+      });
     }
 
     alert("🏆 已返回大廳！勝利組別保留，其他組別已刪除。");
@@ -1041,6 +1063,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
