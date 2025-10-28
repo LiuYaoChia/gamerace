@@ -434,8 +434,8 @@ if (!isHost) {
 
     // checks
     const memberCount = group.members ? Object.keys(group.members).length : 0;
-    if (memberCount >= 3) {
-      showOverlayMsg("此組別已滿 3 人，請選擇其他組別！", 4000);
+    if (memberCount >= 1) {
+      showOverlayMsg("此組別已滿 1 人，請選擇其他組別！", 4000);
       return;
     }
     if (Object.values(group.members || {}).some(m => m?.name === name)) {
@@ -570,17 +570,29 @@ function addGroupShakeTx(groupId) {
   const gRef = ref(db, `groups/${groupId}`);
   runTransaction(gRef, (g) => {
     if (!g) return g;
+
+    const membersCount = g.members ? Object.keys(g.members).length : 1;
+    const BASE_STEP = 5; // baseline shake progress
+
+    // ✅ Adaptive fine-tuned pace: sqrt scaling
+    const step = BASE_STEP / Math.sqrt(membersCount);
+
     return {
       ...g,
       shakes: (g.shakes || 0) + 1,
-      progress: Math.min(100, (g.progress || 0) + STEP_PERCENT),
+      progress: Math.min(100, (g.progress || 0) + step),
     };
-  }).then(async (res) => {
+  })
+  .then((res) => {
     const g = res.snapshot?.val();
     if (g && g.progress >= 100) {
-      // ✅ store the groupId only
-      await set(ref(db, "winner"), groupId);
+      // ✅ Winner detected
+      set(ref(db, "winner"), groupId);
+      set(ref(db, "gameState"), "finished");
     }
+  })
+  .catch((err) => {
+    console.error("Shake transaction failed:", err);
   });
 }
 
@@ -790,93 +802,52 @@ onValue(ref(db, "winner"), async (snap) => {
 
 
 
-// ====== Winner Exit: keep winner player in their group, remove others ======
+// ====== Winner Exit: full reset, everyone back to lobby ======
 els.winnerExit?.addEventListener("click", async () => {
   try {
-    // 1️⃣ Get winner ID safely
-    const winnerSnap = await get(ref(db, "winner"));
-    const winnerVal = winnerSnap.val();
-    const winnerId =
-      typeof winnerVal === "string"
-        ? winnerVal
-        : typeof winnerVal === "object" && winnerVal?.groupId
-        ? winnerVal.groupId
-        : null;
-
-    if (!winnerId) {
-      alert("⚠️ 沒有找到勝利組別！");
-      return;
-    }
-
-    // 2️⃣ Get all groups
+    // 1️⃣ Get all groups
     const snap = await get(ref(db, "groups"));
     const groups = snap.val() || {};
 
-    // 3️⃣ Remove all other groups
-    const updates = {};
-    for (const gid in groups) {
-      if (gid === winnerId) {
-        // ✅ Keep winner group members intact
-        updates[`groups/${gid}/progress`] = 0;
-        updates[`groups/${gid}/shakes`] = 0;
-        updates[`groups/${gid}/name`] =
-          groups[gid].name || customGroupNames?.[gid] || `Group ${gid}`;
-      } else {
-        await remove(ref(db, `groups/${gid}`));
-      }
-    }
+    // 2️⃣ Remove all groups (including the winner)
+    const removePromises = Object.keys(groups).map((gid) =>
+      remove(ref(db, `groups/${gid}`))
+    );
+    await Promise.all(removePromises);
 
-    // 4️⃣ Apply updates
-    if (Object.keys(updates).length > 0) await update(ref(db), updates);
-
-    // 5️⃣ Reset state
+    // 3️⃣ Clear winner and reset game state
     await remove(ref(db, "winner"));
     await set(ref(db, "gameState"), "lobby");
 
-    // 6️⃣ Host UI back to lobby
+    // 4️⃣ Host UI back to lobby
     if (!isPhone) {
       els.winnerPopup?.style.setProperty("display", "none");
       els.gameScreen?.style.setProperty("display", "none");
       els.setupScreen?.style.setProperty("display", "block");
-      console.log("🎮 Host returned to lobby.");
+      console.log("🎮 All reset — host back to lobby.");
     }
 
-    // 7️⃣ Winner phone stays in waiting scene
-    if (isPhone && currentGroupId === winnerId) {
-      const gRef = ref(db, `groups/${winnerId}`);
+    // 5️⃣ Phones also automatically return to lobby
+    if (isPhone) {
+      // Reset all phone UI to default lobby screen
+      if (els.phoneView) els.phoneView.style.display = "none";
+      if (els.setupScreen) els.setupScreen.style.display = "block";
+      if (els.waitingMsg) els.waitingMsg.style.display = "none";
+      if (els.phoneLabel) els.phoneLabel.textContent = "";
+      if (els.phoneCupid) els.phoneCupid.style.display = "none";
+      if (els.leaveBtn) els.leaveBtn.style.display = "none";
 
-      // Re-subscribe in case previous listeners were lost
-      onValue(gRef, (s) => {
-        const g = s.val() || {};
-        updatePhoneView(g);
-        if (els.waitingMsg) els.waitingMsg.style.display = "block";
-        if (els.phoneLabel) {
-          els.phoneLabel.style.display = "block";
-          els.phoneLabel.textContent = "已加入 – 等待主持人開始";
-        }
-        if (els.phoneView) {
-          Object.assign(els.phoneView.style, {
-            display: "flex",
-            position: "fixed",
-            inset: "0",
-            zIndex: "200001",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0,0,0,0.35)",
-          });
-        }
-        if (els.phoneCupid) els.phoneCupid.style.display = "block";
-        if (els.leaveBtn) els.leaveBtn.style.display = "block";
-      });
+      currentGroupId = null; // clear phone’s group link
+      console.log("📱 Phone also returned to lobby.");
     }
 
-    alert("🏆 已返回大廳！勝利組別保留，其他組別已刪除。");
-
+    alert("🏁 遊戲已完全重置！所有組別與玩家已返回大廳。");
   } catch (err) {
     console.error("Winner exit failed:", err);
-    alert("重置過程出現錯誤，請稍後再試。");
+    alert("⚠️ 重置過程出現錯誤，請稍後再試。");
   }
 });
+
 
 // ====== Start / Reset / Exit ======
 async function startGame() {
@@ -1063,12 +1034,3 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
-
-
-
-
-
-
-
-
-
