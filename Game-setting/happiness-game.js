@@ -708,7 +708,7 @@ onValue(ref(db, "groups"), (snap) => {
 });
 
 
-// ====== Winner popup logic (with ranking, no duplicate history, no old list) ======
+// ====== Winner popup logic (with highlighted ranking and clean layout) ======
 onValue(ref(db, "winner"), async (snap) => {
   const winnerId = snap.val();
   if (!winnerId) {
@@ -721,9 +721,16 @@ onValue(ref(db, "winner"), async (snap) => {
     const g = gSnap.val() || {};
     const name = g.name || `Group ${winnerId}`;
 
-    if (els.winnerMsg) els.winnerMsg.textContent = `🏆 Winner: ${name}!`;
+    // 🏆 Winner title
+    if (els.winnerMsg) {
+      els.winnerMsg.innerHTML = `
+        <span style="font-size: 26px; font-weight: 700; color: #ffeb3b; text-shadow: 1px 1px 3px #000;">
+          🏆 Winner: ${name}!
+        </span>
+      `;
+    }
 
-    // --- Correct cupid image ---
+    // --- Cupid image ---
     const cupidSrc = cupidVariants[g.cupidIndex ?? 0];
     const winnerCupid = document.getElementById("winner-cupid");
     if (winnerCupid) {
@@ -733,46 +740,57 @@ onValue(ref(db, "winner"), async (snap) => {
       winnerCupid.classList.add("land");
     }
 
-    if (els.winnerPopup) els.winnerPopup.style.display = "flex";
+    if (els.winnerPopup) {
+      els.winnerPopup.style.display = "flex";
+      els.winnerPopup.style.flexDirection = "column";
+      els.winnerPopup.style.alignItems = "center";
+      els.winnerPopup.style.textAlign = "center";
+      els.winnerPopup.style.color = "#fff";
+    }
 
     // --- Member list ---
     let listContainer = document.getElementById("winner-members");
     if (!listContainer) {
       listContainer = document.createElement("div");
       listContainer.id = "winner-members";
-      listContainer.style.marginTop = "15px";
-      listContainer.style.textAlign = "center";
-      listContainer.style.fontSize = "17px";
       els.winnerPopup.appendChild(listContainer);
-    } else {
-      listContainer.innerHTML = "";
     }
 
     const members = g.members || {};
-    let html = `<h3 style="margin-bottom:8px;">👥 成員名單</h3><ul style="list-style:none;padding:0;">`;
-    html += Object.values(members)
-      .map(m => `<li style="margin:4px 0;">${m.name}${m.isOwner ? " 👑" : ""}</li>`)
-      .join("") || `<li>（無成員資料）</li>`;
+    let html = `
+      <h3 style="margin-top:15px;font-size:20px;font-weight:600;color:#ffd54f;">👥 成員名單</h3>
+      <ul style="list-style:none;padding:0;margin:6px 0;font-size:17px;">`;
+    html +=
+      Object.values(members)
+        .map(
+          (m) =>
+            `<li style="margin:4px 0;">${
+              m.name
+            }${m.isOwner ? ' <span style="color:#fdd835;">👑</span>' : ""}</li>`
+        )
+        .join("") || `<li>（無成員資料）</li>`;
     html += `</ul>`;
     listContainer.innerHTML = html;
 
-    // --- Winner history (unique logging only, no display) ---
+    // --- Winner history (no display) ---
     const historyRef = ref(db, "winnerHistory");
     const histSnap = await get(historyRef);
     const history = histSnap.val() || {};
-    const alreadyExists = Object.values(history).some(h => h.groupId === winnerId);
+    const alreadyExists = Object.values(history).some(
+      (h) => h.groupId === winnerId
+    );
     if (!alreadyExists) {
       await push(historyRef, { groupId: winnerId, name, timestamp: Date.now() });
     }
 
-    // --- Ranking (Top 3 by progress) ---
+    // --- Ranking (Top 3) ---
     const groupsSnap = await get(ref(db, "groups"));
     const groups = groupsSnap.val() || {};
     const ranked = Object.entries(groups)
       .map(([id, g]) => ({
         id,
         name: g.name || `Group ${id}`,
-        progress: g.progress || 0
+        progress: g.progress || 0,
       }))
       .sort((a, b) => b.progress - a.progress)
       .slice(0, 3);
@@ -781,24 +799,44 @@ onValue(ref(db, "winner"), async (snap) => {
     if (!rankContainer) {
       rankContainer = document.createElement("div");
       rankContainer.id = "winner-ranking";
-      rankContainer.style.marginTop = "20px";
-      rankContainer.style.textAlign = "center";
-      rankContainer.style.fontSize = "16px";
       els.winnerPopup.appendChild(rankContainer);
     }
 
-    let rankHTML = `<h3 style="margin-bottom:8px;">🏁 最終排名</h3><ul style="list-style:none;padding:0;">`;
+    let rankHTML = `
+      <h3 style="margin-top:20px;font-size:20px;font-weight:600;color:#4fc3f7;">🏁 最終排名</h3>
+      <ul style="list-style:none;padding:0;margin:8px 0;">`;
     ranked.forEach((r, i) => {
-      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉";
-      rankHTML += `<li style="margin:4px 0;">${medal} ${r.name} — ${r.progress}%</li>`;
+      const medal =
+        i === 0
+          ? "🥇"
+          : i === 1
+          ? "🥈"
+          : "🥉";
+      const color =
+        i === 0
+          ? "#ffeb3b"
+          : i === 1
+          ? "#c0c0c0"
+          : "#cd7f32";
+
+      rankHTML += `
+        <li style="
+          margin:6px 0;
+          font-size:18px;
+          font-weight:600;
+          color:${color};
+          text-shadow:1px 1px 2px #000;
+        ">
+          ${medal} ${r.name} — <span style="color:#fff;">${r.progress}%</span>
+        </li>`;
     });
     rankHTML += `</ul>`;
     rankContainer.innerHTML = rankHTML;
-
   } catch (err) {
     console.error("Winner fetch failed:", err);
   }
 });
+
 
 
 
@@ -1034,3 +1072,4 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
