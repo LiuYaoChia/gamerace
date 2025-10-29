@@ -90,6 +90,7 @@ console.log("DEBUG els:", {
 // ====== UI Helpers ======
 if (isHost) {
   if (els.form) els.form.style.display = "none"; // hide the join form
+  els.motionBtn.style.display = "none"; // hide the join form
   els.startBtn.style.display = "inline-block";   // show Start Game button
   els.resetBtn.style.display = "inline-block";   // show Reset button
 } else {
@@ -1072,4 +1073,5 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
