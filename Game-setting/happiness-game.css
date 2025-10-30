@@ -1,12 +1,8 @@
 /* === GENERAL STYLES === */
 body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Microsoft JhengHei', sans-serif;
-  background: url('img/cupids.jpg') no-repeat center center fixed;
+  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,240,240,0.95)),
+              url('img/cupids.jpg') no-repeat center center fixed;
   background-size: cover;
-  color: #333;
-  overflow-x: hidden;
 }
 
 /* === QR Code (Top-Left Corner) === */
@@ -24,19 +20,27 @@ body {
 #qr-code img { width: 100px; height: 100px; }
 
 /* === PLAYER SETUP SCREEN === */
+/* Make #player-setup container flow naturally inside .game-layout */
 #player-setup {
-  position: absolute;
-  top: 20%;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative; /* no longer absolutely centered */
+  top: auto;
+  left: auto;
+  transform: none;
   background: rgba(255,255,255,0.95);
-  padding: 24px 36px;
+  width: auto;
+  padding: 20px;
+  box-shadow: none;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-  text-align: center;
-  width: 340px;
+  margin: 0;
 }
-#player-setup h2 { margin-bottom: 16px; font-size: 1.6rem; color: #333; }
+
+/* Adjust title inside merged layout */
+#player-setup h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  color: #d6336c;
+  margin-bottom: 16px;
+}
 
 /* === FORM INPUTS === */
 #name-form input[type="text"] {
@@ -127,11 +131,12 @@ body {
 /* === GAME LAYOUT (full width) === */
 .game-layout {
   display: flex;
-  justify-content: center; /* you can change to "space-between" if you want both panels flush */
+  justify-content: center;
   align-items: flex-start;
-  gap: 20px;
+  gap: 32px;
   width: 100%;
-  margin: 0;
+  margin-top: 40px;
+  flex-wrap: wrap;
 }
 
 /* === GAME CONTAINER (Fix left spacing) === */
@@ -224,11 +229,12 @@ body {
   0%,100% { transform: translateY(-50%) scale(1); filter: drop-shadow(0 0 12px rgba(255,255,255,0.75)); }
   50%     { transform: translateY(-50%) scale(1.1); filter: drop-shadow(0 0 18px rgba(255,255,255,0.9)); }
 }
-/* === RANKING PANEL === */
+/* Slightly resize the right panel for better balance */
 .ranking-panel {
-  flex: 1;
-  max-width: 260px;
-  margin: 0;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
 }
 .ranking-panel h3 { margin-bottom: 10px; color: #222; text-align: center; }
 #ranking-list { list-style: none; padding: 0; margin: 0; }
@@ -459,6 +465,7 @@ body {
 /* playful hop */
 @keyframes hop { 0%{transform:translateY(0)} 30%{transform:translateY(-10px)} 60%{transform:translateY(0)} 100%{transform:translateY(0)} }
 #phone-view .phone-cupid.jump{ animation: hop 0.6s ease; }
+
 
 
 
