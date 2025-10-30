@@ -469,64 +469,42 @@ body {
 @keyframes hop { 0%{transform:translateY(0)} 30%{transform:translateY(-10px)} 60%{transform:translateY(0)} 100%{transform:translateY(0)} }
 #phone-view .phone-cupid.jump{ animation: hop 0.6s ease; }
 
-/* === FIX VISIBILITY ON BRIGHT BACKGROUND === */
+/* === FINAL VISIBILITY FIX (確保內容顯示在背景上方) === */
 
-/* Make text and containers visible */
 #player-setup,
-#game-container,
+.game-container,
 .game-layout,
 #player-list,
 h2, h3, h4, h5, h6, p, span {
-  position: relative;
-  z-index: 10;
-  color: #2c3e50 !important; /* dark gray text for readability */
+  position: relative !important;
+  z-index: 20 !important;
+  color: #2c3e50 !important;
 }
 
-/* Give the setup form area a subtle frosted panel look */
+/* Add a soft translucent background to player setup */
 #player-setup {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(6px);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  border-radius: 16px !important;
+  padding: 24px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25) !important;
 }
 
-/* Game container should also contrast slightly */
+/* Add same effect to game container */
 .game-container {
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(6px) !important;
+  border-radius: 16px !important;
+  padding: 20px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
 }
 
-/* Make the title pop */
+/* Make sure the title is visible */
 #player-setup h2 {
   color: #d6336c !important;
-  text-shadow: 0 0 10px rgba(255,255,255,0.8),
+  text-shadow: 0 0 10px rgba(255,255,255,0.9),
                0 2px 5px rgba(0,0,0,0.3);
+  z-index: 25 !important;
+  position: relative;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
