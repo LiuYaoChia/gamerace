@@ -1,6 +1,6 @@
 /* === GENERAL STYLES === */
 body {
-  background: url('images/your-cupid-bg.png') no-repeat center center fixed;
+  background: url('images/cupids.jpg') no-repeat center center fixed;
   background-size: cover;
   margin: 0;
   font-family: "Noto Sans TC", sans-serif;
@@ -468,6 +468,7 @@ body {
 /* playful hop */
 @keyframes hop { 0%{transform:translateY(0)} 30%{transform:translateY(-10px)} 60%{transform:translateY(0)} 100%{transform:translateY(0)} }
 #phone-view .phone-cupid.jump{ animation: hop 0.6s ease; }
+
 
 
 
