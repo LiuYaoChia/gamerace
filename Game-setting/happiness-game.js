@@ -677,37 +677,45 @@ get(groupsRef).then((snap) => {
 
 onValue(ref(db, "groups"), (snap) => {
   const groups = snap.val() || {};
+  if (!isHost) return; // only host sees game scene
 
-  if (!isPhone) {
-    // only render valid groups
-    const validGroups = Object.entries(groups)
-      .filter(([_, g]) => g && typeof g === "object" && g.name); // ✅ skip null or empty
+  els.playerList.style.display = "none"; // hide old UI parts
+  els.setupScreen.style.display = "none";
+  els.rankList.style.display = "none";
 
-    renderGroupsUI(Object.fromEntries(validGroups));
-
-    if (currentGameState === "lobby") {
-      // show player list
-      els.playerList.innerHTML = "";
-      validGroups.forEach(([gid, g]) => {
-        const members = Object.values(g.members || {})
-          .map((m) => `<li>${m.name}</li>`)
-          .join("");
-
-        const groupName = customGroupNames[gid] || g.name; // ✅ safer naming
-
-        els.playerList.innerHTML += `
-          <div class="group">
-            <h3>${groupName}</h3>
-            <ul>${members}</ul>
-          </div>`;
-      });
-    } else {
-      // clear player list when game started
-      els.playerList.innerHTML = "";
-    }
-  }
+  renderLobbyScene(groups);
 });
 
+function renderLobbyScene(groups) {
+  els.track.innerHTML = ""; // clear track first
+
+  // Add lanes for each group
+  Object.entries(groups).forEach(([gid, g]) => {
+    const lane = document.createElement("div");
+    lane.className = "lane";
+    lane.dataset.groupId = gid;
+
+    const cupidImg = cupidVariants[g.cupidIndex ?? 0];
+    const groupName = g.name || customGroupNames[gid] || `Group ${gid}`;
+    const memberNames = Object.values(g.members || {}).map(m => m.name).join(", ");
+
+    lane.innerHTML = `
+      <div class="lane-inner" style="position:relative;height:120px;">
+        <img class="groom" src="${cupidImg}" alt="groom">
+        <div class="lane-label" style="position:absolute;left:20px;top:10px;color:#fff;font-weight:bold;">
+          ${groupName}<br><span style="font-size:13px;">${memberNames}</span>
+        </div>
+      </div>
+    `;
+    els.track.appendChild(lane);
+  });
+
+  // 👰 Add bride once at right end
+  const bride = document.createElement("img");
+  bride.src = "img/goal.png";
+  bride.className = "bride";
+  els.track.appendChild(bride);
+}
 
 // ====== Winner popup logic (with highlighted ranking and clean layout) ======
 onValue(ref(db, "winner"), async (snap) => {
@@ -1073,6 +1081,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
