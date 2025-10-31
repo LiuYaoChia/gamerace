@@ -717,7 +717,7 @@ function renderLobbyScene(groups) {
 
   // 👰 Add bride at right end once
   const bride = document.createElement("img");
-  bride.src = "img/bride.png";
+  bride.src = "img/goal.png";
   bride.className = "bride";
   els.track.appendChild(bride);
 }
@@ -1092,6 +1092,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
