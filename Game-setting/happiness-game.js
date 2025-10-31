@@ -678,11 +678,7 @@ get(groupsRef).then((snap) => {
 onValue(ref(db, "groups"), (snap) => {
   const groups = snap.val() || {};
   if (!isHost) return; // only host sees game scene
-
-  els.playerList.style.display = "none"; // hide old UI parts
   els.setupScreen.style.display = "none";
-  els.rankList.style.display = "none";
-
   renderLobbyScene(groups);
 });
 
@@ -1081,6 +1077,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
