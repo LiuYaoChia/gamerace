@@ -23,7 +23,14 @@ body {
 
 /* === PLAYER SETUP SCREEN === */
 /* Make #player-setup container flow naturally inside .game-layout */
-.game-container,
+.game-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: url('img/cupids.jpg') no-repeat center center / cover;
+}
 #player-setup {
   display: block !important;
   position: relative !important;
@@ -107,25 +114,6 @@ body {
 }
 
 
-/* === PLAYER LIST === */
-#player-list {
-  margin-top: 10px;
-  list-style: none;
-  padding: 0;
-  max-height: 150px;
-  overflow-y: auto;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-}
-#player-list li {
-  margin: 6px 0;
-  font-size: 1.2em;
-  color: #333;
-  padding: 6px 12px;
-  background: #f7f7f7;
-  border-radius: 6px;
-}
-
 /* === GAME LAYOUT (full width) === */
 .game-layout {
   display: flex !important;
@@ -140,16 +128,17 @@ body {
 
 /* === TRACK (use full width instead of 90%) === */
 #track {
-  flex: 1 1 66%;
-  min-height: 56vh;              /* give it sensible height so lanes show */
-  background: rgba(255,255,255,0.92) !important;
-  padding: 18px !important;
-  border-radius: 14px !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.18) !important;
-  z-index: 55 !important;
-  overflow: visible !important;
+  flex: 1;
+  width: 90%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 40px 100px 40px 100px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
-
 /* === GROUP TRACK CONTAINER === */
 .group-track {
   margin: 15px 0;
@@ -167,16 +156,12 @@ body {
 /* === LANE STYLING === */
 .track-lanes { position: relative; width: 100%; }
 .lane {
-  position: relative;    /* allows absolute positioning inside */
-  height: 140px;                                   /* taller lane */
-  margin: 20px 0;
-  border-radius: 70px;
-  background: linear-gradient(90deg,#d0ebff 0%,#74c0fc 100%);
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.25),
-              0 8px 20px rgba(0,0,0,0.15);
-  display: flex;
-  align-items: center;                              /* vertical centering for content */
-  padding: 0 20px;
+  position: relative;
+  height: 100px;
+  background: linear-gradient(90deg, #d0ebff, #74c0fc);
+  border-radius: 60px;
+  margin: 12px 0;
+  overflow: hidden;
 }
 .lane .progress {
   height: 100%;
@@ -204,40 +189,64 @@ body {
   font-weight: bold;
 }
 
-.cupid {
-  width: 110px;                                     /* bigger avatars */
-  height: 110px;
-  object-fit: contain;
-  position: relative;
+.lane .player-names {
+  position: absolute;
+  left: 20px;
   top: 50%;
-  transform: translateY(-50%);                      /* perfect vertical middle */
-  filter: drop-shadow(0 0 12px rgba(255,255,255,0.75));
-  z-index: 5;
-  animation: glowPulse 3s ease-in-out infinite;
+  transform: translateY(-50%);
+  font-weight: bold;
+  color: #003366;
+}
+
+.groom {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 80px;
+  transition: left 0.4s ease;
+}
+
+/* === BRIDE === */
+.bride {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100px;
+  z-index: 10;
 }
 
 @keyframes glowPulse {
   0%,100% { transform: translateY(-50%) scale(1); filter: drop-shadow(0 0 12px rgba(255,255,255,0.75)); }
   50%     { transform: translateY(-50%) scale(1.1); filter: drop-shadow(0 0 18px rgba(255,255,255,0.9)); }
 }
-/* Slightly resize the right panel for better balance */
-.ranking-panel {
-  flex: 0 0 300px;
-  max-width: 340px;
-  background: rgba(255,255,255,0.95) !important;
-  padding: 16px !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.14) !important;
-  z-index: 60 !important;
-}
-.ranking-panel h3 { margin-bottom: 10px; color: #222; text-align: center; }
-#ranking-list { list-style: none; padding: 0; margin: 0; }
-#ranking-list > li {
-  margin-bottom: 12px;
-  font-weight: 600;
-}
-#ranking-list ul { margin: 6px 0 0 16px; }
 
+.control-panel {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.control-panel button {
+  font-size: 1.2em;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  color: white;
+  background: #ff6b6b;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.control-panel button:hover {
+  background: #e63946;
+}
 /* === TIME UP OVERLAY === */
 #timeup {
   display: none;
@@ -480,11 +489,7 @@ body {
   margin-bottom: 12px !important;
   z-index: 56 !important;
 }
-/* Make sure player list and form are visible */
-#player-list, #name-form, #start-game, #reset-players {
-  z-index: 65 !important;
-  position: relative !important;
-}
+
 
 /* Mobile: stacked layout */
 @media (max-width: 860px) {
@@ -492,3 +497,4 @@ body {
   .ranking-panel { width: 100%; max-width: none; }
   #track { min-height: 48vh; }
 }
+
