@@ -100,7 +100,7 @@ if (isHost) {
 
 function showSetup() {
   els.setupScreen.style.display = "block";
-  els.gameScreen.style.display  = "none";
+  els.gameScreen.style.display  = "block";
   els.phoneView.style.display   = "none";
   // only show QR code on desktop
   if (!isPhone && els.qrEl) {
@@ -655,7 +655,7 @@ onValue(ref(db, "gameState"), snap => {
   if (currentGameState === "lobby") {
     showSetup();
     if (els.setupScreen) els.setupScreen.style.display = "block";
-    if (els.gameScreen) els.gameScreen.style.display = "none";
+    if (els.gameScreen) els.gameScreen.style.display = "block";
   } else if (currentGameState === "playing") {
     if (els.setupScreen) els.setupScreen.style.display = "none";
     if (els.gameScreen) els.gameScreen.style.display = "block";
@@ -999,7 +999,7 @@ async function resetGame() {
   await set(ref(db,"gameState"),"lobby");
 
   // Switch UI (host side)
-  els.gameScreen.style.display = "none";
+  els.gameScreen.style.display = "block";
   els.setupScreen.style.display = "block";
 }
 
@@ -1031,7 +1031,7 @@ els.exitBtn?.addEventListener("click", async () => {
 
   currentGroupId = null;
   if (els.phoneView) els.phoneView.style.display = "none";
-  if (els.gameScreen) els.gameScreen.style.display = "none";
+  if (els.gameScreen) els.gameScreen.style.display = "block";
   if (els.setupScreen) els.setupScreen.style.display = "block";
   alert("遊戲已重置！");
 });
@@ -1073,5 +1073,6 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
