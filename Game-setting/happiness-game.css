@@ -157,11 +157,18 @@ body {
 .track-lanes { position: relative; width: 100%; }
 .lane {
   position: relative;
-  height: 100px;
-  background: linear-gradient(90deg, #d0ebff, #74c0fc);
-  border-radius: 60px;
-  margin: 12px 0;
+  width: 100%;
+  border-bottom: 2px dashed rgba(255,255,255,0.25);
+}
+.track {
+  position: relative;
+  width: 100%;
+  height: 85vh;
   overflow: hidden;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
 }
 .lane .progress {
   height: 100%;
@@ -199,22 +206,20 @@ body {
 }
 
 .groom {
+  height: 80px;
   position: absolute;
-  left: 0;
-  top: 50%;
   transform: translateY(-50%);
-  width: 80px;
-  transition: left 0.4s ease;
 }
 
 /* === BRIDE === */
 .bride {
   position: absolute;
-  right: 20px;
+  right: 50px;
   top: 50%;
   transform: translateY(-50%);
-  width: 100px;
-  z-index: 10;
+  width: 130px;
+  z-index: 5;
+  pointer-events: none;
 }
 
 @keyframes glowPulse {
@@ -497,4 +502,5 @@ body {
   .ranking-panel { width: 100%; max-width: none; }
   #track { min-height: 48vh; }
 }
+
 
