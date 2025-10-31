@@ -683,35 +683,50 @@ onValue(ref(db, "groups"), (snap) => {
 });
 
 function renderLobbyScene(groups) {
-  els.track.innerHTML = ""; // clear track first
+  const activeGroups = Object.entries(groups)
+    .filter(([_, g]) => g.members && Object.keys(g.members).length > 0);
 
-  // Add lanes for each group
-  Object.entries(groups).forEach(([gid, g]) => {
+  els.track.innerHTML = ""; // clear
+
+  const total = activeGroups.length || 1;
+  const trackHeight = Math.max(100, Math.floor((window.innerHeight * 0.8) / total));
+
+  activeGroups.forEach(([gid, g], idx) => {
     const lane = document.createElement("div");
     lane.className = "lane";
     lane.dataset.groupId = gid;
+    lane.style.height = `${trackHeight}px`;
 
-    const cupidImg = cupidVariants[g.cupidIndex ?? 0];
     const groupName = g.name || customGroupNames[gid] || `Group ${gid}`;
     const memberNames = Object.values(g.members || {}).map(m => m.name).join(", ");
+    const cupidImg = cupidVariants[g.cupidIndex ?? 0];
+    const progress = g.progress || 0;
 
     lane.innerHTML = `
-      <div class="lane-inner" style="position:relative;height:120px;">
-        <img class="groom" src="${cupidImg}" alt="groom">
-        <div class="lane-label" style="position:absolute;left:20px;top:10px;color:#fff;font-weight:bold;">
+      <div class="lane-inner" style="position:relative;height:100%;width:100%;">
+        <div class="lane-label"
+          style="position:absolute;left:20px;top:10px;color:#fff;font-weight:bold;">
           ${groupName}<br><span style="font-size:13px;">${memberNames}</span>
         </div>
+        <img class="groom" src="${cupidImg}" alt="groom"
+          style="position:absolute;top:50%;transform:translateY(-50%);left:${progress}%;transition:left 0.5s;">
       </div>
     `;
     els.track.appendChild(lane);
   });
 
-  // 👰 Add bride once at right end
+  // 👰 Add bride at right end once
   const bride = document.createElement("img");
-  bride.src = "img/goal.png";
+  bride.src = "img/bride.png";
   bride.className = "bride";
   els.track.appendChild(bride);
 }
+
+window.addEventListener("resize", async () => {
+  const snap = await get(ref(db, "groups"));
+  const groups = snap.val() || {};
+  renderLobbyScene(groups);
+});
 
 // ====== Winner popup logic (with highlighted ranking and clean layout) ======
 onValue(ref(db, "winner"), async (snap) => {
@@ -1077,6 +1092,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
