@@ -677,56 +677,106 @@ get(groupsRef).then((snap) => {
 
 onValue(ref(db, "groups"), (snap) => {
   const groups = snap.val() || {};
-  if (!isHost) return; // only host sees game scene
+  if (!isHost) return; // only host updates scene
+
+  console.log("🎯 groups updated:", groups);
   els.setupScreen.style.display = "none";
+  els.gameScreen.style.display = "block";
+
   renderLobbyScene(groups);
 });
 
 function renderLobbyScene(groups) {
+  if (!els.track) return;
+
   const activeGroups = Object.entries(groups)
     .filter(([_, g]) => g.members && Object.keys(g.members).length > 0);
 
-  els.track.innerHTML = ""; // clear
+  els.track.innerHTML = ""; // clear old lanes
 
-  const total = activeGroups.length || 1;
+  // If no active groups yet, just show background
+  if (activeGroups.length === 0) {
+    console.log("No active groups yet.");
+    return;
+  }
+
+  const total = activeGroups.length;
   const trackHeight = Math.max(100, Math.floor((window.innerHeight * 0.8) / total));
 
   activeGroups.forEach(([gid, g], idx) => {
-    const lane = document.createElement("div");
-    lane.className = "lane";
-    lane.dataset.groupId = gid;
-    lane.style.height = `${trackHeight}px`;
-
     const groupName = g.name || customGroupNames[gid] || `Group ${gid}`;
-    const memberNames = Object.values(g.members || {}).map(m => m.name).join(", ");
+    const memberNames = Object.values(g.members || {}).map(m => m.name).join("、");
     const cupidImg = cupidVariants[g.cupidIndex ?? 0];
     const progress = g.progress || 0;
 
-    lane.innerHTML = `
-      <div class="lane-inner" style="position:relative;height:100%;width:100%;">
-        <div class="lane-label"
-          style="position:absolute;left:20px;top:10px;color:#fff;font-weight:bold;">
-          ${groupName}<br><span style="font-size:13px;">${memberNames}</span>
-        </div>
-        <img class="groom" src="${cupidImg}" alt="groom"
-          style="position:absolute;top:50%;transform:translateY(-50%);left:${progress}%;transition:left 0.5s;">
-      </div>
+    const lane = document.createElement("div");
+    lane.className = "lane";
+    lane.dataset.groupId = gid;
+    lane.style.cssText = `
+      position: relative;
+      height: ${trackHeight}px;
+      margin: 8px 0;
+      overflow: visible;
     `;
+
+    // Cupid (groom)
+    const groom = document.createElement("img");
+    groom.src = cupidImg;
+    groom.className = "groom";
+    groom.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: ${progress}%;
+      transform: translateY(-50%);
+      height: 90px;
+      transition: left 0.4s ease-out;
+    `;
+
+    // Group & members text
+    const label = document.createElement("div");
+    label.innerHTML = `<strong>${groupName}</strong><br><span style="font-size:14px;">${memberNames}</span>`;
+    label.style.cssText = `
+      position: absolute;
+      left: 20px;
+      top: 10px;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+    `;
+
+    lane.appendChild(groom);
+    lane.appendChild(label);
     els.track.appendChild(lane);
   });
 
   // 👰 Add bride at right end once
-  const bride = document.createElement("img");
-  bride.src = "img/goal.png";
-  bride.className = "bride";
-  els.track.appendChild(bride);
+  let bride = document.querySelector(".bride");
+  if (!bride) {
+    bride = document.createElement("img");
+    bride.src = "img/bride.png";
+    bride.className = "bride";
+    Object.assign(bride.style, {
+      position: "absolute",
+      right: "60px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      height: "120px",
+      zIndex: 10
+    });
+    els.track.appendChild(bride);
+  }
+
+  // 💫 Adjust track container
+  Object.assign(els.track.style, {
+    position: "relative",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-evenly",
+    width: "100%",
+    height: "80vh",
+    overflow: "visible"
+  });
 }
 
-window.addEventListener("resize", async () => {
-  const snap = await get(ref(db, "groups"));
-  const groups = snap.val() || {};
-  renderLobbyScene(groups);
-});
 
 // ====== Winner popup logic (with highlighted ranking and clean layout) ======
 onValue(ref(db, "winner"), async (snap) => {
@@ -1092,6 +1142,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
