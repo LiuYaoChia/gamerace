@@ -128,18 +128,16 @@ body {
 
 /* === TRACK (use full width instead of 90%) === */
 #track {
+  background: transparent !important; /* remove white block covering */
   flex: 1;
-  width: 100%;
-  height: 80vh;
-  position: relative;
-  overflow: visible;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  padding: 40px 100px 40px 100px;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  justify-content: space-evenly;
+  align-items: stretch;
+  width: 100%;
+  height: 85vh;
+  padding: 0 80px;
+  overflow: visible;
 }
 /* === GROUP TRACK CONTAINER === */
 .group-track {
@@ -157,10 +155,25 @@ body {
 
 /* === LANE STYLING === */
 .track-lanes { position: relative; width: 100%; }
+/* Each track lane (one group) */
 .lane {
   position: relative;
+  flex: 1;
   width: 100%;
-  border-bottom: 2px dashed rgba(255,255,255,0.25);
+  border-radius: 60px;
+  margin: 6px 0;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2) inset;
+  overflow: hidden;
+}
+/* Slight color gradient to make each lane distinct */
+.lane:nth-child(odd) {
+  background: linear-gradient(90deg, rgba(255,192,203,0.25), rgba(255,255,255,0.05));
+}
+.lane:nth-child(even) {
+  background: linear-gradient(90deg, rgba(173,216,230,0.25), rgba(255,255,255,0.05));
 }
 .track {
   position: relative;
@@ -171,6 +184,12 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
+}
+/* The inner container of each lane */
+.lane-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 .lane .progress {
   height: 100%;
@@ -206,27 +225,39 @@ body {
   font-weight: bold;
   color: #003366;
 }
-
-.groom {
-  height: 80px;
+/* Group and player names */
+/* Label and players */
+.lane .lane-label {
   position: absolute;
-  transform: translateY(-50%);
+  left: 30px;
+  top: 12px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+  z-index: 3;
 }
-
+/* Groom (Cupid) */
 .lane img.groom {
-  pointer-events: none;
+  height: 90px;
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translateY(-50%);
+  transition: left 0.4s ease-out;
+  z-index: 3;
 }
 
-/* === BRIDE === */
+/* Bride (goal) */
 .bride {
   position: absolute;
-  right: 50px;
+  right: 60px;
   top: 50%;
   transform: translateY(-50%);
-  width: 130px;
+  height: 120px;
   z-index: 5;
-  pointer-events: none;
 }
+
 
 @keyframes glowPulse {
   0%,100% { transform: translateY(-50%) scale(1); filter: drop-shadow(0 0 12px rgba(255,255,255,0.75)); }
@@ -508,6 +539,7 @@ body {
   .ranking-panel { width: 100%; max-width: none; }
   #track { min-height: 48vh; }
 }
+
 
 
 
