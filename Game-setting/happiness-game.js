@@ -752,7 +752,7 @@ function renderLobbyScene(groups) {
   let bride = document.querySelector(".bride");
   if (!bride) {
     bride = document.createElement("img");
-    bride.src = "img/bride.png";
+    bride.src = "img/goal.png";
     bride.className = "bride";
     Object.assign(bride.style, {
       position: "absolute",
@@ -1142,6 +1142,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
