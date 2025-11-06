@@ -590,6 +590,13 @@ get(groupsRef).then((snap) => {
 function renderGameScene(groups) {
   if (!els.track) return;
 
+    // ✅ Hide setup UI to reveal full-screen game
+  if (els.setupScreen) els.setupScreen.style.display = "none";
+  if (els.gameScreen) {
+    els.gameScreen.style.display = "flex";
+    els.gameScreen.style.zIndex = "10";
+  }
+  
   // clear old content
   els.track.innerHTML = "";
 
@@ -1068,6 +1075,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
