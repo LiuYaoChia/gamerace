@@ -671,23 +671,22 @@ function renderGameScene(groups) {
     els.track.appendChild(lane);
   });
 
-  // 👰 Bride stays vertically centered regardless of number of lanes
+  // 👰 Bride (static on right side of track)
   let bride = document.querySelector(".bride");
   if (!bride) {
     bride = document.createElement("img");
-    bride.src = "img/goal.png"; // or your bride image
+    bride.src = "img/goal.png";
     bride.className = "bride";
-    document.body.appendChild(bride);
+    els.track.appendChild(bride);
   }
 
   Object.assign(bride.style, {
     position: "absolute",
     right: "60px",
-    top: els.track.getBoundingClientRect().top + els.track.offsetHeight / 2 - 60 + "px",
+    top: "50%",
     transform: "translateY(-50%)",
     height: "120px",
     zIndex: 10,
-    transition: "top 0.4s ease",
   });
 }
 
@@ -1075,6 +1074,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
