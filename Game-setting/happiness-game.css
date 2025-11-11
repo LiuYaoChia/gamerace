@@ -32,11 +32,11 @@ body {
   background: url('img/cupids.jpg') no-repeat center center / cover;
 }
 #player-setup {
-  display: block !important;
-  position: relative !important;
-  z-index: 50 !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
+  display: none;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Adjust title inside merged layout */
@@ -138,6 +138,7 @@ body {
   height: 85vh;
   padding: 0 80px;
   overflow: visible;
+  border: 2px dashed rgba(255,0,0,0.5);
 }
 /* === GROUP TRACK CONTAINER === */
 .group-track {
@@ -539,6 +540,7 @@ body {
   .ranking-panel { width: 100%; max-width: none; }
   #track { min-height: 48vh; }
 }
+
 
 
 
