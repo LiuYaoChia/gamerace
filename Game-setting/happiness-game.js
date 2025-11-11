@@ -590,14 +590,14 @@ get(groupsRef).then((snap) => {
 function renderGameScene(groups) {
   if (!els.track) return;
 
-    // ✅ Hide setup UI to reveal full-screen game
+  // Hide setup, show game
   if (els.setupScreen) els.setupScreen.style.display = "none";
   if (els.gameScreen) {
     els.gameScreen.style.display = "flex";
     els.gameScreen.style.zIndex = "10";
   }
-  
-  // clear old content
+
+  // Clear existing
   els.track.innerHTML = "";
 
   if (!groups || typeof groups !== "object") return;
@@ -631,16 +631,21 @@ function renderGameScene(groups) {
     const cupidImg = cupidVariants[g.cupidIndex ?? 0];
     const progress = g.progress || 0;
 
+    // 🟢 Outer container
     const lane = document.createElement("div");
     lane.className = "lane";
     lane.dataset.groupId = gid;
     lane.style.cssText = `
       position: relative;
       height: ${trackHeight}px;
-      margin: 6px 0;
+      margin: 10px 0;
+      border-radius: 60px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(6px);
       overflow: visible;
     `;
 
+    // 🟢 Groom
     const groom = document.createElement("img");
     groom.src = cupidImg;
     groom.className = "groom";
@@ -651,19 +656,23 @@ function renderGameScene(groups) {
       transform: translateY(-50%);
       height: 90px;
       transition: left 0.4s ease-out;
+      z-index: 2;
     `;
 
+    // 🟢 Group name + player names
     const label = document.createElement("div");
     label.innerHTML = `
-      <strong>${groupName}</strong><br>
+      <strong style="font-size:18px;">${groupName}</strong><br>
       <span style="font-size:14px;">${memberNames}</span>
     `;
+    label.className = "lane-label";
     label.style.cssText = `
       position: absolute;
       left: 20px;
       top: 10px;
       color: #fff;
       text-shadow: 1px 1px 2px #000;
+      z-index: 3;
     `;
 
     lane.appendChild(groom);
@@ -671,7 +680,7 @@ function renderGameScene(groups) {
     els.track.appendChild(lane);
   });
 
-  // 👰 Bride (static on right side of track)
+  // 🟢 Bride (right-end, vertically centered)
   let bride = document.querySelector(".bride");
   if (!bride) {
     bride = document.createElement("img");
@@ -1074,6 +1083,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
