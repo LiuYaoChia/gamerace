@@ -163,9 +163,9 @@ body {
   width: 100%;
   border-radius: 60px;
   margin: 6px 0;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(4px);
-  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.2) inset;
   overflow: hidden;
 }
@@ -233,9 +233,9 @@ body {
   left: 30px;
   top: 12px;
   color: #fff;
-  font-weight: 700;
-  font-size: 1rem;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+  font-weight: 600;
+  font-size: 1.2rem;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.6);
   z-index: 3;
 }
 /* Groom (Cupid) */
@@ -540,6 +540,7 @@ body {
   .ranking-panel { width: 100%; max-width: none; }
   #track { min-height: 48vh; }
 }
+
 
 
 
