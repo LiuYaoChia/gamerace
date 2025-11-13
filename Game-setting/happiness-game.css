@@ -10,8 +10,9 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(3px);
+  /* comment these out or make it very light */
+  background: rgba(255, 255, 255, 0.05); /* softer mist */
+  backdrop-filter: none;  /* remove blur */
   z-index: 0;
 }
 
@@ -557,13 +558,13 @@ body::before {
 
 /* === TITLE === */
 .game-title {
+  position: relative;
+  z-index: 1000;  /* higher than body::before */
   text-align: center;
   font-size: 2rem;
-  font-weight: bold;
-  margin: 20px 0 10px;
   color: #fff8e1;
   text-shadow: 0 3px 10px rgba(0,0,0,0.6);
-  z-index: 10;
+  margin-top: 20px;
 }
 /* Make group-choices area visible (in case earlier rules hid it) */
 #group-choices {
@@ -582,6 +583,7 @@ body::before {
   .ranking-panel { width: 100%; max-width: none; }
   #track { min-height: 48vh; }
 }
+
 
 
 
