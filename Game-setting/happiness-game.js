@@ -699,6 +699,7 @@ function renderGameScene(groups) {
   });
 }
 
+
 window.addEventListener("resize", async () => {
   const snap = await get(ref(db, "groups"));
   const groups = snap.val() || {};
@@ -1083,6 +1084,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
