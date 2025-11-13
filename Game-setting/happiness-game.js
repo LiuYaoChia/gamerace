@@ -680,6 +680,13 @@ function renderGameScene(groups) {
     els.track.appendChild(lane);
   });
 
+  // 💫 Animate shimmer only when progress updates
+  if (!lane.dataset.prevProgress || lane.dataset.prevProgress != progress) {
+    lane.classList.add("active");
+    setTimeout(() => lane.classList.remove("active"), 1500);
+    lane.dataset.prevProgress = progress;
+  }
+  
   // 🟢 Bride (right-end, vertically centered)
   let bride = document.querySelector(".bride");
   if (!bride) {
@@ -1084,6 +1091,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
