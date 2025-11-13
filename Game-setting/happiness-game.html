@@ -8,49 +8,49 @@
 </head>
 <body>
 
-<!-- ✅ QR Code (fixed position) -->
-<div id="qr-code" style="position:absolute; top:10px; left:10px; z-index:10;">
+<!-- ✅ QR Code -->
+<div id="qr-code">
   <img id="qr-img"
     src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https%3A%2F%2Fliuyaochia.github.io%2Fgamerace%2FGame-setting%2Fhappiness-game.html"
     alt="無法顯示" />
 </div>
 
-<!-- ✅ PLAYER SETUP SCREEN -->
-<div id="player-setup" style="display:none;"></div>
+<!-- ✅ Player Setup (hidden on host) -->
+<div id="player-setup" style="display:none;">
   <h2 class="game-title">💘 蚵仔，你心底的名字</h2>
   <form id="name-form">
-    <input type="text" id="player-name" placeholder="Enter your name" required />
-    <div id="group-choices" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;"></div>
+    <input type="text" id="player-name" placeholder="輸入你的名字" required />
+    <div id="group-choices"></div>
     <input type="hidden" id="group-select" />
     <button type="submit" id="enable-motion" class="motion-btn">🎮 開啟動作捕捉</button>
   </form>
 </div>
 
-<!-- ✅ GAME CONTAINER -->
+<!-- ✅ Game Container -->
 <div class="game-container">
   <div class="game-layout">
-    <!-- ✅ Track -->
+    <!-- 🏁 Track -->
     <div class="track" id="track">
-      <!-- JS will create 6 groom lanes dynamically -->
-    </div>
-    <!-- ✅ Right Panel -->
-    <div class="control-panel">
-      <button id="start-game">🎮 開始遊戲</button>
-      <button id="reset-players">🔄 重置</button>
-      <button id="exit-game" style="margin-top: 1rem; background-color: #c0392b;">離開遊戲</button>
+      <!-- JS dynamically adds Cupids and lanes -->
     </div>
   </div>
 
+  <!-- ✅ Floating Control Buttons -->
+  <div class="control-panel">
+    <button id="start-game">🎮 開始遊戲</button>
+    <button id="reset-players">🔄 重置</button>
+    <button id="exit-game" class="exit-btn">🚪 離開遊戲</button>
+  </div>
+
   <!-- ✅ Winner Popup -->
-  <div id="winner-popup"
-    style="display:none; align-items:center; justify-content:center; flex-direction:column; background:rgba(0,0,0,0.8);">
+  <div id="winner-popup">
     <h2 id="winner-title">🏆 Winner!</h2>
     <div class="winner-scene">
       <img id="winner-cupid" src="img/transparent.png" class="winner-cupid" />
       <img id="winner-goal" src="img/goal.png" class="winner-goal" />
     </div>
     <div id="winner-name"></div>
-    <div id="winner-message" style="margin-bottom: 20px;"></div>
+    <div id="winner-message"></div>
     <button id="winner-exit">離開遊戲</button>
   </div>
 
@@ -58,24 +58,19 @@
   <div class="overlay" id="timeup">TIME UP!</div>
 </div>
 
-<!-- 📱 Phone-only view -->
+<!-- 📱 Phone view -->
 <div id="phone-view" style="display:none;">
   <div id="phone-panel" class="glass">
     <div id="phone-label" class="phone-label">Waiting...</div>
     <img id="phone-cupid" alt="Cupid" class="phone-cupid" />
     <div class="btn-row">
       <button id="rename-group-btn" class="btn secondary" style="display:none;">重新命名組別</button>
-      <button id="leave-group-btn"  class="btn danger" style="display:none;">離開組別</button>
+      <button id="leave-group-btn" class="btn danger" style="display:none;">離開組別</button>
     </div>
-    <div id="waiting-msg" style="margin-top:12px; font-size:14px; color:#fff; display:none;">等待遊戲開始...</div>
+    <div id="waiting-msg">等待遊戲開始...</div>
   </div>
 </div>
 
 <script type="module" src="happiness-game.js"></script>
 </body>
 </html>
-
-
-
-
-
