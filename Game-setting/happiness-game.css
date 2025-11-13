@@ -584,13 +584,32 @@ body::before {
   #track { min-height: 48vh; }
 }
 
-
-
-
-
-
-
-
-
-
-
+.ranking-panel {
+  position: absolute;
+  top: 20%;
+  right: 40px;
+  background: rgba(255,255,255,0.25);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 16px 24px;
+  width: 200px;
+  color: #003366;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+.ranking-panel h3 {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #003366;
+  margin-bottom: 10px;
+}
+.ranking-panel ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ranking-panel li {
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 6px 0;
+  color: #222;
+}
