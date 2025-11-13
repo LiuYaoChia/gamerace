@@ -587,6 +587,17 @@ get(groupsRef).then((snap) => {
   }
 });
 
+function updateRanking(groups) {
+  const rankingList = document.getElementById("ranking-list");
+  if (!rankingList) return;
+  const sorted = Object.entries(groups)
+    .sort((a,b) => (b[1].progress || 0) - (a[1].progress || 0));
+  rankingList.innerHTML = sorted.map(([gid,g]) =>
+    `<li>${g.name || `Group ${gid}`}: ${Math.round(g.progress||0)}%</li>`
+  ).join("");
+}
+
+
 function renderGameScene(groups) {
   if (!els.track) return;
 
@@ -693,7 +704,7 @@ function renderGameScene(groups) {
     bride = document.createElement("img");
     bride.src = "img/goal.png";
     bride.className = "bride";
-    els.track.appendChild(bride);
+    document.querySelector("#track").appendChild(bride);
   }
 
   Object.assign(bride.style, {
@@ -711,6 +722,7 @@ window.addEventListener("resize", async () => {
   const snap = await get(ref(db, "groups"));
   const groups = snap.val() || {};
   renderGameScene(groups);
+  updateRanking(groups);
 });
 
 onValue(ref(db, "groups"), (snap) => {
@@ -1091,6 +1103,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
