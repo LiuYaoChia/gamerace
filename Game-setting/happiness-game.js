@@ -558,13 +558,16 @@ let currentGameState = "lobby";
 onValue(ref(db, "gameState"), snap => {
   currentGameState = snap.val() || "lobby";
 
-  // PHONE (player) handling
+  // On Samsung Android, keyboard opening causes gameState to re-fire repeatedly.
+  // When typing in name input, DO NOT execute any join/lobby UI resets.
   if (isPhone) {
-    // ⭐ Prevent Samsung random UI-reset on keyboard focus:
-    if (document.activeElement === els.nameInput) {
-        // User is typing — DO NOT reset UI
-        return;
-    }
+      const isTyping = document.activeElement === els.nameInput;
+
+      if (isTyping) {
+          console.log("⛔ IGNORE gameState change while typing");
+          return;  // <---- prevent UI reset
+      }
+  }
     if (currentGameState === "lobby") {
       // Clear local join state & hide phone overlay
       currentGroupId = null;
@@ -1137,6 +1140,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
