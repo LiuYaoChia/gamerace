@@ -601,14 +601,14 @@ function updateRanking(groups) {
 function renderGameScene(groups) {
   if (!els.track) return;
 
-  // Hide setup, show game
+  // Hide setup, show game screen
   if (els.setupScreen) els.setupScreen.style.display = "none";
   if (els.gameScreen) {
     els.gameScreen.style.display = "flex";
     els.gameScreen.style.zIndex = "10";
   }
 
-  // Clear existing
+  // Clear track
   els.track.innerHTML = "";
 
   if (!groups || typeof groups !== "object") return;
@@ -617,10 +617,7 @@ function renderGameScene(groups) {
     .filter(([_, g]) => g.members && Object.keys(g.members).length > 0)
     .sort((a, b) => Number(a[0]) - Number(b[0]));
 
-  if (activeGroups.length === 0) {
-    console.log("No active groups yet.");
-    return;
-  }
+  if (activeGroups.length === 0) return;
 
   const total = activeGroups.length;
   const trackHeight = Math.max(100, Math.floor((window.innerHeight * 0.8) / total));
@@ -636,13 +633,14 @@ function renderGameScene(groups) {
     overflow: "visible",
   });
 
+  // LOOP
   activeGroups.forEach(([gid, g]) => {
     const groupName = g.name || customGroupNames[gid] || `Group ${gid}`;
     const memberNames = Object.values(g.members || {}).map(m => m.name).join("、");
     const cupidImg = cupidVariants[g.cupidIndex ?? 0];
     const progress = g.progress || 0;
 
-    // 🟢 Outer container
+    // Lane container
     const lane = document.createElement("div");
     lane.className = "lane";
     lane.dataset.groupId = gid;
@@ -651,12 +649,10 @@ function renderGameScene(groups) {
       height: ${trackHeight}px;
       margin: 10px 0;
       border-radius: 60px;
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(6px);
       overflow: visible;
     `;
 
-    // 🟢 Groom
+    // Groom
     const groom = document.createElement("img");
     groom.src = cupidImg;
     groom.className = "groom";
@@ -667,16 +663,15 @@ function renderGameScene(groups) {
       transform: translateY(-50%);
       height: 90px;
       transition: left 0.4s ease-out;
-      z-index: 2;
     `;
 
-    // 🟢 Group name + player names
+    // Label
     const label = document.createElement("div");
+    label.className = "lane-label";
     label.innerHTML = `
       <strong style="font-size:18px;">${groupName}</strong><br>
       <span style="font-size:14px;">${memberNames}</span>
     `;
-    label.className = "lane-label";
     label.style.cssText = `
       position: absolute;
       left: 20px;
@@ -689,22 +684,22 @@ function renderGameScene(groups) {
     lane.appendChild(groom);
     lane.appendChild(label);
     els.track.appendChild(lane);
+
+    // ⭐ FIXED SHIMMER ANIMATION
+    if (lane.dataset.prevProgress != progress) {
+      lane.classList.add("active");
+      setTimeout(() => lane.classList.remove("active"), 1500);
+      lane.dataset.prevProgress = progress;
+    }
   });
 
-  // 💫 Animate shimmer only when progress updates
-  if (!lane.dataset.prevProgress || lane.dataset.prevProgress != progress) {
-    lane.classList.add("active");
-    setTimeout(() => lane.classList.remove("active"), 1500);
-    lane.dataset.prevProgress = progress;
-  }
-  
-  // 🟢 Bride (right-end, vertically centered)
+  // ⭐ BRIDE (only add once)
   let bride = document.querySelector(".bride");
   if (!bride) {
     bride = document.createElement("img");
     bride.src = "img/goal.png";
     bride.className = "bride";
-    document.querySelector("#track").appendChild(bride);
+    els.track.appendChild(bride);
   }
 
   Object.assign(bride.style, {
@@ -715,14 +710,17 @@ function renderGameScene(groups) {
     height: "120px",
     zIndex: 10,
   });
+
+  // ⭐ Update ranking
+  updateRanking(groups);
 }
+
 
 
 window.addEventListener("resize", async () => {
   const snap = await get(ref(db, "groups"));
   const groups = snap.val() || {};
   renderGameScene(groups);
-  updateRanking(groups);
 });
 
 onValue(ref(db, "groups"), (snap) => {
@@ -1103,6 +1101,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
