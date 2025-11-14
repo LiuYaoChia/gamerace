@@ -75,6 +75,24 @@ let currentPlayerId = null;
 let currentGroupId  = null;
 let lastShakeTime   = 0;
 
+// ===== Block Android keyboard from triggering resize resets =====
+let ignoreResize = false;
+window.addEventListener("resize", () => {
+  if (ignoreResize) return;
+});
+
+// When focusing input → ignore resize events
+document.addEventListener("focusin", (e) => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+    ignoreResize = true;
+  }
+});
+
+// When leaving input → allow resize again after a short delay
+document.addEventListener("focusout", () => {
+  setTimeout(() => { ignoreResize = false; }, 500);
+});
+
 // DEBUG: global error catcher + show element refs
 window.addEventListener("error", e => console.error("Global error:", e.error || e.message || e));
 console.log("DEBUG els:", {
@@ -1119,6 +1137,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
