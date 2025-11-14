@@ -99,18 +99,33 @@ if (isHost) {
 }
 
 function showSetup() {
+
+  // ⭐ Host side (desktop) — always show
   if (isHost) {
       els.setupScreen.style.display = "block";
       els.gameScreen.style.display  = "block";
   }
-  els.phoneView.style.display   = "none";
-  // only show QR code on desktop
+
+  // ⭐ Fix Samsung disappearing-lobby bug:
+  // If the user is touching the name input on Android,
+  // DO NOT hide or reset anything.
+  if (isPhone && document.activeElement === els.nameInput) {
+      // User is typing — Android will cause viewport resize.
+      // Prevent UI from collapsing.
+      return;
+  }
+
+  // Hide phoneView by default
+  els.phoneView.style.display = "none";
+
+  // ⭐ QR Code only on desktop (unchanged)
   if (!isPhone && els.qrEl) {
     els.qrEl.style.display = "block";
   } else if (els.qrEl) {
     els.qrEl.style.display = "none";
   }
 }
+
 function showGame() {
   els.gameScreen.style.display  = "block";
   els.phoneView.style.display   = "none";
@@ -1108,6 +1123,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
