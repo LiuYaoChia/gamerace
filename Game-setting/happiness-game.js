@@ -99,8 +99,10 @@ if (isHost) {
 }
 
 function showSetup() {
-  els.setupScreen.style.display = "block";
-  els.gameScreen.style.display  = "block";
+  if (isHost) {
+      els.setupScreen.style.display = "block";
+      els.gameScreen.style.display  = "block";
+  }
   els.phoneView.style.display   = "none";
   // only show QR code on desktop
   if (!isPhone && els.qrEl) {
@@ -529,6 +531,11 @@ onValue(ref(db, "gameState"), snap => {
 
   // PHONE (player) handling
   if (isPhone) {
+    // ⭐ Prevent Samsung random UI-reset on keyboard focus:
+    if (document.activeElement === els.nameInput) {
+        // User is typing — DO NOT reset UI
+        return;
+    }
     if (currentGameState === "lobby") {
       // Clear local join state & hide phone overlay
       currentGroupId = null;
@@ -1101,6 +1108,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
