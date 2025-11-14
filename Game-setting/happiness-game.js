@@ -558,62 +558,74 @@ let currentGameState = "lobby";
 onValue(ref(db, "gameState"), snap => {
   currentGameState = snap.val() || "lobby";
 
-  // On Samsung Android, keyboard opening causes gameState to re-fire repeatedly.
-  // When typing in name input, DO NOT execute any join/lobby UI resets.
+  // ========== PHONE TYPING GUARD (Android Samsung fix) ==========
   if (isPhone) {
       const isTyping = document.activeElement === els.nameInput;
-
       if (isTyping) {
           console.log("⛔ IGNORE gameState change while typing");
-          return;  // <---- prevent UI reset
+          return;  // stop UI reset while typing on phone
       }
   }
-    if (currentGameState === "lobby") {
-      // Clear local join state & hide phone overlay
-      currentGroupId = null;
 
-      if (els.phoneView) els.phoneView.style.display = "none";
-      if (els.waitingMsg) els.waitingMsg.style.display = "none";
-      if (els.phoneLabel) els.phoneLabel.style.display = "none";
-      if (els.phoneCupid) els.phoneCupid.style.display = "none";
-      if (els.leaveBtn) els.leaveBtn.style.display = "none";
-      if (els.renameBtn) els.renameBtn.style.display = "none";
+  // ========== PHONE MODE (non-host) ==========
+  if (isPhone) {
+      if (currentGameState === "lobby") {
 
-      // show the join form / setup screen
-      if (els.form) els.form.style.display = "block";
-      showSetup();
+          currentGroupId = null;
 
-      // Refresh group choices for phones (safe if function exists)
-      if (typeof renderGroupChoices === "function") renderGroupChoices().catch(()=>{});
-    } else if (currentGameState === "playing") {
-      if (els.waitingMsg) els.waitingMsg.style.display = "none";
-      if (els.phoneLabel) els.phoneLabel.textContent = "比賽開始！搖動手機！";
-      // Keep phone overlay visible only for joined users
-      if (currentGroupId && els.phoneView) els.phoneView.style.display = "flex";
-    } else {
-      // fallback/waiting state
-      if (currentGroupId) {
-        if (els.waitingMsg) els.waitingMsg.style.display = "block";
-        if (els.phoneLabel) els.phoneLabel.textContent = "等待主持人開始";
-      } else {
-        showSetup();
+          if (els.phoneView) els.phoneView.style.display = "none";
+          if (els.waitingMsg) els.waitingMsg.style.display = "none";
+          if (els.phoneLabel) els.phoneLabel.style.display = "none";
+          if (els.phoneCupid) els.phoneCupid.style.display = "none";
+          if (els.leaveBtn) els.leaveBtn.style.display = "none";
+          if (els.renameBtn) els.renameBtn.style.display = "none";
+
+          // Show join form
+          if (els.form) els.form.style.display = "block";
+
+          showSetup();
+
+          // refresh group choices
+          if (typeof renderGroupChoices === "function") {
+              renderGroupChoices().catch(()=>{});
+          }
       }
-    }
-    return;
+
+      else if (currentGameState === "playing") {
+          if (els.waitingMsg) els.waitingMsg.style.display = "none";
+          if (els.phoneLabel) els.phoneLabel.textContent = "比賽開始！搖動手機！";
+
+          if (currentGroupId && els.phoneView) {
+              els.phoneView.style.display = "flex";
+          }
+      }
+
+      else {
+          // fallback
+          if (currentGroupId) {
+              if (els.waitingMsg) els.waitingMsg.style.display = "block";
+              if (els.phoneLabel) els.phoneLabel.textContent = "等待主持人開始";
+          } else {
+              showSetup();
+          }
+      }
+
+      return;  // STOP HERE for phone mode
   }
 
-  // HOST (desktop) handling
+  // ========== HOST (Desktop) ==========
   if (currentGameState === "lobby") {
-    showSetup();
-    if (els.setupScreen) els.setupScreen.style.display = "block";
-    if (els.gameScreen) els.gameScreen.style.display = "block";
-  } else if (currentGameState === "playing") {
-    if (els.setupScreen) els.setupScreen.style.display = "none";
-    if (els.gameScreen) els.gameScreen.style.display = "block";
-    showGame();
+      showSetup();
+      if (els.setupScreen) els.setupScreen.style.display = "block";
+      if (els.gameScreen) els.gameScreen.style.display = "block";
+  }
+
+  else if (currentGameState === "playing") {
+      if (els.setupScreen) els.setupScreen.style.display = "none";
+      if (els.gameScreen) els.gameScreen.style.display = "block";
+      showGame();
   }
 });
-
 
 const groupsRef = ref(db, "groups");
 get(groupsRef).then((snap) => {
@@ -1140,6 +1152,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
