@@ -99,32 +99,28 @@ if (isHost) {
 }
 
 function showSetup() {
-
-  // ⭐ Host side (desktop) — always show
+  // HOST: show setup + game layout placeholders
   if (isHost) {
-      els.setupScreen.style.display = "block";
-      els.gameScreen.style.display  = "block";
+    els.setupScreen.style.display = "block";
+    els.gameScreen.style.display  = "block";
   }
 
-  // ⭐ Fix Samsung disappearing-lobby bug:
-  // If the user is touching the name input on Android,
-  // DO NOT hide or reset anything.
-  if (isPhone && document.activeElement === els.nameInput) {
-      // User is typing — Android will cause viewport resize.
-      // Prevent UI from collapsing.
-      return;
+  // PHONE: show the join screen!
+  if (isPhone) {
+    els.setupScreen.style.display = "block";   // 👈 show join UI
+    els.form.style.display = "block";          // 👈 show form (name + groups)
+    els.phoneView.style.display = "none";      // 👈 hide phone shake UI until joined
+
+    // Hide QR for phones
+    if (els.qrEl) els.qrEl.style.display = "none";
   }
 
-  // Hide phoneView by default
-  els.phoneView.style.display = "none";
-
-  // ⭐ QR Code only on desktop (unchanged)
+  // Desktop show QR
   if (!isPhone && els.qrEl) {
     els.qrEl.style.display = "block";
-  } else if (els.qrEl) {
-    els.qrEl.style.display = "none";
   }
 }
+
 
 function showGame() {
   els.gameScreen.style.display  = "block";
@@ -1123,6 +1119,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
