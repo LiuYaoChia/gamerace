@@ -840,15 +840,30 @@ window.addEventListener("resize", async () => {
 });
 
 onValue(ref(db, "groups"), (snap) => {
-  const groups = snap.val() || {};
-  if (!isHost) return; // only host updates scene
+  let groups = snap.val() || {};
 
-  console.log("🎯 groups updated:", groups);
-  els.setupScreen.style.display = "none";
-  els.gameScreen.style.display = "block";
+  // ------ FIX: sanitize array-like groups ------
+  if (Array.isArray(groups)) {
+    const cleaned = {};
+    groups.forEach((g, i) => {
+      if (g && typeof g === "object") cleaned[i] = g;
+    });
+    groups = cleaned;
+    console.log("FIXED groups:", groups);
+  }
+  // ---------------------------------------------
 
-  renderGameScene(groups);
+  if (!isHost) return;
+
+  try {
+    els.setupScreen.style.display = "none";
+    els.gameScreen.style.display = "block";
+    renderGameScene(groups);
+  } catch (err) {
+    console.error("renderGameScene crash:", err);
+  }
 });
+
 
 
 
@@ -1217,6 +1232,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
