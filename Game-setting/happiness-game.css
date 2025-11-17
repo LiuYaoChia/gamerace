@@ -60,7 +60,11 @@ input, textarea {
   width: 100%;
   box-sizing: border-box;
 }
-
+#player-setup input:focus {
+  position: relative;
+  z-index: 100;
+  outline: none;
+}
 /* Adjust title inside merged layout */
 #player-setup h2 {
   text-align: center;
@@ -629,6 +633,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
