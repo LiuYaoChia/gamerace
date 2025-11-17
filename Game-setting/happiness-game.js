@@ -554,15 +554,32 @@ function animateCupidJump(groupId) {
 
 // ====== Global Game State Listener (Host + Phone unified) ======
 let currentGameState = "lobby";
+let lastHeight = window.innerHeight;
+let keyboardOpen = false;
+window.addEventListener("resize", () => {
+  const newHeight = window.innerHeight;
+
+  // Keyboard opened (height shrink > 150px)
+  if (lastHeight - newHeight > 150) {
+    keyboardOpen = true;
+  } else {
+    keyboardOpen = false;
+  }
+
+  lastHeight = newHeight;
+});
 
 onValue(ref(db, "gameState"), snap => {
   currentGameState = snap.val() || "lobby";
 
-  // SAMSUNG: Prevent UI reset when typing
+  // ============================================
+  // SAMSUNG FIX — DO NOT CHANGE UI when keyboard opens
+  // ============================================
   if (isPhone) {
     const isTyping = document.activeElement === els.nameInput;
-    if (isTyping) {
-      console.log("⛔ IGNORE gameState update (user typing)");
+
+    if (isTyping || keyboardOpen) {
+      console.log("⛔ IGNORE gameState update (Samsung keyboard active)");
       return;
     }
   }
@@ -572,11 +589,8 @@ onValue(ref(db, "gameState"), snap => {
   // ==========================
   if (isPhone) {
     if (currentGameState === "lobby") {
-
-      // FIXED: setupScreen instead of playerSetup
       els.setupScreen.style.display = "block";
       els.form.style.display = "block";
-
       els.phoneView.style.display = "none";
 
       if (typeof renderGroupChoices === "function") {
@@ -586,8 +600,6 @@ onValue(ref(db, "gameState"), snap => {
     }
 
     if (currentGameState === "playing") {
-
-      // FIXED
       els.setupScreen.style.display = "none";
 
       if (currentGroupId) {
@@ -599,7 +611,6 @@ onValue(ref(db, "gameState"), snap => {
       return;
     }
 
-    // fallback
     els.setupScreen.style.display = "block";
     return;
   }
@@ -620,6 +631,7 @@ onValue(ref(db, "gameState"), snap => {
     }
   }
 });
+
 
 
 const groupsRef = ref(db, "groups");
@@ -1147,6 +1159,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
