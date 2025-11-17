@@ -69,6 +69,7 @@ const els = {
   renameBtn:   document.getElementById("rename-group-btn"),
   qrEl:        document.getElementById("qr-code"),
   waitingMsg:  document.getElementById("waiting-msg"),
+  rank      :  document.getElementById("ranking-list"),
 };
 
 let currentPlayerId = null;
@@ -628,6 +629,7 @@ onValue(ref(db, "gameState"), snap => {
         setDisplay(els.phoneCupid, "none");
         setDisplay(els.leaveBtn, "none");
         setDisplay(els.renameBtn, "none");
+        setDisplay(els.rank, "none");
 
         // refresh choices (safe)
         if (typeof renderGroupChoices === "function") {
@@ -1215,6 +1217,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
