@@ -1,6 +1,6 @@
 /* === GENERAL STYLES === */
 body {
-  background: url('img/麵浪賽道海灘.jpg') no-repeat center center fixed;
+  background: url('img/麵浪賽道海灘.jpg') no-repeat center center;
   background-size: cover;
   margin: 0;
   font-family: "Noto Sans TC", sans-serif;
@@ -8,7 +8,7 @@ body {
 }
 body::before {
   content: "";
-  position: fixed;
+  position: absolute !important;
   inset: 0;
   /* comment these out or make it very light */
   background: rgba(255, 255, 255, 0.05); /* softer mist */
@@ -37,7 +37,8 @@ body::before {
   flex-direction: column;
   align-items: center;
   justify-content: start;
-  height: 100vh;
+  height: auto !important;
+  min-height: 100% !important;
   position: relative;
 }
 #player-setup {
@@ -143,7 +144,8 @@ body::before {
   justify-content: space-evenly;
   align-items: stretch;
   width: 90%;
-  height: 80vh;
+  height: auto !important;
+  min-height: 300px; /* allow scrolling */
   padding: 0 80px;
   position: relative;
   overflow: visible;
@@ -306,7 +308,7 @@ body::before {
 
 /* === CONTROL PANEL (Bottom-Right Corner) === */
 .control-panel {
-  position: fixed;
+  position: absolute !important;
   bottom: 40px;
   right: 40px;
   display: flex;
@@ -339,7 +341,7 @@ body::before {
 /* === TIME UP OVERLAY === */
 #timeup {
   display: none;
-  position: fixed;
+  position: absolute !important;
   top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -377,7 +379,7 @@ body::before {
 
 /* === Winner Popup (full screen overlay) === */
 #winner-popup {
-  position: fixed;
+  position: absolute !important;
   inset: 0; /* cover the whole screen */
   display: none; /* hidden until winner */
   width: 100%;  /* ensure the container spans */
@@ -493,7 +495,7 @@ body::before {
 
 /* Phone overlay container */
 #phone-view{
-  position: fixed;            
+  position: static !important;           
   display: flex;              /* make it a flexbox */
   display: none;               /* hidden by default */
   inset: 0;
@@ -583,7 +585,7 @@ body::before {
 @media (max-width: 860px) {
   .game-layout { flex-direction: column; gap: 16px; padding: 12px; }
   .ranking-panel { width: 100%; max-width: none; }
-  #track { min-height: 48vh; }
+  #track { min-height: 300px !important; }
 }
 
 .ranking-panel {
@@ -615,5 +617,6 @@ body::before {
   margin: 6px 0;
   color: #222;
 }
+
 
 
