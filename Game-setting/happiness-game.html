@@ -5,8 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>💘 蚵仔，你心底的名字</title>
   <link rel="stylesheet" href="happiness-game.css" />
+
+  <style>
+    /* ---------------------------------------------------
+       🔥 Samsung Android 8/9 Chrome Keyboard Fix
+       Prevent body resizing when keyboard opens
+    --------------------------------------------------- */
+    html, body {
+      height: 100%;
+      overflow: hidden;     /* stop layout collapse */
+      position: fixed;      /* lock viewport */
+      inset: 0;
+      width: 100%;
+      touch-action: none;   /* avoid forced scroll jumps */
+    }
+
+    /* All scrollable content lives in this wrapper */
+    #safe-wrapper {
+      height: 100%;
+      width: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+      touch-action: auto;
+    }
+  </style>
 </head>
+
 <body>
+<div id="safe-wrapper"><!-- 🔥 FIX WRAPPER START -->
 
 <!-- ✅ QR Code -->
 <div id="qr-code">
@@ -29,6 +56,7 @@
 <!-- ✅ Game Container -->
 <div class="game-container">
   <div class="game-layout">
+
     <!-- 🏁 Track -->
     <div class="track" id="track">
       <!-- JS dynamically adds Cupids and lanes -->
@@ -45,9 +73,7 @@
   <!-- 🏅 Ranking Panel -->
   <div class="ranking-panel">
     <h3>🏆 排行榜</h3>
-    <ul id="ranking-list">
-      <!-- JS fills in ranking dynamically -->
-    </ul>
+    <ul id="ranking-list"></ul>
   </div>
   
   <!-- ✅ Winner Popup -->
@@ -62,7 +88,7 @@
     <button id="winner-exit">離開遊戲</button>
   </div>
 
-  <!-- ✅ Time Up Overlay -->
+  <!-- ⏰ Time Up Overlay -->
   <div class="overlay" id="timeup">TIME UP!</div>
 </div>
 
@@ -79,7 +105,8 @@
   </div>
 </div>
 
+</div><!-- 🔥 FIX WRAPPER END -->
+
 <script type="module" src="happiness-game.js"></script>
 </body>
 </html>
-
