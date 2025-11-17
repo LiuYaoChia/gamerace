@@ -601,6 +601,10 @@ if (window.visualViewport) {
   });
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Rank panel:", els.rank); // should not be null
+});
+
 onValue(ref(db, "gameState"), snap => {
   try {
     const newState = snap.val() || "lobby";
@@ -1217,6 +1221,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
