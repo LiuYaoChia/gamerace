@@ -15,6 +15,18 @@ body::before {
   backdrop-filter: none;  /* remove blur */
   z-index: 0;
 }
+/* Help Android avoid reflow when keyboard opens */
+html, body {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Prevent mobile browsers from auto-scrolling inputs into odd positions */
+input, textarea {
+  -webkit-user-select: text;
+  caret-color: auto;
+  touch-action: manipulation;
+}
 
 /* === QR Code (Top-Left Corner) === */
 #qr-code {
@@ -617,6 +629,7 @@ body::before {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
