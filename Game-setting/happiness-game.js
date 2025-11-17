@@ -558,72 +558,73 @@ let currentGameState = "lobby";
 onValue(ref(db, "gameState"), snap => {
   currentGameState = snap.val() || "lobby";
 
-  // ========== PHONE TYPING GUARD (Android Samsung fix) ==========
+  // ================
+  // SAMSUNG KEYBOARD FIX
+  // Prevent UI from disappearing when the keyboard opens
+  // ================
   if (isPhone) {
-      const isTyping = document.activeElement === els.nameInput;
-      if (isTyping) {
-          console.log("⛔ IGNORE gameState change while typing");
-          return;  // stop UI reset while typing on phone
-      }
+    const isTyping = document.activeElement === els.nameInput;
+
+    if (isTyping) {
+      console.log("⛔ IGNORE gameState update (user typing on phone)");
+      return;
+    }
   }
 
-  // ========== PHONE MODE (non-host) ==========
+  // ======================================================
+  // PHONE BEHAVIOR
+  // ======================================================
   if (isPhone) {
-      if (currentGameState === "lobby") {
+    if (currentGameState === "lobby") {
+      // Show join form
+      els.playerSetup.style.display = "block";
+      els.form.style.display = "block";
 
-          currentGroupId = null;
+      // Hide phone racing overlay
+      els.phoneView.style.display = "none";
 
-          if (els.phoneView) els.phoneView.style.display = "none";
-          if (els.waitingMsg) els.waitingMsg.style.display = "none";
-          if (els.phoneLabel) els.phoneLabel.style.display = "none";
-          if (els.phoneCupid) els.phoneCupid.style.display = "none";
-          if (els.leaveBtn) els.leaveBtn.style.display = "none";
-          if (els.renameBtn) els.renameBtn.style.display = "none";
-
-          // Show join form
-          if (els.form) els.form.style.display = "block";
-
-          showSetup();
-
-          // refresh group choices
-          if (typeof renderGroupChoices === "function") {
-              renderGroupChoices().catch(()=>{});
-          }
+      // Refresh group choices
+      if (typeof renderGroupChoices === "function") {
+        renderGroupChoices().catch(()=>{});
       }
 
-      else if (currentGameState === "playing") {
-          if (els.waitingMsg) els.waitingMsg.style.display = "none";
-          if (els.phoneLabel) els.phoneLabel.textContent = "比賽開始！搖動手機！";
+      return;
+    }
 
-          if (currentGroupId && els.phoneView) {
-              els.phoneView.style.display = "flex";
-          }
+    if (currentGameState === "playing") {
+      // Hide setup screen
+      els.playerSetup.style.display = "none";
+
+      // Only show phone overlay if player already joined group
+      if (currentGroupId) {
+        els.phoneView.style.display = "flex";
+        els.phoneLabel.textContent = "比賽開始！搖動手機！";
+      } else {
+        els.phoneView.style.display = "none";
       }
 
-      else {
-          // fallback
-          if (currentGroupId) {
-              if (els.waitingMsg) els.waitingMsg.style.display = "block";
-              if (els.phoneLabel) els.phoneLabel.textContent = "等待主持人開始";
-          } else {
-              showSetup();
-          }
-      }
+      return;
+    }
 
-      return;  // STOP HERE for phone mode
+    // Fallback
+    els.playerSetup.style.display = "block";
+    return;
   }
 
-  // ========== HOST (Desktop) ==========
-  if (currentGameState === "lobby") {
-      showSetup();
-      if (els.setupScreen) els.setupScreen.style.display = "block";
-      if (els.gameScreen) els.gameScreen.style.display = "block";
-  }
+  // ======================================================
+  // HOST (DESKTOP) BEHAVIOR
+  // ======================================================
+  if (!isPhone) {
+    if (currentGameState === "lobby") {
+      els.playerSetup.style.display = "block";
+      els.gameScreen.style.display = "block";
+    }
 
-  else if (currentGameState === "playing") {
-      if (els.setupScreen) els.setupScreen.style.display = "none";
-      if (els.gameScreen) els.gameScreen.style.display = "block";
+    if (currentGameState === "playing") {
+      els.playerSetup.style.display = "none";
+      els.gameScreen.style.display = "block";
       showGame();
+    }
   }
 });
 
@@ -1152,6 +1153,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
