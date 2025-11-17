@@ -15,11 +15,6 @@ body::before {
   backdrop-filter: none;  /* remove blur */
   z-index: 0;
 }
-/* Help Android avoid reflow when keyboard opens */
-html, body {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
 
 /* Prevent mobile browsers from auto-scrolling inputs into odd positions */
 input, textarea {
@@ -633,6 +628,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
