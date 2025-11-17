@@ -69,7 +69,7 @@ const els = {
   renameBtn:   document.getElementById("rename-group-btn"),
   qrEl:        document.getElementById("qr-code"),
   waitingMsg:  document.getElementById("waiting-msg"),
-  rank      :  document.getElementById("ranking-panel"),
+  rank      :  document.getElementById(".ranking-panel"),
 };
 
 let currentPlayerId = null;
@@ -1217,6 +1217,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
