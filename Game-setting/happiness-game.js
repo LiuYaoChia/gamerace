@@ -553,22 +553,17 @@ function animateCupidJump(groupId) {
   }
 }
 
-// ====== Global Game State Listener (Host + Phone unified) ======
+// ====== Improved Samsung / Android 9 Lobby Fix ======
 let currentGameState = "lobby";
-
-// ───── Keyboard / typing helpers ─────
 let isTyping = false;
 let ignoreViewportResize = false;
 let lastVVHeight = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-let vvResizeTimeout;
+let resizeTimeout = null;
 
-// Helper to safely set element display
-const setDisplay = (el, val) => {
-  if (!el) return;
-  try { el.style.display = val; } catch(e){ console.warn("setDisplay failed", e); }
-};
+// Detect Android 9 (Samsung) roughly
+const isAndroid9 = /Android 9/i.test(navigator.userAgent);
 
-// ===== Focus / blur on name input =====
+// ----- Name input focus/blur -----
 if (els.nameInput) {
   els.nameInput.addEventListener("focus", () => {
     isTyping = true;
@@ -577,7 +572,7 @@ if (els.nameInput) {
       document.documentElement.style.height = window.innerHeight + "px";
       document.body.style.height = window.innerHeight + "px";
     } catch(e){}
-    console.log("DEBUG: nameInput focus -> isTyping=true, freeze viewport reactions");
+    console.log("DEBUG: nameInput focus -> freeze viewport reactions");
   });
 
   els.nameInput.addEventListener("blur", () => {
@@ -588,105 +583,75 @@ if (els.nameInput) {
         document.documentElement.style.height = "";
         document.body.style.height = "";
       } catch(e){}
-      console.log("DEBUG: nameInput blur -> isTyping=false, unfreeze viewport reactions");
-    }, 350);
+      console.log("DEBUG: nameInput blur -> unfreeze viewport reactions");
+    }, 450); // slightly longer for Android 9
   });
 }
 
-// ===== VisualViewport resize (keyboard open/close) =====
+// ----- VisualViewport resize (keyboard open/close) -----
 if (window.visualViewport) {
   window.visualViewport.addEventListener("resize", () => {
     const vh = window.visualViewport.height;
-    if (Math.abs(vh - lastVVHeight) > 80) {
-      console.log("DEBUG: visualViewport resize detected", { lastVVHeight, vh });
 
-      if (!isTyping) {
-        ignoreViewportResize = true;
-        clearTimeout(vvResizeTimeout);
-        vvResizeTimeout = setTimeout(() => { ignoreViewportResize = false; }, 500);
-      }
+    if (Math.abs(vh - lastVVHeight) > 80) {
+      ignoreViewportResize = true;
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        ignoreViewportResize = false;
+        console.log("DEBUG: visualViewport resize ended, unfreeze");
+      }, 650); // longer for Samsung keyboard animation
     }
+
     lastVVHeight = vh;
   });
 }
 
-// ===== DOMContentLoaded debug =====
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("Rank panel:", els.rank);
-});
-
-// ===== Firebase gameState listener =====
+// ----- GameState listener -----
 onValue(ref(db, "gameState"), snap => {
   try {
     const newState = snap.val() || "lobby";
-    console.log("DEBUG gameState fired ->", newState, { isPhone, isTyping, ignoreViewportResize });
-
     currentGameState = newState;
+    console.log("DEBUG gameState fired ->", newState, { isPhone, isTyping, ignoreViewportResize, isAndroid9 });
 
-    // Mobile typing / ignoring viewport, skip update
-    if (isPhone && (isTyping || ignoreViewportResize)) {
-      console.log("DEBUG: gameState ignored because typing/ignoreViewportResize is true");
-      return;
-    }
+    const setDisplay = (el, val) => { if (el) el.style.display = val; };
 
-    // ===== PHONE / MOBILE VIEW =====
     if (isPhone) {
-      if (currentGameState === "lobby") {
-        // Show lobby safely
-        requestAnimationFrame(() => {
-          setDisplay(els.setupScreen, "block");
-          setDisplay(els.form, "block");
-          setDisplay(els.phoneView, "none");
-          setDisplay(els.waitingMsg, "none");
-          setDisplay(els.phoneLabel, "none");
-          setDisplay(els.phoneCupid, "none");
-          setDisplay(els.leaveBtn, "none");
-          setDisplay(els.renameBtn, "none");
-          setDisplay(els.rank, "none");
-
-          // refresh group choices safely
-          if (typeof renderGroupChoices === "function") {
-            (async () => {
-              try {
-                await renderGroupChoices();
-              } catch(err) {
-                console.warn("renderGroupChoices failed", err);
-              }
-            })();
+      // For Android 9 / Samsung: delay lobby hide if typing
+      if (isAndroid9 && isTyping && currentGameState === "lobby") {
+        console.log("DEBUG: Samsung delay lobby update while typing");
+        setTimeout(() => {
+          if (!isTyping && !ignoreViewportResize) {
+            applyPhoneLobbyUI();
           }
-        });
+        }, 150); // small delay to prevent flicker
+        return;
+      }
+
+      // normal immediate behavior
+      if (currentGameState === "lobby") {
+        applyPhoneLobbyUI();
         return;
       }
 
       if (currentGameState === "playing") {
-        requestAnimationFrame(() => {
-          setDisplay(els.setupScreen, "none");
-          setDisplay(els.form, "none");
-
-          if (currentGroupId) {
-            setDisplay(els.phoneView, "flex");
-            if (els.phoneLabel) els.phoneLabel.textContent = "比賽開始！搖動手機！";
-          } else {
-            setDisplay(els.phoneView, "none");
-          }
-        });
+        setDisplay(els.setupScreen, "none");
+        setDisplay(els.form, "none");
+        if (currentGroupId) {
+          setDisplay(els.phoneView, "flex");
+          if (els.phoneLabel) els.phoneLabel.textContent = "比賽開始！搖動手機！";
+        } else {
+          setDisplay(els.phoneView, "none");
+        }
         return;
       }
-
-      // fallback
-      setDisplay(els.setupScreen, "block");
-      return;
-    }
-
-    // ===== HOST / DESKTOP VIEW =====
-    if (!isPhone) {
+    } else { // HOST / Desktop
       if (currentGameState === "lobby") {
         setDisplay(els.setupScreen, "block");
         setDisplay(els.gameScreen, "block");
       } else if (currentGameState === "playing") {
         setDisplay(els.setupScreen, "none");
         setDisplay(els.gameScreen, "block");
-        if (typeof showGame === "function") showGame();
+        showGame && showGame();
       }
     }
 
@@ -694,6 +659,23 @@ onValue(ref(db, "gameState"), snap => {
     console.error("gameState handler exception:", err);
   }
 });
+
+// ----- Helper: apply phone lobby UI -----
+function applyPhoneLobbyUI() {
+  const setDisplay = (el, val) => { if (el) el.style.display = val; };
+
+  setDisplay(els.setupScreen, "block");
+  setDisplay(els.form, "block");
+  setDisplay(els.phoneView, "none");
+  setDisplay(els.waitingMsg, "none");
+  setDisplay(els.phoneLabel, "none");
+  setDisplay(els.phoneCupid, "none");
+  setDisplay(els.leaveBtn, "none");
+  setDisplay(els.renameBtn, "none");
+  setDisplay(els.rank, "none");
+
+  if (typeof renderGroupChoices === "function") renderGroupChoices().catch(console.warn);
+}
 
 
 
@@ -1226,6 +1208,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
