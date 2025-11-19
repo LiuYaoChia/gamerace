@@ -558,7 +558,14 @@ function animateCupidJump(groupId) {
    Detect typing using touchstart (the ONLY event
    Samsung Android 9 always fires)
 --------------------------------------------------- */
+// ===== GLOBAL STATE =====
+let currentGameState = "lobby";
+let currentGroupId   = null;
+
 let phoneTyping = false;
+let isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+// your existing els = { ... } must be defined BEFORE onValue too
 
 // Detect typing reliably on Samsung
 if (els.nameInput) {
@@ -1192,6 +1199,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
