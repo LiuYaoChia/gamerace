@@ -559,6 +559,44 @@ function animateCupidJump(groupId) {
   }
 }
 
+
+// ===== Force stabilize layout for Samsung Android 9 =====
+const isSamsungAndroid9 =
+  /SM-G95/gi.test(navigator.userAgent) && /Android 9/gi.test(navigator.userAgent);
+
+if (isSamsungAndroid9) {
+  console.log("Samsung Android 9 detected — applying viewport fix");
+
+  const freezeHeight = () => {
+    const h = window.innerHeight;
+    document.documentElement.style.height = h + "px";
+    document.body.style.height = h + "px";
+    document.getElementById("player-setup").style.height = h + "px";
+    document.getElementById("player-setup").style.overflow = "auto";
+  };
+
+  const unfreezeHeight = () => {
+    document.documentElement.style.height = "";
+    document.body.style.height = "";
+    document.getElementById("player-setup").style.height = "";
+    document.getElementById("player-setup").style.overflow = "";
+  };
+
+  // When tapping input
+  els.nameInput.addEventListener("focus", () => {
+    freezeHeight();
+    console.log("Freeze height (keyboard open)");
+  });
+
+  // When leaving input
+  els.nameInput.addEventListener("blur", () => {
+    setTimeout(() => {
+      unfreezeHeight();
+      console.log("Unfreeze height (keyboard closed)");
+    }, 300);
+  });
+}
+
 /* -------------------------------------------------
    SAMSUNG ANDROID 9 FIX
    Detect typing using touchstart (the ONLY event
@@ -1202,6 +1240,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
