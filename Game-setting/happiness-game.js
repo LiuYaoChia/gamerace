@@ -73,7 +73,7 @@ const els = {
 };
 
 let currentPlayerId = null;
-let currentGroupId  = null;
+let currentGroupId   = null;
 let lastShakeTime   = 0;
 
 // ===== Block Android keyboard from triggering resize resets =====
@@ -560,8 +560,6 @@ function animateCupidJump(groupId) {
 --------------------------------------------------- */
 // ===== GLOBAL STATE =====
 let currentGameState = "lobby";
-let currentGroupId   = null;
-
 let phoneTyping = false;
 let isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -1199,6 +1197,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
