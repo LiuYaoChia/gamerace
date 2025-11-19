@@ -45,7 +45,7 @@ input, textarea {
   align-items: center;
   justify-content: start;
   height: auto !important;
-  min-height: 100% !important;
+  min-height: 100vh !important;   /* ← FIX */
   position: relative;
 }
 #player-setup {
@@ -628,6 +628,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
