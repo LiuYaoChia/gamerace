@@ -8,7 +8,8 @@ body {
 }
 body::before {
   content: "";
-  position: absolute !important;
+  position: fixed;
+  pointer-events: none;
   inset: 0;
   /* comment these out or make it very light */
   background: rgba(255, 255, 255, 0.05); /* softer mist */
@@ -506,7 +507,7 @@ input, textarea {
 
 /* Phone overlay container */
 #phone-view{
-  position: static !important;           
+  position: fixed !important;          
   display: flex;              /* make it a flexbox */
   display: none;               /* hidden by default */
   inset: 0;
@@ -628,6 +629,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
