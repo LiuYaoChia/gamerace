@@ -278,6 +278,12 @@ async function updatePhoneView(group) {
 signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
 onAuthStateChanged(auth,(user)=>{ if(user) currentPlayerId=user.uid; });
 
+// ====== Prevent Samsung auto-submit glitch ======
+document.getElementById("enable-motion").addEventListener("click", () => {
+    console.log("Manual submit triggered");
+    document.getElementById("name-form").dispatchEvent(new Event("submit", { cancelable: true }));
+});
+
 // ====== Join Group (debug & robust replacement) ======
 if (!isHost) {
   els.form?.addEventListener("submit", async (e) => {
@@ -1196,6 +1202,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
