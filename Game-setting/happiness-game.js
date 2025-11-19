@@ -561,7 +561,6 @@ function animateCupidJump(groupId) {
 // ===== GLOBAL STATE =====
 let currentGameState = "lobby";
 let phoneTyping = false;
-let isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 // your existing els = { ... } must be defined BEFORE onValue too
 
@@ -1197,6 +1196,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
