@@ -140,7 +140,9 @@ function showSetup() {
     els.qrEl.style.display = "block";
   }
 }
-
+if (isPhone && els.rankList) {
+  els.rankList.style.display = "none";
+}
 
 function showGame() {
   els.gameScreen.style.display  = "block";
@@ -1243,6 +1245,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
