@@ -45,12 +45,18 @@
 <!-- ✅ Player Setup (hidden on host) -->
 <div id="player-setup" style="display:none;">
   <h2 class="game-title">💘 蚵仔，你心底的名字</h2>
-  <form id="name-form">
-    <input type="text" id="player-name" placeholder="輸入你的名字" required />
+
+  <!-- ⛔ NO MORE <form> — Samsung fix -->
+  <div id="name-form">
+    <input type="text" id="player-name" placeholder="輸入你的名字" autocomplete="off" />
+    
     <div id="group-choices"></div>
+
     <input type="hidden" id="group-select" />
-    <button type="button" id="enable-motion" class="motion-btn">🎮 開啟動作捕捉</button>
-  </form>
+
+    <!-- This becomes the JOIN button -->
+    <button id="enable-motion" class="motion-btn">🎮 開啟動作捕捉</button>
+  </div>
 </div>
 
 <!-- ✅ Game Container -->
@@ -110,4 +116,5 @@
 <script type="module" src="happiness-game.js"></script>
 </body>
 </html>
+
 
