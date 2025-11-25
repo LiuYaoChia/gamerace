@@ -286,8 +286,7 @@ document.getElementById("enable-motion").addEventListener("click", () => {
 
 // ====== Join Group (debug & robust replacement) ======
 if (!isHost) {
-  document.getElementById("enable-motion")
-    .addEventListener("click", async (e) => {
+  els.form?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     // tiny helper: visible debug box at top
@@ -1241,6 +1240,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
