@@ -165,7 +165,7 @@ function showPhoneOnly() {
 
 // ====== Ensure Groups ======
 async function ensureGroups() {
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 5; i++) {
     const gRef = ref(db, `groups/${i}`);
     const snap = await get(gRef);
     if (!snap.exists()) {
@@ -1254,6 +1254,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
