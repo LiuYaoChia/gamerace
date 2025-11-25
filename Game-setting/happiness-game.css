@@ -4,6 +4,7 @@ body {
   background-size: cover;
   margin: 0;
   font-family: "Noto Sans TC", sans-serif;
+  position: relative; /* important for layering */
   color: #333;
 }
 body::before {
@@ -623,6 +624,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
