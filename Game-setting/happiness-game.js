@@ -642,6 +642,17 @@ onValue(ref(db, "gameState"), snap => {
   const hide = (el) => el && (el.style.display = "none");
 
   /* -------------------------------------------------
+     QR CODE (top-right in lobby only)
+  --------------------------------------------------- */
+  if (els.qrEl) {
+    if (currentGameState === "lobby") {
+      show(els.qrEl);
+    } else {
+      hide(els.qrEl);
+    }
+  }
+
+  /* -------------------------------------------------
      PHONE BEHAVIOR
   --------------------------------------------------- */
   if (isPhone) {
@@ -712,8 +723,6 @@ onValue(ref(db, "gameState"), snap => {
     }
   }
 });
-
-
 
 
 function updateRanking(groups) {
@@ -1245,6 +1254,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
