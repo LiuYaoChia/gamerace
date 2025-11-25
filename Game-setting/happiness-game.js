@@ -643,10 +643,15 @@ onValue(ref(db, "gameState"), snap => {
 
     // 🔥 MAIN FIX:
     // Prevent UI from disappearing when Samsung keyboard opens
-    if (phoneTyping) {
-      console.log("⛔ BLOCK gameState update while typing");
+  if (phoneTyping) {
+    console.log("⛔ Samsung typing: allow lobby UI, block transitions");
+    if (currentGameState === "lobby") {
+      // ALWAYS show lobby & form while typing
+      els.setupScreen.style.display = "block";
+      els.form.style.display = "block";
       return;
     }
+  }
 
     // --------------------
     // LOBBY STATE
@@ -1240,3 +1245,4 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
