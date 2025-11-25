@@ -162,7 +162,16 @@ function showPhoneOnly() {
   if (els.rank)  els.rank.style.display = "none"
 }
 
-
+async function removeExtraGroups() {
+  const snap = await get(ref(db, "groups"));
+  const groups = snap.val() || {};
+  for (const gid of Object.keys(groups)) {
+    if (Number(gid) > 5) {    // remove group IDs > 5
+      console.log("Removing extra group:", gid);
+      await remove(ref(db, `groups/${gid}`));
+    }
+  }
+}
 // ====== Ensure Groups ======
 async function ensureGroups() {
   for (let i = 1; i <= 5; i++) {
@@ -1252,8 +1261,10 @@ async function removeRedundantGroups() {
   showSetup();
   await ensureGroups();                  // make sure groups exist
   await removeRedundantGroups();         // remove any empty/redundant groups
+  await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
