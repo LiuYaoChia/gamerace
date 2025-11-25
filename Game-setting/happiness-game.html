@@ -14,10 +14,11 @@
     html, body {
       height: 100%;
       overflow: hidden;     /* stop layout collapse */
-      position: fixed;      /* lock viewport */
+      position: relative;  /* ✅ allow background */
       inset: 0;
       width: 100%;
       touch-action: none;   /* avoid forced scroll jumps */
+      background-color: #a0c4ff; /* fallback */
     }
 
     /* All scrollable content lives in this wrapper */
@@ -116,5 +117,6 @@
 <script type="module" src="happiness-game.js"></script>
 </body>
 </html>
+
 
 
