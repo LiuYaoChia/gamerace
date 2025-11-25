@@ -31,8 +31,8 @@ const SHAKE_COOLDOWN_MS  = 500;
 const SHAKE_THRESHOLD    = 15;
 
 const cupidVariants = [
-  "img/groom1.png","img/groom2.png","img/groom3.png",
-  "img/groom7.png","img/groom5.png","img/groom6.png"
+  "img/pinkboat_0.png","img/blackboat_0.png","img/redboat_0.png",
+  "img/whiteboat_0.png","img/yellowboat_0.png"
 ];
 
 // ====== Custom Group Names ======
@@ -1254,6 +1254,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
