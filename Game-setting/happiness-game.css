@@ -139,6 +139,7 @@ input, textarea {
 /* === GAME LAYOUT (full width) === */
 .game-layout {
   display: flex !important;
+  isolation: isolate;
   flex-direction: row;
   gap: 24px;
   align-items: flex-start;
@@ -199,7 +200,6 @@ input, textarea {
   background-size: 200% 100%;
   animation: waterRipple 6s linear infinite;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(4px);
 }
 
 /* Alternating ocean/sand shimmer */
@@ -337,7 +337,6 @@ input, textarea {
   padding: 12px 24px;
   background: rgba(255,255,255,0.25);
   color: #003366;
-  backdrop-filter: blur(6px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -508,7 +507,6 @@ input, textarea {
 /* Phone overlay container */
 #phone-view{
   position: fixed !important;          
-  display: flex;              /* make it a flexbox */
   display: none;               /* hidden by default */
   inset: 0;
   align-items: center;
@@ -526,8 +524,6 @@ input, textarea {
   border-radius: 16px;
   padding: 16px 18px;
   background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 10px 30px rgba(0,0,0,.35);
   color: #fff;
   text-align: center;
@@ -560,7 +556,6 @@ input, textarea {
   font-size: 15px;
   font-weight: 600;
   box-shadow: 0 4px 16px rgba(0,0,0,.25);
-  backdrop-filter: blur(4px);
 }
 #phone-view .btn.secondary{ background: rgba(255,255,255,.15); color:#fff; }
 #phone-view .btn.danger{ background: #e74c3c; color:#fff; }
@@ -605,7 +600,6 @@ input, textarea {
   top: 20%;
   right: 40px;
   background: rgba(255,255,255,0.25);
-  backdrop-filter: blur(8px);
   border-radius: 12px;
   padding: 16px 24px;
   width: 200px;
@@ -629,6 +623,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
