@@ -157,7 +157,8 @@ function showPhoneOnly() {
   if (els.qrEl)        els.qrEl.style.display       = "none";
   if (els.phoneLabel)  els.phoneLabel.style.display = "block";
   if (els.phoneCupid)  els.phoneCupid.style.display = "block";
-  if (els.resetBtn) els.resetBtn.style.display = "none";
+  if (els.resetBtn)  els.resetBtn.style.display = "none";
+  if (els.rankList)  els.rankList.style.display = "none";
 }
 
 
@@ -430,6 +431,7 @@ if (!isHost) {
       }
 
       if (els.setupScreen) els.setupScreen.style.display = "none";
+      els.rankList.style.display = "none";
       els.waitingMsg.style.display = "block";
       els.phoneLabel.style.display = "block";
       els.phoneLabel.textContent = "已加入 – 等待主持人開始";
@@ -1241,6 +1243,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
