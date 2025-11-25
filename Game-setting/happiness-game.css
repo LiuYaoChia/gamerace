@@ -14,7 +14,7 @@ body::before {
   /* comment these out or make it very light */
   background: rgba(255, 255, 255, 0.05); /* softer mist */
   backdrop-filter: none;  /* remove blur */
-  z-index: 0;
+  z-index: -1;
 }
 
 /* Prevent mobile browsers from auto-scrolling inputs into odd positions */
@@ -623,6 +623,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
