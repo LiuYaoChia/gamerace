@@ -15,20 +15,21 @@
       height: 100%;
       overflow: hidden;     /* stop layout collapse */
       position: relative;  /* ✅ allow background */
+      overflow: hidden;        /* prevent scrolling */
       inset: 0;
       width: 100%;
       touch-action: none;   /* avoid forced scroll jumps */
-      background-color: #a0c4ff; /* fallback */
     }
 
     /* All scrollable content lives in this wrapper */
     #safe-wrapper {
       height: 100%;
       width: 100%;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
+      overflow: hidden;        /* remove scroll bar */
+      display: flex;
+      flex-direction: column;
+      justify-content: start;  /* top align content */
       position: relative;
-      touch-action: auto;
     }
   </style>
 </head>
@@ -117,6 +118,7 @@
 <script type="module" src="happiness-game.js"></script>
 </body>
 </html>
+
 
 
 
