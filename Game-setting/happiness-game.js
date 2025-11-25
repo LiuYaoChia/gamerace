@@ -641,21 +641,22 @@ onValue(ref(db, "gameState"), snap => {
   --------------------------------------------------- */
   if (isPhone) {
 
-    // 🔥 MAIN FIX:
-    // Prevent UI from disappearing when Samsung keyboard opens
-  if (phoneTyping) {
-    console.log("⛔ Samsung typing: allow lobby UI, block transitions");
-    if (currentGameState === "lobby") {
-      // ALWAYS show lobby & form while typing
-      els.setupScreen.style.display = "block";
-      els.form.style.display = "block";
+    // 🔥 FIX: Samsung keyboard must NEVER hide the lobby or form
+    if (phoneTyping) {
+      console.log("⛔ Samsung typing: freeze lobby UI");
+
+      // Force lobby UI
+      show(els.setupScreen);
+      show(els.form);
+
+      hide(els.phoneView);
+      hide(els.waitingMsg);
+
+      // STOP — do NOT go further
       return;
     }
-  }
 
-    // --------------------
-    // LOBBY STATE
-    // --------------------
+    // ----- NORMAL LOBBY -----
     if (currentGameState === "lobby") {
       show(els.setupScreen);
       show(els.form);
@@ -667,28 +668,21 @@ onValue(ref(db, "gameState"), snap => {
       hide(els.leaveBtn);
       hide(els.renameBtn);
 
-      // Refresh groups
-      if (typeof renderGroupChoices === "function") {
-        renderGroupChoices().catch(console.warn);
-      }
-
+      renderGroupChoices().catch(console.warn);
       return;
     }
 
-    // --------------------
-    // PLAYING STATE
-    // --------------------
+    // ----- PLAYING -----
     if (currentGameState === "playing") {
       hide(els.setupScreen);
       hide(els.form);
 
       if (currentGroupId) {
         show(els.phoneView);
-        if (els.phoneLabel) els.phoneLabel.textContent = "比賽開始！搖動手機！";
+        els.phoneLabel.textContent = "比賽開始！搖動手機！";
       } else {
         hide(els.phoneView);
       }
-
       return;
     }
 
@@ -709,10 +703,11 @@ onValue(ref(db, "gameState"), snap => {
     if (currentGameState === "playing") {
       hide(els.setupScreen);
       show(els.gameScreen);
-      showGame && showGame();
+      if (typeof showGame === "function") showGame();
     }
   }
 });
+
 
 
 
@@ -1245,4 +1240,5 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
