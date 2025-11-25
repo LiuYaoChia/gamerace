@@ -129,7 +129,7 @@ function showSetup() {
     els.setupScreen.style.display = "block";   // 👈 show join UI
     els.form.style.display = "block";          // 👈 show form (name + groups)
     els.phoneView.style.display = "none";      // 👈 hide phone shake UI until joined
-    els.rankList.style.display = "none";
+    els.rank.style.display = "none";
 
     // Hide QR for phones
     if (els.qrEl) els.qrEl.style.display = "none";
@@ -140,8 +140,8 @@ function showSetup() {
     els.qrEl.style.display = "block";
   }
 }
-if (isPhone && els.rankList) {
-  els.rankList.style.display = "none";
+if (isPhone && els.rank) {
+  els.rank.style.display = "none"; // hide the entire ranking panel
 }
 
 function showGame() {
@@ -160,7 +160,7 @@ function showPhoneOnly() {
   if (els.phoneLabel)  els.phoneLabel.style.display = "block";
   if (els.phoneCupid)  els.phoneCupid.style.display = "block";
   if (els.resetBtn)  els.resetBtn.style.display = "none";
-  if (els.rankList)  els.rankList.style.display = "none";
+  if (els.rank)  els.rank.style.display = "none"
 }
 
 
@@ -433,7 +433,7 @@ if (!isHost) {
       }
 
       if (els.setupScreen) els.setupScreen.style.display = "none";
-      els.rankList.style.display = "none";
+      els.rank.style.display = "none";
       els.waitingMsg.style.display = "block";
       els.phoneLabel.style.display = "block";
       els.phoneLabel.textContent = "已加入 – 等待主持人開始";
@@ -1245,6 +1245,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
