@@ -129,6 +129,7 @@ function showSetup() {
     els.setupScreen.style.display = "block";   // 👈 show join UI
     els.form.style.display = "block";          // 👈 show form (name + groups)
     els.phoneView.style.display = "none";      // 👈 hide phone shake UI until joined
+    els.rankList.style.display = "none";
 
     // Hide QR for phones
     if (els.qrEl) els.qrEl.style.display = "none";
@@ -1240,6 +1241,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
