@@ -675,7 +675,7 @@ onValue(ref(db, "gameState"), snap => {
     if (currentGameState === "lobby") {
       show(els.setupScreen);
       show(els.form);
-
+      hide(els.qrEl);
       hide(els.phoneView);
       hide(els.waitingMsg);
       hide(els.phoneLabel);
@@ -691,6 +691,7 @@ onValue(ref(db, "gameState"), snap => {
     if (currentGameState === "playing") {
       hide(els.setupScreen);
       hide(els.form);
+      hide(els.qrEl);
 
       if (currentGroupId) {
         show(els.phoneView);
@@ -1253,6 +1254,7 @@ async function removeRedundantGroups() {
   await removeRedundantGroups();         // remove any empty/redundant groups
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
