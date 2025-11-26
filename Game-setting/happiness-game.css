@@ -155,25 +155,29 @@ input, textarea {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly;
-  align-items: flex-start;   /* <--- key change */
-  width: "calc(100% - 280px)";
+  justify-content: space-evenly; /* evenly distributes lanes */
+  align-items: stretch;           /* lanes take full width */
+  width: calc(100% - 280px);
   margin-right: 280px;
-  height: auto !important;
+  height: 80vh;                  /* fixed viewport space */
   min-height: 300px;
-  padding-left: 20px;        /* minimal padding */
-  padding-right: 0 !important;
+  padding-left: 20px;            
+  padding-right: 0;
   position: relative;
   overflow: visible;
 }
 
 /* === GROUP TRACK CONTAINER === */
 .group-track {
-  margin: 15px 0;
-  padding: 10px;
+  flex: 1;                       /* each lane takes equal vertical space */
+  display: flex;                  /* allow positioning inside lane */
+  flex-direction: column;
+  justify-content: center;        /* center groom vertically */
+  padding: 5px 10px;              /* small inner padding */
   border: 2px solid #b9d6ff;
   border-radius: 10px;
   background: rgba(255,255,255,0.6);
+  margin: 0;                      /* remove extra vertical margin */
 }
 .group-track h3 {
   margin: 0 0 6px 0;
@@ -181,8 +185,17 @@ input, textarea {
   color: #0b2a74;
 }
 
+
 /* === LANE STYLING === */
-.track-lanes { position: relative; width: 100%; }
+.track-lanes {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly; /* equal gaps between lanes */
+  align-items: stretch;
+  height: 80vh;                  /* fill 80% of viewport height */
+  width: 100%;
+  position: relative;
+}
 /* 🌊 Gentle ocean ripple animation for all lanes */
 @keyframes waterRipple {
   0%, 100% { background-position: 0% 0%; }
@@ -190,11 +203,10 @@ input, textarea {
 }
 
 .lane {
-  position: relative;
-  flex: 1;
-  width: 100%;
+  flex: 1;                       /* each lane takes equal vertical space */
   border-radius: 60px;
-  margin: 6px 0;
+  margin: 0;                     /* remove fixed vertical margin */
+  position: relative;
   background: repeating-linear-gradient(
     90deg,
     rgba(255, 223, 128, 0.7) 0px,
@@ -204,6 +216,9 @@ input, textarea {
   background-size: 200% 100%;
   animation: waterRipple 6s linear infinite;
   border: 2px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;           /* vertically center player names and groom */
+  padding: 0 15px;               /* optional inner spacing */
 }
 
 /* Alternating ocean/sand shimmer */
@@ -627,6 +642,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
