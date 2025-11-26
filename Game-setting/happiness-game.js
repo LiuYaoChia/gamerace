@@ -759,18 +759,27 @@ function updateRanking(groups) {
 }
 
 function checkForWinner(groups) {
+  const trackWidth = els.track.offsetWidth || window.innerWidth;
+  const brideGap = 50 + 120; // 50px margin + bride width
+  const maxGroomX = trackWidth - brideGap;
+
   Object.entries(groups).forEach(([gid, g]) => {
-    if ((g.progress || 0) >= 100) {
-      // write winner if not already set
+    const rawProgress = g.progress || 0;
+    const groomXpx = Math.min((rawProgress / 100) * trackWidth, maxGroomX);
+
+    // If groom visually reached the bride, declare winner
+    if (groomXpx >= maxGroomX) {
       const winnerRef = ref(db, "winner");
       get(winnerRef).then(snap => {
         if (!snap.val()) {
           set(winnerRef, gid);
+          console.log(`Winner declared: ${gid}`);
         }
       });
     }
   });
 }
+
 
 
 function renderGameScene(groups) {
@@ -1299,6 +1308,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
