@@ -517,18 +517,24 @@ els.motionBtn?.addEventListener("click",()=>{
 });
 
 function handleMotion(e) {
-  const acc=e.accelerationIncludingGravity;
-  if(!acc) return;
-  const strength=Math.sqrt((acc.x||0)**2+(acc.y||0)**2+(acc.z||0)**2);
-  if(strength>SHAKE_THRESHOLD&&currentGroupId) {
-    const now=Date.now();
-    if(now-lastShakeTime>SHAKE_COOLDOWN_MS) {
-      lastShakeTime=now;
+  // Only allow shakes when the game is playing
+  if (currentGameState !== "playing") return;
+
+  const acc = e.accelerationIncludingGravity;
+  if (!acc) return;
+
+  const strength = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2);
+
+  if (strength > SHAKE_THRESHOLD && currentGroupId) {
+    const now = Date.now();
+    if (now - lastShakeTime > SHAKE_COOLDOWN_MS) {
+      lastShakeTime = now;
       addGroupShakeTx(currentGroupId);
       animateCupidJump(currentGroupId);
     }
   }
 }
+
 
 function addGroupShakeTx(groupId) {
   const gRef = ref(db, `groups/${groupId}`);
@@ -1309,31 +1315,4 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
