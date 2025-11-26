@@ -973,14 +973,33 @@ onValue(ref(db, "winner"), async (snap) => {
     }
 
     // --- Cupid image ---
-    const cupidSrc = cupidVariants[g.cupidIndex ?? 0];
-    const winnerCupid = document.getElementById("winner-cupid");
-    if (winnerCupid) {
-      winnerCupid.src = cupidSrc;
-      winnerCupid.classList.remove("land");
-      void winnerCupid.offsetWidth;
-      winnerCupid.classList.add("land");
-    }
+    const winnerScene = document.getElementById("winner-scene");
+
+    // Clear previous content
+    winnerScene.innerHTML = "";
+
+    // Create groom image dynamically
+    const groomImg = document.createElement("img");
+    groomImg.src = cupidVariants[g.cupidIndex ?? 0]; // groom picture
+    groomImg.alt = "Groom";
+    groomImg.classList.add("winner-cupid", "land"); // CSS class for float/animation
+
+    // Create bride image dynamically
+    const brideImg = document.createElement("img");
+    brideImg.src = "img/goal.png"; // bride image
+    brideImg.alt = "Bride";
+    brideImg.classList.add("winner-goal", "land"); // CSS class for float/animation
+
+    // Add both to the scene
+    winnerScene.appendChild(groomImg);
+    winnerScene.appendChild(brideImg);
+
+    // Optional: force reflow to restart animation
+    void groomImg.offsetWidth;
+    void brideImg.offsetWidth;
+    groomImg.classList.add("land");
+    brideImg.classList.add("land");
+
 
     if (els.winnerPopup) {
       els.winnerPopup.style.display = "flex";
@@ -1315,4 +1334,5 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
