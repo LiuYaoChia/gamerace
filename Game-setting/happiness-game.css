@@ -1,6 +1,6 @@
 /* === GENERAL STYLES === */
 body {
-  background: url('img/海灘無麵浪.jpg') no-repeat center center;
+  background: url('img/海灘.jpg') no-repeat center center;
   background-size: cover;
   margin: 0;
   font-family: "Noto Sans TC", sans-serif;
@@ -642,6 +642,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
