@@ -727,6 +727,8 @@ onValue(ref(db, "gameState"), snap => {
 
     if (currentGameState === "playing") {
       hide(els.setupScreen);
+      hide(els.startBtn);
+      hide(els.resetBtn);
       show(els.gameScreen);
       if (typeof showGame === "function") showGame();
     }
@@ -1264,6 +1266,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
