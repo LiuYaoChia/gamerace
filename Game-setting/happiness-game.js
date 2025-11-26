@@ -739,12 +739,25 @@ onValue(ref(db, "gameState"), snap => {
 function updateRanking(groups) {
   const rankingList = document.getElementById("ranking-list");
   if (!rankingList) return;
+
+  const trackWidth = els.track.offsetWidth || window.innerWidth;
+  const brideGap = 50 + 120; // 50px margin + bride width
+  const maxGroomX = trackWidth - brideGap;
+
   const sorted = Object.entries(groups)
-    .sort((a,b) => (b[1].progress || 0) - (a[1].progress || 0));
-  rankingList.innerHTML = sorted.map(([gid,g]) =>
-    `<li>${g.name || `Group ${gid}`}: ${Math.round(g.progress||0)}%</li>`
+    .map(([gid, g]) => {
+      const rawProgress = g.progress || 0;
+      const groomXpx = Math.min((rawProgress / 100) * trackWidth, maxGroomX);
+      const visualProgressPercent = (groomXpx / maxGroomX) * 100;
+      return [gid, { ...g, visualProgress: visualProgressPercent }];
+    })
+    .sort((a, b) => (b[1].visualProgress || 0) - (a[1].visualProgress || 0));
+
+  rankingList.innerHTML = sorted.map(([gid, g]) =>
+    `<li>${g.name || `Group ${gid}`}: ${Math.round(g.visualProgress || 0)}%</li>`
   ).join("");
 }
+
 
 
 function renderGameScene(groups) {
@@ -1272,6 +1285,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
