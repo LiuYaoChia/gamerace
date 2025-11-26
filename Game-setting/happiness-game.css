@@ -307,7 +307,7 @@ input, textarea {
 /* Bride (Goal) */
 .bride {
   position: absolute;
-  right: 30px;
+  right: 60px;
   top: 50%;
   transform: translateY(-50%);
   height: 120px;
@@ -626,6 +626,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
