@@ -853,7 +853,7 @@ function renderGameScene(groups) {
 
   Object.assign(bride.style, {
     position: "absolute",
-    right: "280px",
+    right: "180px",
     top: "50%",
     transform: "translateY(-50%)",
     height: "120px",
@@ -1266,6 +1266,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
