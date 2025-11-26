@@ -894,11 +894,12 @@ function renderGameScene(groups) {
 
   Object.assign(bride.style, {
     position: "absolute",
-    right: "50px",
+    right: "80px",       // move slightly left from edge
     top: "50%",
     transform: "translateY(-50%)",
-    height: "120px",
-    zIndex: 10,
+    height: "200px",     // bigger size
+    maxHeight: "25vh",   // optional responsive max
+    zIndex: 20,          // higher than lanes
   });
 
   // ⭐ Update ranking
@@ -1308,6 +1309,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
