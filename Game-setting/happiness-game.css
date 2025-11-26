@@ -440,17 +440,14 @@ input, textarea {
   gap: 50px; /* spacing between groom and bride */
   margin: 20px 0;
 }
-
-/* Enlarge groom & bride */
-.winner-cupid,
-.winner-goal {
+.winner-scene img {
   width: 110px;
   height: 110px;
-  top: 50%;
-  translateY(-50%);
-  flex-shrink: 0;
+  object-fit: cover;
   animation: float 3s ease-in-out infinite;
 }
+
+
 
 /* Winner Name */
 #winner-name {
@@ -642,6 +639,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
