@@ -788,7 +788,12 @@ function renderGameScene(groups) {
     const memberNames = Object.values(g.members || {}).map(m => m.name).join("、");
     const cupidImg = cupidVariants[g.cupidIndex ?? 0];
     const progress = g.progress || 0;
-    const groomX = Math.min(progress, 95); // keep groom from crossing bride
+    // Compute groom position as percentage of track width, leaving 50px gap to bride
+    const trackWidth = els.track.offsetWidth || window.innerWidth;
+    const brideGap = 50 + 120; // 50px from right + bride width
+    const maxGroomX = ((trackWidth - brideGap) / trackWidth) * 100;
+    const groomX = Math.min(progress, maxGroomX); 
+
 
     // Lane container
     const lane = document.createElement("div");
@@ -1267,6 +1272,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
