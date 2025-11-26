@@ -788,6 +788,7 @@ function renderGameScene(groups) {
     const memberNames = Object.values(g.members || {}).map(m => m.name).join("、");
     const cupidImg = cupidVariants[g.cupidIndex ?? 0];
     const progress = g.progress || 0;
+    const groomX = Math.min(progress, 95); // keep groom from crossing bride
 
     // Lane container
     const lane = document.createElement("div");
@@ -808,7 +809,7 @@ function renderGameScene(groups) {
     groom.style.cssText = `
       position: absolute;
       top: 50%;
-      left: ${progress}%;
+      left: ${groomX}%;
       transform: translateY(-50%);
       height: 90px;
       transition: left 0.4s ease-out;
@@ -1266,6 +1267,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
