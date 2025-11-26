@@ -606,7 +606,7 @@ input, textarea {
   background: rgba(255,255,255,0.25);
   border-radius: 12px;
   padding: 16px 24px;
-  width: 200px;
+  width: 150px;
   color: #003366;
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
@@ -627,6 +627,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
