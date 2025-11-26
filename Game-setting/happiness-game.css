@@ -156,14 +156,16 @@ input, textarea {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
-  align-items: stretch;
-  width: 90%;
+  align-items: flex-start;   /* <--- key change */
+  width: 100%;
   height: auto !important;
-  min-height: 300px; /* allow scrolling */
-  padding: 0 80px;
+  min-height: 300px;
+  padding-left: 20px;        /* minimal padding */
+  padding-right: 0 !important;
   position: relative;
   overflow: visible;
 }
+
 /* === GROUP TRACK CONTAINER === */
 .group-track {
   margin: 15px 0;
@@ -305,7 +307,7 @@ input, textarea {
 /* Bride (Goal) */
 .bride {
   position: absolute;
-  right: 40px;
+  right: 30px;
   top: 50%;
   transform: translateY(-50%);
   height: 120px;
@@ -624,6 +626,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
