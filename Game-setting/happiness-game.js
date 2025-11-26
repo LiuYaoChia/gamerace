@@ -758,6 +758,19 @@ function updateRanking(groups) {
   ).join("");
 }
 
+function checkForWinner(groups) {
+  Object.entries(groups).forEach(([gid, g]) => {
+    if ((g.progress || 0) >= 100) {
+      // write winner if not already set
+      const winnerRef = ref(db, "winner");
+      get(winnerRef).then(snap => {
+        if (!snap.val()) {
+          set(winnerRef, gid);
+        }
+      });
+    }
+  });
+}
 
 
 function renderGameScene(groups) {
@@ -881,6 +894,7 @@ function renderGameScene(groups) {
 
   // ⭐ Update ranking
   updateRanking(groups);
+  checkForWinner(groups);
 }
 
 
@@ -1285,6 +1299,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
