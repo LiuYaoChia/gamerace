@@ -1253,6 +1253,8 @@ els.leaveBtn?.addEventListener("click", async () => {
   els.setupScreen.style.display = "none";  // ✅ go back to lobby
   els.leaveBtn.style.display = "none";
   els.renameBtn.style.display = "none";
+  els.startBtn.style.display = "block"; // phone doesn't show start button
+  els.resetBtn.style.display = "block";
 });
 
 // ====== Reset Game (Host Only) ======
@@ -1348,6 +1350,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
