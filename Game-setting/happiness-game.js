@@ -962,7 +962,7 @@ onValue(ref(db, "winner"), async (snap) => {
     return;
   }
     // Skip winner popup if it's a phone
-  if (isPhone()) {
+  if (isPhone) {
     // Optional: just show winner name somewhere on the phone UI
     if (els.phoneWinnerName) {
       const gSnap = await get(ref(db, `groups/${winnerId}`));
@@ -1348,6 +1348,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
