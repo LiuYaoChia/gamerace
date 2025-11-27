@@ -1154,6 +1154,13 @@ els.winnerExit?.addEventListener("click", async () => {
       
 
       currentGroupId = null; // clear phone’s group link
+      // 🔹 Immediately render group choices for phone lobby
+      await renderGroupChoices();
+
+      // 🔹 Optional: force reflow so it appears immediately on iOS
+      requestAnimationFrame(() => {
+        els.groupChoices.offsetHeight;
+      });
       console.log("📱 Phone also returned to lobby.");
     }
 
@@ -1279,7 +1286,16 @@ async function resetGame() {
 
   // Switch UI (host side)
   els.gameScreen.style.display = "block";
-  els.setupScreen.style.display = "block";
+  els.setupScreen.style.display = "none";
+  els.startBtn.style.display = "block"; // phone doesn't show start button
+  els.resetBtn.style.display = "block";
+    // 🔹 Immediately render group choices for phone lobby
+  await renderGroupChoices();
+
+  // 🔹 Optional: force reflow so it appears immediately on iOS
+  requestAnimationFrame(() => {
+    els.groupChoices.offsetHeight;
+  });
 }
 
 if (isHost) {
@@ -1312,6 +1328,13 @@ els.exitBtn?.addEventListener("click", async () => {
   if (els.phoneView) els.phoneView.style.display = "none";
   if (els.gameScreen) els.gameScreen.style.display = "block";
   if (els.setupScreen) els.setupScreen.style.display = "none";
+    // 🔹 Immediately render group choices for phone lobby
+  await renderGroupChoices();
+
+  // 🔹 Optional: force reflow so it appears immediately on iOS
+  requestAnimationFrame(() => {
+    els.groupChoices.offsetHeight;
+  });
   alert("遊戲已重置！");
 });
 
@@ -1353,6 +1376,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
