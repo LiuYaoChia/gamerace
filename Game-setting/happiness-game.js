@@ -961,7 +961,17 @@ onValue(ref(db, "winner"), async (snap) => {
     if (els.winnerPopup) els.winnerPopup.style.display = "none";
     return;
   }
-
+    // Skip winner popup if it's a phone
+  if (isPhone()) {
+    // Optional: just show winner name somewhere on the phone UI
+    if (els.phoneWinnerName) {
+      const gSnap = await get(ref(db, `groups/${winnerId}`));
+      const g = gSnap.val() || {};
+      els.phoneWinnerName.textContent = g.name || `Group ${winnerId}`;
+    }
+    return;
+  }
+  
   try {
     const gSnap = await get(ref(db, `groups/${winnerId}`));
     const g = gSnap.val() || {};
@@ -1136,7 +1146,7 @@ els.winnerExit?.addEventListener("click", async () => {
       if (els.phoneView) els.phoneView.style.display = "none";
       if (els.setupScreen) els.setupScreen.style.display = "block";
       if (els.waitingMsg) els.waitingMsg.style.display = "none";
-      if (els.phoneLabel) els.phoneLabel.textContent = "";
+      if (els.phoneLabel) els.phoneLabel.textContent = "none";
       if (els.phoneCupid) els.phoneCupid.style.display = "none";
       if (els.leaveBtn) els.leaveBtn.style.display = "none";
 
@@ -1338,6 +1348,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
