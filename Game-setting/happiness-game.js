@@ -1240,7 +1240,7 @@ els.leaveBtn?.addEventListener("click", async () => {
   // 5️⃣ Switch back to lobby view
   els.phoneView.style.display = "none";
   els.form.style.display = "block";
-  els.setupScreen.style.display = "block";  // ✅ go back to lobby
+  els.setupScreen.style.display = "none";  // ✅ go back to lobby
   els.leaveBtn.style.display = "none";
   els.renameBtn.style.display = "none";
 });
@@ -1338,6 +1338,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
