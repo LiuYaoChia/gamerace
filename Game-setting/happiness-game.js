@@ -1296,7 +1296,7 @@ els.exitBtn?.addEventListener("click", async () => {
   currentGroupId = null;
   if (els.phoneView) els.phoneView.style.display = "none";
   if (els.gameScreen) els.gameScreen.style.display = "block";
-  if (els.setupScreen) els.setupScreen.style.display = "block";
+  if (els.setupScreen) els.setupScreen.style.display = "none";
   alert("遊戲已重置！");
 });
 
@@ -1338,6 +1338,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
