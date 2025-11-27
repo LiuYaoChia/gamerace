@@ -538,32 +538,36 @@ function handleMotion(e) {
 
 function addGroupShakeTx(groupId) {
   const gRef = ref(db, `groups/${groupId}`);
+
   runTransaction(gRef, (g) => {
     if (!g) return g;
 
     const membersCount = g.members ? Object.keys(g.members).length : 1;
-    const BASE_STEP = 5; // baseline shake progress
-
-    // ✅ Adaptive fine-tuned pace: sqrt scaling
+    const BASE_STEP = 5;
     const step = BASE_STEP / Math.sqrt(membersCount);
+
+    const newProgress = Math.min(100, (g.progress || 0) + step);
 
     return {
       ...g,
       shakes: (g.shakes || 0) + 1,
-      progress: Math.min(100, (g.progress || 0) + step),
+      progress: newProgress,
     };
   })
   .then((res) => {
-    const g = res.snapshot?.val();
-    if (g && g.progress >= 100) {
-      // ✅ Winner detected
+    if (!res.committed) return;
+
+    const g = res.snapshot.val();
+    if (!g) return;
+
+    // ⭐ Winner only set ONCE
+    if (g.progress >= 100 && !g.isWinnerDeclared) {
       set(ref(db, "winner"), groupId);
+      set(ref(db, `groups/${groupId}/isWinnerDeclared`), true);
       set(ref(db, "gameState"), "finished");
     }
   })
-  .catch((err) => {
-    console.error("Shake transaction failed:", err);
-  });
+  .catch((err) => console.error("Shake transaction failed:", err));
 }
 
 // ====== Animation ======
@@ -1334,5 +1338,6 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
