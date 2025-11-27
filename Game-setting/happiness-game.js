@@ -1136,7 +1136,9 @@ els.winnerExit?.addEventListener("click", async () => {
     if (!isPhone) {
       els.winnerPopup?.style.setProperty("display", "none");
       els.gameScreen?.style.setProperty("display", "none");
-      els.setupScreen?.style.setProperty("display", "block");
+      els.setupScreen?.style.setProperty("display", "none");
+      els.startBtn.style.display = "block"; // phone doesn't show start button
+      els.resetBtn.style.display = "block";
       console.log("🎮 All reset — host back to lobby.");
     }
 
@@ -1149,6 +1151,7 @@ els.winnerExit?.addEventListener("click", async () => {
       if (els.phoneLabel) els.phoneLabel.textContent = "none";
       if (els.phoneCupid) els.phoneCupid.style.display = "none";
       if (els.leaveBtn) els.leaveBtn.style.display = "none";
+      
 
       currentGroupId = null; // clear phone’s group link
       console.log("📱 Phone also returned to lobby.");
@@ -1350,6 +1353,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
