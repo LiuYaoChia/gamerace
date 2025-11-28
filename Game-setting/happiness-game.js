@@ -1287,16 +1287,28 @@ els.leaveBtn?.addEventListener("click", async () => {
   // 4️⃣ Reset local vars
   currentGroupId = null;
 
-  // 5️⃣ Switch back to lobby view
-  els.phoneView.style.display = "none";
-  els.form.style.display = "block";
-  els.setupScreen.style.display = "none";  // ✅ go back to lobby
-  els.leaveBtn.style.display = "none";
-  els.renameBtn.style.display = "none";
-  els.startBtn.style.display = "block"; // phone doesn't show start button
-  els.resetBtn.style.display = "block";
-});
+   // 4️⃣ Host UI back to lobby
+  if (!isPhone) {
+    els.winnerPopup?.style.setProperty("display", "none");
+    els.gameScreen?.style.setProperty("display", "none");
+    els.setupScreen?.style.setProperty("display", "none");
+    els.startBtn.style.display = "block"; // phone doesn't show start button
+    els.resetBtn.style.display = "block";
+    console.log("🎮 All reset — host back to lobby.");
+  }
 
+    // 5️⃣ Phones also automatically return to lobby
+  if (isPhone) {
+    // Reset all phone UI to default lobby screen
+    if (els.phoneView) els.phoneView.style.display = "none";
+    if (els.setupScreen) els.setupScreen.style.display = "block";
+    if (els.waitingMsg) els.waitingMsg.style.display = "none";
+    if (els.phoneLabel) els.phoneLabel.textContent = "none";
+    if (els.phoneCupid) els.phoneCupid.style.display = "none";
+    if (els.leaveBtn) els.leaveBtn.style.display = "none";
+    console.log("📱 Phone also returned to lobby.");
+}
+  
 // ====== Reset Game (Host Only) ======
 async function resetGame() {
   // Clear all groups
@@ -1424,6 +1436,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
