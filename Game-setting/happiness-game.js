@@ -188,13 +188,22 @@ async function ensureGroups() {
     }
   }
 }
+// ====== Phone LIVE Group List Listener ======
+onValue(ref(db, "groups"), (snap) => {
+  const groups = snap.val() || {};
 
-// ====== Render Groups as Avatar Buttons ======
-async function renderGroupChoices() {
-  const groupsSnap = await get(ref(db, "groups"));
-  const groups = groupsSnap.val() || {};
+  // Only update group choices when in LOBBY UI
+  const inLobby = !currentGroupId && els.setupScreen?.style.display !== "none";
 
+  if (isPhone && inLobby) {
+    renderGroupChoices(groups);
+  }
+});
+
+function renderGroupChoices(groups) {
   const container = document.getElementById("group-choices");
+  if (!container) return;
+
   container.innerHTML = "";
 
   Object.entries(groups)
@@ -218,19 +227,21 @@ async function renderGroupChoices() {
       `;
 
       btn.addEventListener("click", () => {
-        // Highlight selection
         document.querySelectorAll(".group-choice").forEach(el => {
           el.style.borderColor = "transparent";
         });
-        btn.style.borderColor = "#4f46e5"; // highlight border (purple)
+        btn.style.borderColor = "#4f46e5";
 
-        // Set hidden field
         document.getElementById("group-select").value = gid;
       });
 
       container.appendChild(btn);
     });
+
+  // iPhone Safari needs this to repaint
+  container.style.display = "block";
 }
+
 
 
 // ===== Add rename function =========
@@ -1151,16 +1162,6 @@ els.winnerExit?.addEventListener("click", async () => {
       if (els.phoneLabel) els.phoneLabel.textContent = "none";
       if (els.phoneCupid) els.phoneCupid.style.display = "none";
       if (els.leaveBtn) els.leaveBtn.style.display = "none";
-      
-
-      // 🔹 Make sure the group container is visible first
-      const container = document.getElementById("group-choices");
-      container.style.display = "block";
-
-      // 🔹 Delay slightly so Safari can repaint
-      setTimeout(async () => {
-        await renderGroupChoices();
-      }, 50);
       console.log("📱 Phone also returned to lobby.");
     }
 
@@ -1289,14 +1290,6 @@ async function resetGame() {
   els.setupScreen.style.display = "none";
   els.startBtn.style.display = "block"; // phone doesn't show start button
   els.resetBtn.style.display = "block";
-  // 🔹 Make sure the group container is visible first
-  const container = document.getElementById("group-choices");
-  container.style.display = "block";
-
-  // 🔹 Delay slightly so Safari can repaint
-  setTimeout(async () => {
-    await renderGroupChoices();
-  }, 50);
 }
 
 if (isHost) {
@@ -1329,14 +1322,6 @@ els.exitBtn?.addEventListener("click", async () => {
   if (els.phoneView) els.phoneView.style.display = "none";
   if (els.gameScreen) els.gameScreen.style.display = "block";
   if (els.setupScreen) els.setupScreen.style.display = "none";
-  // 🔹 Make sure the group container is visible first
-  const container = document.getElementById("group-choices");
-  container.style.display = "block";
-
-  // 🔹 Delay slightly so Safari can repaint
-  setTimeout(async () => {
-    await renderGroupChoices();
-  }, 50);
   alert("遊戲已重置！");
 });
 
@@ -1378,6 +1363,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
