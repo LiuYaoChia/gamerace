@@ -1153,14 +1153,14 @@ els.winnerExit?.addEventListener("click", async () => {
       if (els.leaveBtn) els.leaveBtn.style.display = "none";
       
 
-      currentGroupId = null; // clear phone’s group link
-      // 🔹 Immediately render group choices for phone lobby
-      await renderGroupChoices();
+      // 🔹 Make sure the group container is visible first
+      const container = document.getElementById("group-choices");
+      container.style.display = "block";
 
-      // 🔹 Optional: force reflow so it appears immediately on iOS
-      requestAnimationFrame(() => {
-        els.groupChoices.offsetHeight;
-      });
+      // 🔹 Delay slightly so Safari can repaint
+      setTimeout(async () => {
+        await renderGroupChoices();
+      }, 50);
       console.log("📱 Phone also returned to lobby.");
     }
 
@@ -1289,13 +1289,14 @@ async function resetGame() {
   els.setupScreen.style.display = "none";
   els.startBtn.style.display = "block"; // phone doesn't show start button
   els.resetBtn.style.display = "block";
-    // 🔹 Immediately render group choices for phone lobby
-  await renderGroupChoices();
+  // 🔹 Make sure the group container is visible first
+  const container = document.getElementById("group-choices");
+  container.style.display = "block";
 
-  // 🔹 Optional: force reflow so it appears immediately on iOS
-  requestAnimationFrame(() => {
-    els.groupChoices.offsetHeight;
-  });
+  // 🔹 Delay slightly so Safari can repaint
+  setTimeout(async () => {
+    await renderGroupChoices();
+  }, 50);
 }
 
 if (isHost) {
@@ -1328,13 +1329,14 @@ els.exitBtn?.addEventListener("click", async () => {
   if (els.phoneView) els.phoneView.style.display = "none";
   if (els.gameScreen) els.gameScreen.style.display = "block";
   if (els.setupScreen) els.setupScreen.style.display = "none";
-    // 🔹 Immediately render group choices for phone lobby
-  await renderGroupChoices();
+  // 🔹 Make sure the group container is visible first
+  const container = document.getElementById("group-choices");
+  container.style.display = "block";
 
-  // 🔹 Optional: force reflow so it appears immediately on iOS
-  requestAnimationFrame(() => {
-    els.groupChoices.offsetHeight;
-  });
+  // 🔹 Delay slightly so Safari can repaint
+  setTimeout(async () => {
+    await renderGroupChoices();
+  }, 50);
   alert("遊戲已重置！");
 });
 
@@ -1376,6 +1378,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
