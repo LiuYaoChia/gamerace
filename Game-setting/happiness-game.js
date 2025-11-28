@@ -299,7 +299,9 @@ async function updatePhoneView(group) {
   if (!group) return;
 
   // Show group name + progress
-  const progressText = `組別「${group.name || currentGroupId}」進度: ${Math.floor(group.progress||0)}%`;
+  const visual = computeVisualProgress(group.progress || 0);
+  const progressText = `組別「${group.name}」進度: ${Math.floor(visual)}%`;
+
 
   // Build members list
   const members = group.members ? Object.values(group.members) : [];
@@ -785,28 +787,35 @@ onValue(ref(db, "gameState"), snap => {
   }
 });
 
+function computeVisualProgress(rawProgress) {
+  const trackWidth = els.track.offsetWidth || window.innerWidth;
+
+  const brideGap = 50 + 120; // 50px margin + bride width
+  const maxGroomX = trackWidth - brideGap;
+
+  const groomX = Math.min((rawProgress / 100) * trackWidth, maxGroomX);
+  return (groomX / maxGroomX) * 100; // 0–100 visual progress
+}
 
 function updateRanking(groups) {
   const rankingList = document.getElementById("ranking-list");
   if (!rankingList) return;
 
-  const trackWidth = els.track.offsetWidth || window.innerWidth;
-  const brideGap = 50 + 120; // 50px margin + bride width
-  const maxGroomX = trackWidth - brideGap;
-
   const sorted = Object.entries(groups)
     .map(([gid, g]) => {
-      const rawProgress = g.progress || 0;
-      const groomXpx = Math.min((rawProgress / 100) * trackWidth, maxGroomX);
-      const visualProgressPercent = (groomXpx / maxGroomX) * 100;
-      return [gid, { ...g, visualProgress: visualProgressPercent }];
+      const visual = computeVisualProgress(g.progress || 0);
+      return [gid, { ...g, visualProgress: visual }];
     })
     .sort((a, b) => (b[1].visualProgress || 0) - (a[1].visualProgress || 0));
 
-  rankingList.innerHTML = sorted.map(([gid, g]) =>
-    `<li>${g.name || `Group ${gid}`}: ${Math.round(g.visualProgress || 0)}%</li>`
-  ).join("");
+  rankingList.innerHTML = sorted
+    .map(
+      ([gid, g]) =>
+        `<li>${g.name || `Group ${gid}`}: ${Math.round(g.visualProgress)}%</li>`
+    )
+    .join("");
 }
+
 
 function checkForWinner(groups) {
   const trackWidth = els.track.offsetWidth || window.innerWidth;
@@ -1103,10 +1112,13 @@ onValue(ref(db, "winner"), async (snap) => {
     const groups = groupsSnap.val() || {};
     const ranked = Object.entries(groups)
       .map(([id, g]) => ({
-        id,
-        name: g.name || `Group ${id}`,
-        progress: g.progress || 0,
-      }))
+        const visual = computeVisualProgress(g.progress || 0);
+        return {
+          id,
+          name: g.name || `Group ${id}`,
+          visualProgress: visual,
+        };
+      })
       .sort((a, b) => b.progress - a.progress)
       .slice(0, 3);
 
@@ -1437,4 +1449,5 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
