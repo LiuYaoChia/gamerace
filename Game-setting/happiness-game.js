@@ -215,7 +215,19 @@ onValue(ref(db, "groups"), (snap) => {
   }
 });
 
-function renderGroupChoices(groups) {
+// ====== Render Groups as Avatar Buttons (robust: optional groups param) ======
+async function renderGroupChoices(groups) {
+  // if groups not provided, fetch from Firebase
+  if (!groups) {
+    try {
+      const snap = await get(ref(db, "groups"));
+      groups = snap.val() || {};
+    } catch (err) {
+      console.error("renderGroupChoices: failed to fetch groups:", err);
+      return;
+    }
+  }
+
   const container = document.getElementById("group-choices");
   if (!container) return;
 
@@ -246,12 +258,20 @@ function renderGroupChoices(groups) {
           .forEach(el => (el.style.borderColor = "transparent"));
 
         btn.style.borderColor = "#4f46e5";
-        document.getElementById("group-select").value = gid;
+        const selectEl = document.getElementById("group-select");
+        if (selectEl) selectEl.value = gid;
       });
 
       container.appendChild(btn);
     });
+
+  // Force iOS Safari repaint if needed
+  requestAnimationFrame(() => {
+    container.style.display = "block";
+    container.offsetHeight;
+  });
 }
+
 
 // ===== Add rename function =========
 async function renameGroup(newName) {
@@ -1294,11 +1314,27 @@ async function resetGame() {
   await remove(ref(db,"winner"));
   await set(ref(db,"gameState"),"lobby");
 
-  // Switch UI (host side)
-  els.gameScreen.style.display = "block";
-  els.setupScreen.style.display = "none";
-  els.startBtn.style.display = "block"; // phone doesn't show start button
-  els.resetBtn.style.display = "block";
+  // 4️⃣ Host UI back to lobby
+  if (!isPhone) {
+    els.winnerPopup?.style.setProperty("display", "none");
+    els.gameScreen?.style.setProperty("display", "none");
+    els.setupScreen?.style.setProperty("display", "none");
+    els.startBtn.style.display = "block"; // phone doesn't show start button
+    els.resetBtn.style.display = "block";
+    console.log("🎮 All reset — host back to lobby.");
+  }
+
+    // 5️⃣ Phones also automatically return to lobby
+  if (isPhone) {
+    // Reset all phone UI to default lobby screen
+    if (els.phoneView) els.phoneView.style.display = "none";
+    if (els.setupScreen) els.setupScreen.style.display = "block";
+    if (els.waitingMsg) els.waitingMsg.style.display = "none";
+    if (els.phoneLabel) els.phoneLabel.textContent = "none";
+    if (els.phoneCupid) els.phoneCupid.style.display = "none";
+    if (els.leaveBtn) els.leaveBtn.style.display = "none";
+    console.log("📱 Phone also returned to lobby.");
+  }
 }
 
 if (isHost) {
@@ -1328,10 +1364,26 @@ els.exitBtn?.addEventListener("click", async () => {
   await set(ref(db, "gameState"), "lobby");
 
   currentGroupId = null;
-  if (els.phoneView) els.phoneView.style.display = "none";
-  if (els.gameScreen) els.gameScreen.style.display = "block";
-  if (els.setupScreen) els.setupScreen.style.display = "none";
-  alert("遊戲已重置！");
+  // 4️⃣ Host UI back to lobby
+  if (!isPhone) {
+    els.winnerPopup?.style.setProperty("display", "none");
+    els.gameScreen?.style.setProperty("display", "none");
+    els.setupScreen?.style.setProperty("display", "none");
+    els.startBtn.style.display = "block"; // phone doesn't show start button
+    els.resetBtn.style.display = "block";
+    alert("遊戲已重置！");
+  }
+
+    // 5️⃣ Phones also automatically return to lobby
+  if (isPhone) {
+    // Reset all phone UI to default lobby screen
+    if (els.phoneView) els.phoneView.style.display = "none";
+    if (els.setupScreen) els.setupScreen.style.display = "block";
+    if (els.waitingMsg) els.waitingMsg.style.display = "none";
+    if (els.phoneLabel) els.phoneLabel.textContent = "none";
+    if (els.phoneCupid) els.phoneCupid.style.display = "none";
+    if (els.leaveBtn) els.leaveBtn.style.display = "none";
+  }
 });
 
 
@@ -1372,6 +1424,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
