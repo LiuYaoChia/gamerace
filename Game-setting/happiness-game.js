@@ -1307,8 +1307,9 @@ els.leaveBtn?.addEventListener("click", async () => {
     if (els.phoneCupid) els.phoneCupid.style.display = "none";
     if (els.leaveBtn) els.leaveBtn.style.display = "none";
     console.log("📱 Phone also returned to lobby.");
-}
-  
+  }
+});
+
 // ====== Reset Game (Host Only) ======
 async function resetGame() {
   // Clear all groups
@@ -1436,3 +1437,4 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
