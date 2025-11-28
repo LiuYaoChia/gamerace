@@ -188,15 +188,30 @@ async function ensureGroups() {
     }
   }
 }
-// ====== Phone LIVE Group List Listener ======
+// ====== Live Group Updates for Phone Lobby ======
 onValue(ref(db, "groups"), (snap) => {
   const groups = snap.val() || {};
 
-  // Only update group choices when in LOBBY UI
-  const inLobby = !currentGroupId && els.setupScreen?.style.display !== "none";
+  // Detect phone in lobby
+  const phoneSetup = document.getElementById("player-setup");
+  const inLobby =
+    isPhone &&
+    !currentGroupId &&                     // phone is not in a group
+    phoneSetup &&
+    phoneSetup.style.display !== "none";  // lobby screen is shown
 
-  if (isPhone && inLobby) {
+  if (inLobby) {
+    console.log("📱 Updating group choices...");
     renderGroupChoices(groups);
+
+    // iPhone Safari DOM refresh force
+    requestAnimationFrame(() => {
+      const container = document.getElementById("group-choices");
+      if (container) {
+        container.style.display = "block";
+        container.offsetHeight; // force reflow
+      }
+    });
   }
 });
 
@@ -227,22 +242,16 @@ function renderGroupChoices(groups) {
       `;
 
       btn.addEventListener("click", () => {
-        document.querySelectorAll(".group-choice").forEach(el => {
-          el.style.borderColor = "transparent";
-        });
-        btn.style.borderColor = "#4f46e5";
+        document.querySelectorAll(".group-choice")
+          .forEach(el => (el.style.borderColor = "transparent"));
 
+        btn.style.borderColor = "#4f46e5";
         document.getElementById("group-select").value = gid;
       });
 
       container.appendChild(btn);
     });
-
-  // iPhone Safari needs this to repaint
-  container.style.display = "block";
 }
-
-
 
 // ===== Add rename function =========
 async function renameGroup(newName) {
@@ -1363,6 +1372,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
