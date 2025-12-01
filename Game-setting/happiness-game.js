@@ -298,9 +298,11 @@ async function renameGroup(newName) {
 async function updatePhoneView(group) {
   if (!group) return;
 
-  const trackWidth = els.track?.offsetWidth || window.innerWidth || 300; // ← ensure valid width
-  const visual = computeVisualProgress(group.progress || 0, trackWidth);
+  // Sanitize progress
+  const progress = Number(group.progress) || 0; 
+  const visual = computeVisualProgress(progress);
 
+  // Update label
   const progressText = `組別「${group.name}」進度: ${Math.floor(visual)}%`;
 
   // Build members list
@@ -311,23 +313,23 @@ async function updatePhoneView(group) {
   });
   membersHtml += "</div>";
 
-  // Update phone label with group + members
   if (els.phoneLabel) els.phoneLabel.innerHTML = progressText + membersHtml;
 
-  // Owner check → show/hide rename button
+  // Show/hide rename button for owner
   if (currentGroupId && currentPlayerId) {
     const memberSnap = await get(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`));
     const member = memberSnap.val();
     if (els.renameBtn) els.renameBtn.style.display = member?.isOwner ? "block" : "none";
   }
 
-  // Set phone cupid image based on group's cupidIndex
+  // Update cupid image
   if (els.phoneCupid) {
     const idx = group.cupidIndex ?? 0;
-    els.phoneCupid.src = cupidVariants[idx];
+    els.phoneCupid.src = cupidVariants[idx];  
     els.phoneCupid.alt = `Cupid of group ${group.name || currentGroupId}`;
   }
 }
+
 
 
 // ====== Auth ======
@@ -551,13 +553,15 @@ if (isPhone && currentGroupId) {
 }
 
 // ====== Shake Handling ======
-els.motionBtn?.addEventListener("click",()=>{
-  if(typeof DeviceMotionEvent!=="undefined" &&
-     typeof DeviceMotionEvent.requestPermission==="function") {
-    DeviceMotionEvent.requestPermission().then(res=>{
-      if(res==="granted") window.addEventListener("devicemotion",handleMotion);
+els.motionBtn?.addEventListener("click", () => {
+  if (typeof DeviceMotionEvent !== "undefined" &&
+      typeof DeviceMotionEvent.requestPermission === "function") {
+    DeviceMotionEvent.requestPermission().then(res => {
+      if (res === "granted") window.addEventListener("devicemotion", handleMotion);
     });
-  } else window.addEventListener("devicemotion",handleMotion);
+  } else {
+    window.addEventListener("devicemotion", handleMotion);
+  }
 });
 
 function handleMotion(e) {
@@ -573,13 +577,29 @@ function handleMotion(e) {
     const now = Date.now();
     if (now - lastShakeTime > SHAKE_COOLDOWN_MS) {
       lastShakeTime = now;
+
+      // Update Firebase
       addGroupShakeTx(currentGroupId);
+
+      // Animate cupid locally
       animateCupidJump(currentGroupId);
+
+      // ⭐ Optimistically update phone view immediately
+      const group = groups[currentGroupId];  // your local snapshot cache
+      if (group) {
+        const membersCount = group.members ? Object.keys(group.members).length : 1;
+        const BASE_STEP = 5;
+        const step = BASE_STEP / Math.sqrt(membersCount);
+        group.progress = Math.min(100, (Number(group.progress) || 0) + step);
+
+        updatePhoneView(group);
+      }
     }
   }
 }
 
 
+// ====== Add shake transaction ======
 function addGroupShakeTx(groupId) {
   const gRef = ref(db, `groups/${groupId}`);
 
@@ -590,7 +610,7 @@ function addGroupShakeTx(groupId) {
     const BASE_STEP = 5;
     const step = BASE_STEP / Math.sqrt(membersCount);
 
-    const newProgress = Math.min(100, (g.progress || 0) + step);
+    const newProgress = Math.min(100, (Number(g.progress) || 0) + step);
 
     return {
       ...g,
@@ -618,14 +638,16 @@ function addGroupShakeTx(groupId) {
 function animateCupidJump(groupId) {
   const lane = document.querySelector(`.lane[data-group-id="${groupId}"]`);
   const cupid = lane?.querySelector(".cupid");
-  if (cupid) { cupid.classList.add("jump"); setTimeout(() => cupid.classList.remove("jump"), 600); }
+  if (cupid) { 
+    cupid.classList.add("jump"); 
+    setTimeout(() => cupid.classList.remove("jump"), 600); 
+  }
 
   if (els.phoneCupid && els.phoneView && els.phoneView.style.display !== "none") {
     els.phoneCupid.classList.add("jump");
     setTimeout(() => els.phoneCupid.classList.remove("jump"), 600);
   }
 }
-
 
 // ===== Force stabilize layout for Samsung Android 9 =====
 const isSamsungAndroid9 =
@@ -974,25 +996,29 @@ window.addEventListener("resize", async () => {
 onValue(ref(db, "groups"), (snap) => {
   let groups = snap.val() || {};
 
-  // ------ FIX: sanitize array-like groups ------
+  // Fix array-like groups
   if (Array.isArray(groups)) {
     const cleaned = {};
     groups.forEach((g, i) => {
       if (g && typeof g === "object") cleaned[i] = g;
     });
     groups = cleaned;
-    console.log("FIXED groups:", groups);
   }
-  // ---------------------------------------------
 
-  if (!isHost) return;
-
-  try {
-    els.setupScreen.style.display = "none";
-    els.gameScreen.style.display = "block";
-    renderGameScene(groups);
-  } catch (err) {
-    console.error("renderGameScene crash:", err);
+  if (isHost) {
+    // Host updates the main game screen
+    try {
+      els.setupScreen.style.display = "none";
+      els.gameScreen.style.display = "block";
+      renderGameScene(groups);
+    } catch (err) {
+      console.error("renderGameScene crash:", err);
+    }
+  } else {
+    // Phone updates only its group's view
+    if (currentGroupId && groups[currentGroupId]) {
+      updatePhoneView(groups[currentGroupId]);
+    }
   }
 });
 
@@ -1453,6 +1479,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
