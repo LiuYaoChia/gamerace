@@ -806,20 +806,21 @@ function updateRanking(groups) {
 
   const sorted = Object.entries(groups)
     .map(([gid, g]) => {
-      // Ensure progress is numeric and clamped between 0-100
-      const raw = Math.min(100, Math.max(0, Number(g.progress) || 0));
-      // Compute visual progress for sorting (0–100%)
-      const visual = raw; // use raw directly, or computeVisualProgress(raw) for pixels if needed
+      // Convert progress to number and clamp 0-100
+      const raw = Math.min(100, Math.max(0, parseFloat(g.progress) || 0));
+      // Visual progress for sorting
+      const visual = raw;
       return [gid, { ...g, visualProgress: visual, progress: raw }];
     })
     .sort((a, b) => b[1].visualProgress - a[1].visualProgress);
 
   rankingList.innerHTML = sorted
     .map(([gid, g]) => 
-      `<li>${g.name || `Group ${gid}`}: ${g.progress.toFixed(0)}%</li>` // always 0–100
+      `<li>${g.name || `Group ${gid}`}: ${g.progress.toFixed(0)}%</li>`
     )
     .join("");
 }
+
 
 
 function checkForWinner(groups) {
@@ -1454,6 +1455,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
