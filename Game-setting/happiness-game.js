@@ -790,29 +790,22 @@ function safeProgress(v) {
   return Number.isFinite(v) ? v : 0;
 }
 function computeVisualProgress(raw) {
-  const p = safeProgress(raw);      // 0–100 guaranteed
+  const p = Math.max(0, Math.min(raw, 100)); // clamp
 
-  // Get track width (safe fallback)
+  // safe width
   const trackWidth = els.track?.offsetWidth;
   const W = (trackWidth && trackWidth > 50) ? trackWidth : window.innerWidth;
 
-  // Groom/bride safe widths
+  // read groom + bride widths
   const groomW = els.groom?.offsetWidth || 100;
   const brideW = els.bride?.offsetWidth || 120;
 
-  // Max allowed travel distance
-  const maxX = Math.max(W - (brideW + 50), 1);
+  // IMPORTANT FIX — subtract groomW also
+  const maxX = Math.max(W - (brideW + groomW + 50), 1);
 
-  // Linear mapping 0–100%
   const px = (p / 100) * maxX;
-
-  // Convert to percentage for CSS
-  const percent = (px / maxX) * 100;
-
-  return Number.isFinite(percent) ? percent : 0;
+  return (px / maxX) * 100;
 }
-
-
 
 function updateRanking(groups) {
   const rankingList = document.getElementById("ranking-list");
@@ -1463,6 +1456,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
