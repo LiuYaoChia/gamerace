@@ -834,26 +834,22 @@ function updateRanking(groups) {
 }
 
 
-
 function checkForWinner(groups) {
   Object.entries(groups).forEach(([gid, g]) => {
-    const raw = g.progress || 0;
-    const visual = computeVisualProgress(raw); // 0–100 visual %
+    const raw = Number(g.progress) || 0;
 
-    if (visual >= 100) {
+    // Only declare winner when REAL progress hits 100%
+    if (raw >= 100) {
       const winnerRef = ref(db, "winner");
       get(winnerRef).then(snap => {
         if (!snap.val()) {
           set(winnerRef, gid);
-          console.log(`Winner declared (visual logic): ${gid}`);
+          console.log(`Winner declared by RAW progress: ${gid}`);
         }
       });
     }
   });
 }
-
-
-
 
 function renderGameScene(groups) {
   if (!els.track) return;
@@ -1467,6 +1463,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
