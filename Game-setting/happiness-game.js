@@ -294,41 +294,27 @@ async function renameGroup(newName) {
   alert("組別名稱已更新！");
 }
 
-// ====== Phone View ======
 async function updatePhoneView(group) {
   if (!group) return;
 
-  // Sanitize progress
-  const progress = Number(group.progress) || 0; 
-  const visual = computeVisualProgress(progress);
+  // Raw progress from DB (0–100)
+  const progress = Number(group.progress) || 0;
 
-  // Update label
-  const progressText = `組別「${group.name}」進度: ${Math.floor(visual)}%`;
+  // Update progress label using raw percentage
+  const progressText = `組別「${group.name}」進度: ${Math.floor(progress)}%`;
+  const labelEl = document.getElementById("progress-label");
+  if (labelEl) labelEl.textContent = progressText;
 
-  // Build members list
-  const members = group.members ? Object.values(group.members) : [];
-  let membersHtml = "<div style='margin-top:8px; font-size:14px; text-align:left;'>";
-  members.forEach(m => {
-    membersHtml += `• ${m.name}${m.isOwner ? " 👑" : ""}<br>`;
-  });
-  membersHtml += "</div>";
+  // Compute visual position for animation (pixels along the track)
+  const visualX = computeVisualProgress(progress);
 
-  if (els.phoneLabel) els.phoneLabel.innerHTML = progressText + membersHtml;
-
-  // Show/hide rename button for owner
-  if (currentGroupId && currentPlayerId) {
-    const memberSnap = await get(ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`));
-    const member = memberSnap.val();
-    if (els.renameBtn) els.renameBtn.style.display = member?.isOwner ? "block" : "none";
-  }
-
-  // Update cupid image
-  if (els.phoneCupid) {
-    const idx = group.cupidIndex ?? 0;
-    els.phoneCupid.src = cupidVariants[idx];  
-    els.phoneCupid.alt = `Cupid of group ${group.name || currentGroupId}`;
+  // Update cupid / character animation position
+  const cupidEl = document.getElementById("cupid");
+  if (cupidEl) {
+    cupidEl.style.transform = `translateX(${visualX}px)`;
   }
 }
+
 
 
 
@@ -570,28 +556,24 @@ async function handleMotion(e) {
   const acc = e.accelerationIncludingGravity;
   if (!acc) return;
 
-  const strength = Math.sqrt((acc.x || 0)**2 + (acc.y || 0)**2 + (acc.z || 0)**2);
+  const strength = Math.sqrt((acc.x||0)**2 + (acc.y||0)**2 + (acc.z||0)**2);
 
   if (strength > SHAKE_THRESHOLD && currentGroupId) {
     const now = Date.now();
     if (now - lastShakeTime > SHAKE_COOLDOWN_MS) {
       lastShakeTime = now;
 
-      // Update Firebase
-      addGroupShakeTx(currentGroupId);
-
       // Animate cupid locally
       animateCupidJump(currentGroupId);
 
-      // ✅ Fetch group from Firebase directly
+      // --- Phones just read the updated progress from Firebase ---
       const snap = await get(ref(db, `groups/${currentGroupId}`));
       const group = snap.val();
-      if (group) {
-        updatePhoneView(group);
-      }
+      if (group) updatePhoneView(group);
     }
   }
 }
+
 
 
 
@@ -1472,6 +1454,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
