@@ -313,22 +313,14 @@ async function updatePhoneView(group) {
   membersHtml += `</div>`;
 
   // --- Update phone label with group + members ---
-  // ====== Phone Progress Label ======
-  if (els.phoneLabel) {
-    const rawProgress = Number(group.progress) || 0;
-    const visual = Math.floor(computeVisualProgress(rawProgress));
-  
-    els.phoneLabel.innerHTML =
-      `進度：${visual}%` +
-      (group.members
-        ? "<br><span style='font-size:14px'>" +
-          Object.values(group.members)
-            .map(m => `• ${m.name}${m.isOwner ? " 👑" : ""}`)
-            .join("<br>") +
-          "</span>"
-        : "");
-  }
+  // Sanitize by your safeProgress()
+  const raw = safeProgress(group.progress);
+  const progressText = `${raw.toFixed(0)}%`;
 
+  // ⭐ Update phone progress label
+  if (els.phoneLabel) {
+    els.phoneLabel.textContent = `進度：${progressText}`;
+  }
 
   // --- Owner check → show/hide rename button ---
   if (currentGroupId && currentPlayerId) {
@@ -1480,6 +1472,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
