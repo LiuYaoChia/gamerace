@@ -585,7 +585,7 @@ function handleMotion(e) {
       animateCupidJump(currentGroupId);
 
       // ⭐ Optimistically update phone view immediately
-      const group = groups[currentGroupId];  // your local snapshot cache
+      const group = localGroups[currentGroupId]; // ✅ always has the latest snapshot
       if (group) {
         const membersCount = group.members ? Object.keys(group.members).length : 1;
         const BASE_STEP = 5;
@@ -996,34 +996,28 @@ window.addEventListener("resize", async () => {
   renderGameScene(groups);
 });
 
+let localGroups = {};  // cache for both host & phone
+
 onValue(ref(db, "groups"), (snap) => {
   let groups = snap.val() || {};
-
+  
   // Fix array-like groups
   if (Array.isArray(groups)) {
     const cleaned = {};
-    groups.forEach((g, i) => {
-      if (g && typeof g === "object") cleaned[i] = g;
-    });
+    groups.forEach((g, i) => { if (g && typeof g === "object") cleaned[i] = g; });
     groups = cleaned;
   }
 
-  if (isHost) {
-    // Host updates the main game screen
-    try {
-      els.setupScreen.style.display = "none";
-      els.gameScreen.style.display = "block";
-      renderGameScene(groups);
-    } catch (err) {
-      console.error("renderGameScene crash:", err);
-    }
-  } else {
-    // Phone updates only its group's view
-    if (currentGroupId && groups[currentGroupId]) {
-      updatePhoneView(groups[currentGroupId]);
-    }
+  localGroups = groups;  // update cache
+
+  if (isHost) renderGameScene(groups);
+
+  if (!isHost && currentGroupId) {
+    const myGroup = groups[currentGroupId];
+    if (myGroup) updatePhoneView(myGroup);
   }
 });
+
 
 
 
@@ -1482,6 +1476,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
