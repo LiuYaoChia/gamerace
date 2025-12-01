@@ -794,20 +794,16 @@ function computeVisualProgress(raw) {
   const p = safeProgress(raw); // 0–100
 
   const trackWidth = els.track?.offsetWidth || window.innerWidth;
-  const groomW = 90; // fixed CSS size
-  const brideW = 120;
-  const margin = 50;
+  const groomW = 90;  // groom width in px
+  const brideW = 120; // bride width in px
+  const margin = 50;  // extra spacing
 
-  const maxX = Math.max(trackWidth - (brideW + groomW + margin), 1);
+  const maxX = trackWidth - (groomW + brideW + margin); // max px groom can move
+  const px = (p / 100) * maxX; // px along track
 
-  // Compute pixel offset
-  const px = (p / 100) * maxX;
-
-  // Convert to % of **track width**, not maxX
-  const percent = (px / trackWidth) * 100;
-
-  return Number.isFinite(percent) ? percent : 0;
+  return px; // return **px** directly
 }
+
 
 
 function updateRanking(groups) {
@@ -906,12 +902,13 @@ function renderGameScene(groups) {
 
     // Groom
     const groom = document.createElement("img");
+    const gap = 10; // px
     groom.src = cupidImg;
     groom.className = "groom";
     groom.style.cssText = `
       position: absolute;
       top: 50%;
-      left: ${groomX}%;
+      groom.style.left = `${Math.min(groomX, trackWidth - brideW - groomW - gap)}px`;
       transform: translateY(-50%);
       height: 90px;
       transition: left 0.4s ease-out;
@@ -1459,6 +1456,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
