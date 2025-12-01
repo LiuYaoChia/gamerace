@@ -789,29 +789,26 @@ onValue(ref(db, "gameState"), snap => {
 function safeProgress(v) {
   return Number.isFinite(v) ? v : 0;
 }
-const BRIDE_RIGHT_OFFSET = 80; // MUST match your CSS
 
 function computeVisualProgress(raw) {
-  const p = Math.max(0, Math.min(raw, 100)); // clamp to 0–100
+  const p = safeProgress(raw); // 0–100
 
-  // safe track width
-  const trackWidth = els.track?.offsetWidth;
-  const W = (trackWidth && trackWidth > 50) ? trackWidth : window.innerWidth;
+  const trackWidth = els.track?.offsetWidth || window.innerWidth;
+  const groomW = 90; // fixed CSS size
+  const brideW = 120;
+  const margin = 50;
 
-  const groomW = els.groom?.offsetWidth || 100;
-  const brideW = els.bride?.offsetWidth || 120;
+  const maxX = Math.max(trackWidth - (brideW + groomW + margin), 1);
 
-  const BRIDE_RIGHT_OFFSET = 80; // same as bride.style.right = "80px"
-
-  // ⭐ IMPORTANT FIX — subtract ALL real-world pixel offsets:
-  // right offset + bride width + groom width
-  const maxX = Math.max(W - (BRIDE_RIGHT_OFFSET + brideW + groomW), 1);
-
-  // groom travel mapped on 0–100 progress
+  // Compute pixel offset
   const px = (p / 100) * maxX;
 
-  return (px / maxX) * 100; // convert to %
+  // Convert to % of **track width**, not maxX
+  const percent = (px / trackWidth) * 100;
+
+  return Number.isFinite(percent) ? percent : 0;
 }
+
 
 function updateRanking(groups) {
   const rankingList = document.getElementById("ranking-list");
@@ -1462,6 +1459,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
