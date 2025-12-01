@@ -298,10 +298,10 @@ async function renameGroup(newName) {
 async function updatePhoneView(group) {
   if (!group) return;
 
-  // Show group name + progress
-  const visual = computeVisualProgress(group.progress || 0);
-  const progressText = `組別「${group.name}」進度: ${Math.floor(visual)}%`;
+  const trackWidth = els.track?.offsetWidth || window.innerWidth || 300; // ← ensure valid width
+  const visual = computeVisualProgress(group.progress || 0, trackWidth);
 
+  const progressText = `組別「${group.name}」進度: ${Math.floor(visual)}%`;
 
   // Build members list
   const members = group.members ? Object.values(group.members) : [];
@@ -320,13 +320,15 @@ async function updatePhoneView(group) {
     const member = memberSnap.val();
     if (els.renameBtn) els.renameBtn.style.display = member?.isOwner ? "block" : "none";
   }
+
   // Set phone cupid image based on group's cupidIndex
   if (els.phoneCupid) {
     const idx = group.cupidIndex ?? 0;
-    els.phoneCupid.src = cupidVariants[idx];       // ← key fix
+    els.phoneCupid.src = cupidVariants[idx];
     els.phoneCupid.alt = `Cupid of group ${group.name || currentGroupId}`;
   }
 }
+
 
 // ====== Auth ======
 signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
@@ -794,10 +796,11 @@ function safeProgress(value) {
 }
 
 // Compute groom position in pixels along the track
-function computeVisualProgress(raw, trackWidth, groomW = 90, brideW = 200, gap = 10) {
+function computeVisualProgress(raw, trackWidth = 300, groomW = 90, brideW = 200, gap = 10) {
   const p = safeProgress(raw); // 0–100
-  const maxX = trackWidth - (groomW + brideW + gap);
-  return (p / 100) * maxX; // return px directly
+  const w = Number(trackWidth) || 300; // fallback if trackWidth is 0/undefined
+  const maxX = Math.max(0, w - (groomW + brideW + gap));
+  return (p / 100) * maxX;
 }
 
 function updateRanking(groups) {
@@ -1450,6 +1453,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
