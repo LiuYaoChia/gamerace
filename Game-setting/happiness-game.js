@@ -786,16 +786,33 @@ onValue(ref(db, "gameState"), snap => {
     }
   }
 });
-
-function computeVisualProgress(rawProgress) {
-  const trackWidth = els.track.offsetWidth || window.innerWidth;
-
-  const brideGap = 50 + 120; // 50px margin + bride width
-  const maxGroomX = trackWidth - brideGap;
-
-  const groomX = Math.min((rawProgress / 100) * trackWidth, maxGroomX);
-  return (groomX / maxGroomX) * 100; // 0–100 visual progress
+function safeProgress(v) {
+  return Number.isFinite(v) ? v : 0;
 }
+function computeVisualProgress(raw) {
+  const p = safeProgress(raw);      // 0–100 guaranteed
+
+  // Get track width (safe fallback)
+  const trackWidth = els.track?.offsetWidth;
+  const W = (trackWidth && trackWidth > 50) ? trackWidth : window.innerWidth;
+
+  // Groom/bride safe widths
+  const groomW = els.groom?.offsetWidth || 100;
+  const brideW = els.bride?.offsetWidth || 120;
+
+  // Max allowed travel distance
+  const maxX = Math.max(W - (brideW + 50), 1);
+
+  // Linear mapping 0–100%
+  const px = (p / 100) * maxX;
+
+  // Convert to percentage for CSS
+  const percent = (px / maxX) * 100;
+
+  return Number.isFinite(percent) ? percent : 0;
+}
+
+
 
 function updateRanking(groups) {
   const rankingList = document.getElementById("ranking-list");
@@ -803,18 +820,19 @@ function updateRanking(groups) {
 
   const sorted = Object.entries(groups)
     .map(([gid, g]) => {
-      const visual = computeVisualProgress(g.progress || 0);
-      return [gid, { ...g, visualProgress: visual }];
+      const raw = safeProgress(g.progress);
+      const visual = computeVisualProgress(raw);
+      return [gid, { ...g, visualProgress: visual, progress: raw }];
     })
-    .sort((a, b) => (b[1].visualProgress || 0) - (a[1].visualProgress || 0));
+    .sort((a, b) => b[1].visualProgress - a[1].visualProgress);
 
   rankingList.innerHTML = sorted
-    .map(
-      ([gid, g]) =>
-        `<li>${g.name || `Group ${gid}`}: ${Math.round(g.visualProgress)}%</li>`
+    .map(([gid, g]) => 
+      `<li>${g.name || `Group ${gid}`}: ${Math.round(g.progress)}%</li>`
     )
     .join("");
 }
+
 
 
 function checkForWinner(groups) {
@@ -875,19 +893,16 @@ function renderGameScene(groups) {
     height: "80vh",
     overflow: "visible",
   });
-
+  els.track.getBoundingClientRect();
   // LOOP
   activeGroups.forEach(([gid, g]) => {
     const groupName = g.name || customGroupNames[gid] || `Group ${gid}`;
     const memberNames = Object.values(g.members || {}).map(m => m.name).join("、");
     const cupidImg = cupidVariants[g.cupidIndex ?? 0];
-    const progress = g.progress || 0;
-    // Compute groom position as percentage of track width, leaving 50px gap to bride
-    const trackWidth = els.track.offsetWidth || window.innerWidth;
-    const brideGap = 50 + 120; // 50px from right + bride width
-    const maxGroomX = ((trackWidth - brideGap) / trackWidth) * 100;
-    const groomX = Math.min(progress, maxGroomX); 
-
+    // Use unified visual progress everywhere
+    const raw = g.progress || 0;
+    const progress = raw;               // keep raw
+    const groomX = computeVisualProgress(raw); // returns 0–100 visual %
 
     // Lane container
     const lane = document.createElement("div");
@@ -1110,17 +1125,21 @@ onValue(ref(db, "winner"), async (snap) => {
     // --- Ranking (Top 3) ---
     const groupsSnap = await get(ref(db, "groups"));
     const groups = groupsSnap.val() || {};
+
     const ranked = Object.entries(groups)
       .map(([id, g]) => {
-        const visual = computeVisualProgress(g.progress || 0);
+        const raw = Number(g.progress) || 0;
+        const visual = computeVisualProgress(raw);
         return {
           id,
           name: g.name || `Group ${id}`,
-          visualProgress: visual,
+          progress: raw,            // <-- required for % display
+          visualProgress: visual,   // <-- consistent with track
         };
       })
-      .sort((a, b) => b.progress - a.progress)
+      .sort((a, b) => b.visualProgress - a.visualProgress)
       .slice(0, 3);
+
 
     let rankContainer = document.getElementById("winner-ranking");
     if (!rankContainer) {
@@ -1449,6 +1468,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
