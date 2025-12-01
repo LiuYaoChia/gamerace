@@ -564,14 +564,13 @@ els.motionBtn?.addEventListener("click", () => {
   }
 });
 
-function handleMotion(e) {
-  // Only allow shakes when the game is playing
+async function handleMotion(e) {
   if (currentGameState !== "playing") return;
 
   const acc = e.accelerationIncludingGravity;
   if (!acc) return;
 
-  const strength = Math.sqrt((acc.x || 0) ** 2 + (acc.y || 0) ** 2 + (acc.z || 0) ** 2);
+  const strength = Math.sqrt((acc.x || 0)**2 + (acc.y || 0)**2 + (acc.z || 0)**2);
 
   if (strength > SHAKE_THRESHOLD && currentGroupId) {
     const now = Date.now();
@@ -584,19 +583,16 @@ function handleMotion(e) {
       // Animate cupid locally
       animateCupidJump(currentGroupId);
 
-      // ⭐ Optimistically update phone view immediately
-      const group = localGroups[currentGroupId]; // ✅ always has the latest snapshot
+      // ✅ Fetch group from Firebase directly
+      const snap = await get(ref(db, `groups/${currentGroupId}`));
+      const group = snap.val();
       if (group) {
-        const membersCount = group.members ? Object.keys(group.members).length : 1;
-        const BASE_STEP = 5;
-        const step = BASE_STEP / Math.sqrt(membersCount);
-        group.progress = Math.min(100, (Number(group.progress) || 0) + step);
-
         updatePhoneView(group);
       }
     }
   }
 }
+
 
 
 function addGroupShakeTx(groupId) {
@@ -1476,6 +1472,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
