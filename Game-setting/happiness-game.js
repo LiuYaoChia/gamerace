@@ -836,26 +836,22 @@ function updateRanking(groups) {
 
 
 function checkForWinner(groups) {
-  const trackWidth = els.track.offsetWidth || window.innerWidth;
-  const brideGap = 50 + 120; // 50px margin + bride width
-  const maxGroomX = trackWidth - brideGap;
-
   Object.entries(groups).forEach(([gid, g]) => {
-    const rawProgress = g.progress || 0;
-    const groomXpx = Math.min((rawProgress / 100) * trackWidth, maxGroomX);
+    const raw = g.progress || 0;
+    const visual = computeVisualProgress(raw); // 0–100 visual %
 
-    // If groom visually reached the bride, declare winner
-    if (groomXpx >= maxGroomX) {
+    if (visual >= 100) {
       const winnerRef = ref(db, "winner");
       get(winnerRef).then(snap => {
         if (!snap.val()) {
           set(winnerRef, gid);
-          console.log(`Winner declared: ${gid}`);
+          console.log(`Winner declared (visual logic): ${gid}`);
         }
       });
     }
   });
 }
+
 
 
 
@@ -1130,6 +1126,9 @@ onValue(ref(db, "winner"), async (snap) => {
       .map(([id, g]) => {
         const raw = Number(g.progress) || 0;
         const visual = computeVisualProgress(raw);
+        if (visual >= 99.5) {
+          // declare winner
+        }
         return {
           id,
           name: g.name || `Group ${id}`,
@@ -1468,6 +1467,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
