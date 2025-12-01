@@ -792,20 +792,10 @@ function safeProgress(value) {
 }
 
 // Compute groom position in pixels along the track
-function computeVisualProgress(raw) {
+function computeVisualProgress(raw, trackWidth, groomW = 90, brideW = 200, gap = 10) {
   const p = safeProgress(raw); // 0–100
-  const track = els.track;
-  if (!track) return 0;
-
-  const trackWidth = track.offsetWidth || window.innerWidth;
-  const groomW = 90;   // groom image width in px
-  const brideW = 200;  // bride image width in px
-  const gap = 10;       // px gap before bride
-
   const maxX = trackWidth - (groomW + brideW + gap);
-  const px = (p / 100) * maxX;
-
-  return px; // return px directly
+  return (p / 100) * maxX; // return px directly
 }
 
 
@@ -850,6 +840,13 @@ function checkForWinner(groups) {
 function renderGameScene(groups) {
   if (!els.track) return;
 
+  // Groom & bride constants
+  const groomW = 90;
+  const brideW = 200;
+  const gap = 10;
+
+  const trackWidth = els.track.offsetWidth || window.innerWidth;
+
   // Hide setup, show game screen
   if (els.setupScreen) els.setupScreen.style.display = "none";
   if (els.gameScreen) {
@@ -881,16 +878,15 @@ function renderGameScene(groups) {
     height: "80vh",
     overflow: "visible",
   });
-  els.track.getBoundingClientRect();
+
   // LOOP
   activeGroups.forEach(([gid, g]) => {
     const groupName = g.name || customGroupNames[gid] || `Group ${gid}`;
     const memberNames = Object.values(g.members || {}).map(m => m.name).join("、");
     const cupidImg = cupidVariants[g.cupidIndex ?? 0];
-    // Use unified visual progress everywhere
+
     const raw = g.progress || 0;
-    const progress = raw;               // keep raw
-    const groomX = computeVisualProgress(raw); // returns 0–100 visual %
+    const groomX = computeVisualProgress(raw, trackWidth, groomW, brideW, gap);
 
     // Lane container
     const lane = document.createElement("div");
@@ -904,7 +900,7 @@ function renderGameScene(groups) {
       overflow: visible;
     `;
 
-   // Groom
+    // Groom
     const groom = document.createElement("img");
     groom.src = cupidImg;
     groom.className = "groom";
@@ -913,8 +909,6 @@ function renderGameScene(groups) {
     groom.style.transform = "translateY(-50%)";
     groom.style.height = `${groomW}px`;
     groom.style.transition = "left 0.4s ease-out";
-
-    // Ensure groom stops before bride
     groom.style.left = `${Math.min(groomX, trackWidth - brideW - groomW - gap)}px`;
 
     // Label
@@ -937,15 +931,15 @@ function renderGameScene(groups) {
     lane.appendChild(label);
     els.track.appendChild(lane);
 
-    // ⭐ FIXED SHIMMER ANIMATION
-    if (lane.dataset.prevProgress != progress) {
+    // Shimmer animation
+    if (lane.dataset.prevProgress != raw) {
       lane.classList.add("active");
       setTimeout(() => lane.classList.remove("active"), 1500);
-      lane.dataset.prevProgress = progress;
+      lane.dataset.prevProgress = raw;
     }
   });
 
-  // ⭐ BRIDE (only add once)
+  // Bride (only add once)
   let bride = document.querySelector(".bride");
   if (!bride) {
     bride = document.createElement("img");
@@ -956,19 +950,18 @@ function renderGameScene(groups) {
 
   Object.assign(bride.style, {
     position: "absolute",
-    right: "80px",       // move slightly left from edge
+    right: "80px",
     top: "50%",
     transform: "translateY(-50%)",
-    height: "200px",     // bigger size
-    maxHeight: "25vh",   // optional responsive max
-    zIndex: 20,          // higher than lanes
+    height: `${brideW}px`,
+    maxHeight: "25vh",
+    zIndex: 20,
   });
 
-  // ⭐ Update ranking
+  // Update ranking and check winner
   updateRanking(groups);
   checkForWinner(groups);
 }
-
 
 
 window.addEventListener("resize", async () => {
@@ -1459,6 +1452,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
