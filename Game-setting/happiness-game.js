@@ -908,7 +908,7 @@ function renderGameScene(groups) {
     groom.style.cssText = `
       position: absolute;
       top: 50%;
-      groom.style.left = `${Math.min(groomX, trackWidth - brideW - groomW - gap)}px`;
+      left = `${Math.min(groomX, trackWidth - brideW - groomW - gap)}px`;
       transform: translateY(-50%);
       height: 90px;
       transition: left 0.4s ease-out;
@@ -1456,6 +1456,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
