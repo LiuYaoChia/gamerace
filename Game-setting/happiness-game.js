@@ -786,22 +786,26 @@ onValue(ref(db, "gameState"), snap => {
     }
   }
 });
-function safeProgress(v) {
-  return Number.isFinite(v) ? v : 0;
+function safeProgress(value) {
+  const n = Number(value) || 0;
+  return Math.min(100, Math.max(0, n));
 }
 
+// Compute groom position in pixels along the track
 function computeVisualProgress(raw) {
   const p = safeProgress(raw); // 0–100
+  const track = els.track;
+  if (!track) return 0;
 
-  const trackWidth = els.track?.offsetWidth || window.innerWidth;
-  const groomW = 90;  // groom width in px
-  const brideW = 120; // bride width in px
-  const margin = 50;  // extra spacing
+  const trackWidth = track.offsetWidth || window.innerWidth;
+  const groomW = 90;   // groom image width in px
+  const brideW = 200;  // bride image width in px
+  const gap = 10;       // px gap before bride
 
-  const maxX = trackWidth - (groomW + brideW + margin); // max px groom can move
-  const px = (p / 100) * maxX; // px along track
+  const maxX = trackWidth - (groomW + brideW + gap);
+  const px = (p / 100) * maxX;
 
-  return px; // return **px** directly
+  return px; // return px directly
 }
 
 
@@ -900,19 +904,18 @@ function renderGameScene(groups) {
       overflow: visible;
     `;
 
-    // Groom
+   // Groom
     const groom = document.createElement("img");
-    const gap = 10; // px
     groom.src = cupidImg;
     groom.className = "groom";
-    groom.style.cssText = `
-      position: absolute;
-      top: 50%;
-      left = `${Math.min(groomX, trackWidth - brideW - groomW - gap)}px`;
-      transform: translateY(-50%);
-      height: 90px;
-      transition: left 0.4s ease-out;
-    `;
+    groom.style.position = "absolute";
+    groom.style.top = "50%";
+    groom.style.transform = "translateY(-50%)";
+    groom.style.height = `${groomW}px`;
+    groom.style.transition = "left 0.4s ease-out";
+
+    // Ensure groom stops before bride
+    groom.style.left = `${Math.min(groomX, trackWidth - brideW - groomW - gap)}px`;
 
     // Label
     const label = document.createElement("div");
@@ -1456,6 +1459,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
