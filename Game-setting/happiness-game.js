@@ -294,29 +294,59 @@ async function renameGroup(newName) {
   alert("組別名稱已更新！");
 }
 
+// ====== Phone View ======
 async function updatePhoneView(group) {
   if (!group) return;
 
-  // Raw progress from DB (0–100)
-  const progress = Number(group.progress) || 0;
+  // --- Show group name + progress ---
+  const visual = computeVisualProgress(group.progress || 0);
+  const progressText = `組別「${group.name}」進度: ${Math.floor(visual)}%`;
 
-  // Update progress label using raw percentage
-  const progressText = `組別「${group.name}」進度: ${Math.floor(progress)}%`;
-  const labelEl = document.getElementById("progress-label");
-  if (labelEl) labelEl.textContent = progressText;
+  // --- Build members list ---
+  const members = group.members ? Object.values(group.members) : [];
+  let membersHtml = `<div style="margin-top:8px; font-size:14px; text-align:left;">`;
 
-  // Compute visual position for animation (pixels along the track)
-  const visualX = computeVisualProgress(progress);
+  members.forEach(m => {
+    membersHtml += `• ${m.name}${m.isOwner ? " 👑" : ""}<br>`;
+  });
 
-  // Update cupid / character animation position
-  const cupidEl = document.getElementById("cupid");
-  if (cupidEl) {
-    cupidEl.style.transform = `translateX(${visualX}px)`;
+  membersHtml += `</div>`;
+
+  // --- Update phone label with group + members ---
+  // ====== Phone Progress Label ======
+  if (els.phoneLabel) {
+    const rawProgress = Number(group.progress) || 0;
+    const visual = Math.floor(computeVisualProgress(rawProgress));
+  
+    els.phoneLabel.innerHTML =
+      `進度：${visual}%` +
+      (group.members
+        ? "<br><span style='font-size:14px'>" +
+          Object.values(group.members)
+            .map(m => `• ${m.name}${m.isOwner ? " 👑" : ""}`)
+            .join("<br>") +
+          "</span>"
+        : "");
+  }
+
+
+  // --- Owner check → show/hide rename button ---
+  if (currentGroupId && currentPlayerId) {
+    const memberSnap = await get(
+      ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`)
+    );
+    const member = memberSnap.val();
+    if (els.renameBtn)
+      els.renameBtn.style.display = member?.isOwner ? "block" : "none";
+  }
+
+  // --- Update cupid ---
+  if (els.phoneCupid) {
+    const idx = group.cupidIndex ?? 0;
+    els.phoneCupid.src = cupidVariants[idx];
+    els.phoneCupid.alt = `Cupid of group ${group.name || currentGroupId}`;
   }
 }
-
-
-
 
 // ====== Auth ======
 signInAnonymously(auth).catch(err => console.error("Sign-in failed:", err));
@@ -540,42 +570,43 @@ if (isPhone && currentGroupId) {
 
 // ====== Shake Handling ======
 els.motionBtn?.addEventListener("click", () => {
-  if (typeof DeviceMotionEvent !== "undefined" &&
-      typeof DeviceMotionEvent.requestPermission === "function") {
+  if (
+    typeof DeviceMotionEvent !== "undefined" &&
+    typeof DeviceMotionEvent.requestPermission === "function"
+  ) {
     DeviceMotionEvent.requestPermission().then(res => {
-      if (res === "granted") window.addEventListener("devicemotion", handleMotion);
+      if (res === "granted") {
+        window.addEventListener("devicemotion", handleMotion);
+      }
     });
   } else {
     window.addEventListener("devicemotion", handleMotion);
   }
 });
 
-async function handleMotion(e) {
+
+function handleMotion(e) {
+  // Only allow shakes when the game is playing
   if (currentGameState !== "playing") return;
 
   const acc = e.accelerationIncludingGravity;
   if (!acc) return;
 
-  const strength = Math.sqrt((acc.x||0)**2 + (acc.y||0)**2 + (acc.z||0)**2);
+  const strength = Math.sqrt(
+    (acc.x || 0) ** 2 +
+    (acc.y || 0) ** 2 +
+    (acc.z || 0) ** 2
+  );
 
   if (strength > SHAKE_THRESHOLD && currentGroupId) {
     const now = Date.now();
     if (now - lastShakeTime > SHAKE_COOLDOWN_MS) {
       lastShakeTime = now;
-
-      // Animate cupid locally
+      addGroupShakeTx(currentGroupId);
       animateCupidJump(currentGroupId);
-
-      // --- Phones just read the updated progress from Firebase ---
-      const snap = await get(ref(db, `groups/${currentGroupId}`));
-      const group = snap.val();
-      if (group) updatePhoneView(group);
     }
   }
 }
-
-
-
 
 function addGroupShakeTx(groupId) {
   const gRef = ref(db, `groups/${groupId}`);
@@ -586,8 +617,7 @@ function addGroupShakeTx(groupId) {
     const membersCount = g.members ? Object.keys(g.members).length : 1;
     const BASE_STEP = 5;
     const step = BASE_STEP / Math.sqrt(membersCount);
-
-    const newProgress = Math.min(100, (Number(g.progress) || 0) + step);
+    const newProgress = Math.min(100, (g.progress || 0) + step);
 
     return {
       ...g,
@@ -595,25 +625,21 @@ function addGroupShakeTx(groupId) {
       progress: newProgress,
     };
   })
-  .then((res) => {
-    if (!res.committed) return;
+    .then((res) => {
+      if (!res.committed) return;
 
-    const g = res.snapshot.val();
-    if (!g) return;
+      const g = res.snapshot.val();
+      if (!g) return;
 
-    // ⭐ Update phone view immediately
-    if (!isHost) updatePhoneView(g);
-
-    // ⭐ Winner only set ONCE
-    if (g.progress >= 100 && !g.isWinnerDeclared) {
-      set(ref(db, "winner"), groupId);
-      set(ref(db, `groups/${groupId}/isWinnerDeclared`), true);
-      set(ref(db, "gameState"), "finished");
-    }
-  })
-  .catch((err) => console.error("Shake transaction failed:", err));
+      // ⭐ Winner only set ONCE
+      if (g.progress >= 100 && !g.isWinnerDeclared) {
+        set(ref(db, "winner"), groupId);
+        set(ref(db, `groups/${groupId}/isWinnerDeclared`), true);
+        set(ref(db, "gameState"), "finished");
+      }
+    })
+    .catch((err) => console.error("Shake transaction failed:", err));
 }
-
 
 // ====== Animation ======
 function animateCupidJump(groupId) {
@@ -1454,6 +1480,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
