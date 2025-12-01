@@ -599,7 +599,6 @@ function handleMotion(e) {
 }
 
 
-// ====== Add shake transaction ======
 function addGroupShakeTx(groupId) {
   const gRef = ref(db, `groups/${groupId}`);
 
@@ -624,6 +623,9 @@ function addGroupShakeTx(groupId) {
     const g = res.snapshot.val();
     if (!g) return;
 
+    // ⭐ Update phone view immediately
+    if (!isHost) updatePhoneView(g);
+
     // ⭐ Winner only set ONCE
     if (g.progress >= 100 && !g.isWinnerDeclared) {
       set(ref(db, "winner"), groupId);
@@ -633,6 +635,7 @@ function addGroupShakeTx(groupId) {
   })
   .catch((err) => console.error("Shake transaction failed:", err));
 }
+
 
 // ====== Animation ======
 function animateCupidJump(groupId) {
@@ -1479,6 +1482,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
