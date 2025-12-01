@@ -798,18 +798,14 @@ function computeVisualProgress(raw, trackWidth, groomW = 90, brideW = 200, gap =
   return (p / 100) * maxX; // return px directly
 }
 
-
-
 function updateRanking(groups) {
   const rankingList = document.getElementById("ranking-list");
   if (!rankingList) return;
 
   const sorted = Object.entries(groups)
     .map(([gid, g]) => {
-      // Convert progress to number and clamp 0-100
-      const raw = Math.min(100, Math.max(0, parseFloat(g.progress) || 0));
-      // Visual progress for sorting
-      const visual = raw;
+      const raw = safeProgress(g.progress);
+      const visual = raw; // you could compute a visual transform if needed
       return [gid, { ...g, visualProgress: visual, progress: raw }];
     })
     .sort((a, b) => b[1].visualProgress - a[1].visualProgress);
@@ -888,7 +884,7 @@ function renderGameScene(groups) {
     const memberNames = Object.values(g.members || {}).map(m => m.name).join("、");
     const cupidImg = cupidVariants[g.cupidIndex ?? 0];
 
-    const raw = g.progress || 0;
+    const raw = safeProgress(g.progress);
     const groomX = computeVisualProgress(raw, trackWidth, groomW, brideW, gap);
 
     // Lane container
@@ -1455,6 +1451,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
