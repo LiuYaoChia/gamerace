@@ -786,9 +786,11 @@ onValue(ref(db, "gameState"), snap => {
     }
   }
 });
+
 function safeProgress(value) {
-  const n = Number(value) || 0;
-  return Math.min(100, Math.max(0, n));
+  const n = Number(value);
+  if (isNaN(n) || n < 0) return 0;
+  return Math.min(100, n);
 }
 
 // Compute groom position in pixels along the track
@@ -804,16 +806,13 @@ function updateRanking(groups) {
 
   const sorted = Object.entries(groups)
     .map(([gid, g]) => {
-      const raw = safeProgress(g.progress);
-      const visual = raw; // you could compute a visual transform if needed
-      return [gid, { ...g, visualProgress: visual, progress: raw }];
+      const raw = safeProgress(g.progress); // sanitized
+      return [gid, { ...g, progress: raw }];
     })
-    .sort((a, b) => b[1].visualProgress - a[1].visualProgress);
+    .sort((a, b) => b[1].progress - a[1].progress);
 
   rankingList.innerHTML = sorted
-    .map(([gid, g]) => 
-      `<li>${g.name || `Group ${gid}`}: ${g.progress.toFixed(0)}%</li>`
-    )
+    .map(([gid, g]) => `<li>${g.name || `Group ${gid}`}: ${g.progress.toFixed(0)}%</li>`)
     .join("");
 }
 
@@ -1108,7 +1107,7 @@ onValue(ref(db, "winner"), async (snap) => {
 
     const ranked = Object.entries(groups)
       .map(([id, g]) => {
-        const raw = Number(g.progress) || 0;
+        const raw = safeProgress(g.progress);
         const visual = computeVisualProgress(raw);
         if (visual >= 99.5) {
           // declare winner
@@ -1451,6 +1450,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
