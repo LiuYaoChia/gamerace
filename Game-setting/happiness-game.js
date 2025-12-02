@@ -298,31 +298,28 @@ async function renameGroup(newName) {
 async function updatePhoneView(group) {
   if (!group) return;
 
-  // --- Show group name + progress ---
-  const visual = computeVisualProgress(group.progress || 0);
-  const progressText = `組別「${group.name}」進度: ${Math.floor(visual)}%`;
+  // Real numeric progress
+  const raw = safeProgress(group.progress);
+  const progressPercent = raw.toFixed(0);
 
-  // --- Build members list ---
+  // Build members list
   const members = group.members ? Object.values(group.members) : [];
   let membersHtml = `<div style="margin-top:8px; font-size:14px; text-align:left;">`;
-
   members.forEach(m => {
     membersHtml += `• ${m.name}${m.isOwner ? " 👑" : ""}<br>`;
   });
-
   membersHtml += `</div>`;
 
-  // --- Update phone label with group + members ---
-  // Sanitize by your safeProgress()
-  const raw = safeProgress(group.progress);
-  const progressText = `${raw.toFixed(0)}%`;
-
-  // ⭐ Update phone progress label
+  // ⭐ CORRECT, unified phone label
   if (els.phoneLabel) {
-    els.phoneLabel.textContent = `進度：${progressText}`;
+    els.phoneLabel.innerHTML = `
+      <strong>組別「${group.name}」</strong><br>
+      進度：${progressPercent}%<br>
+      ${membersHtml}
+    `;
   }
 
-  // --- Owner check → show/hide rename button ---
+  // Owner check
   if (currentGroupId && currentPlayerId) {
     const memberSnap = await get(
       ref(db, `groups/${currentGroupId}/members/${currentPlayerId}`)
@@ -332,7 +329,7 @@ async function updatePhoneView(group) {
       els.renameBtn.style.display = member?.isOwner ? "block" : "none";
   }
 
-  // --- Update cupid ---
+  // Update cupid image
   if (els.phoneCupid) {
     const idx = group.cupidIndex ?? 0;
     els.phoneCupid.src = cupidVariants[idx];
@@ -1472,6 +1469,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
