@@ -160,7 +160,7 @@ input, textarea {
   width: calc(100% - 280px);
   margin-right: 280px;
   height: 100vh;                  /* fixed viewport space */
-  min-height: 300px;
+  min-height: 100px;
   padding-left: 20px;            
   padding-right: 0;
   position: relative;
@@ -640,6 +640,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
