@@ -188,13 +188,12 @@ input, textarea {
 
 /* === LANE STYLING === */
 .track-lanes {
+  flex: 1;                 /* takes full height of .track */
   display: flex;
   flex-direction: column;
   justify-content: space-evenly; /* equal gaps between lanes */
   align-items: stretch;
-  height: 80vh;                  /* fill 80% of viewport height */
   width: 100%;
-  position: relative;
 }
 /* 🌊 Gentle ocean ripple animation for all lanes */
 @keyframes waterRipple {
@@ -641,6 +640,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
