@@ -37,7 +37,7 @@ input, textarea {
   border-radius: 6px;
   box-shadow: 0 0 8px rgba(0,0,0,0.2);
 }
-#qr-code img { width: 100px; height: 100px; }
+#qr-code img { width: 200px; height: 200px; }
 
 /* === PLAYER SETUP SCREEN === */
 /* Make #player-setup container flow naturally inside .game-layout */
@@ -641,6 +641,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
