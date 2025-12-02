@@ -164,6 +164,7 @@ input, textarea {
   padding-right: 0;
   position: relative;
   overflow: visible;
+  padding-bottom: 20px;
 }
 
 /* === GROUP TRACK CONTAINER === */
@@ -639,6 +640,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
