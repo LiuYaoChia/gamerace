@@ -897,7 +897,7 @@ function renderGameScene(groups) {
     justifyContent: "space-evenly",
     alignItems: "stretch",
     width: "100%",
-    height: "80vh",
+    height: "100vh",
     overflow: "visible",
   });
 
@@ -1472,6 +1472,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
