@@ -159,7 +159,7 @@ input, textarea {
   align-items: stretch;           /* lanes take full width */
   width: calc(100% - 280px);
   margin-right: 280px;
-  height: 80vh;                  /* fixed viewport space */
+  height: 100vh;                  /* fixed viewport space */
   min-height: 300px;
   padding-left: 20px;            
   padding-right: 0;
@@ -641,6 +641,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
