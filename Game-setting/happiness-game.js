@@ -56,6 +56,7 @@ const els = {
   motionBtn:   document.getElementById("enable-motion"),
   setupScreen: document.getElementById("player-setup"),
   gameScreen:  document.querySelector(".game-container"),
+  gameTitle:  document.querySelector(".game-title"),
   track:       document.getElementById("track"),
   rankList:    document.getElementById("ranking-list"),
   winnerPopup: document.getElementById("winner-popup"),
@@ -795,6 +796,7 @@ onValue(ref(db, "gameState"), snap => {
     if (currentGameState === "lobby") {
       show(els.setupScreen);
       show(els.gameScreen);
+      hide(els.gameTitle);
     }
 
     if (currentGameState === "playing") {
@@ -1469,6 +1471,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
