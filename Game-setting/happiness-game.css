@@ -588,7 +588,7 @@ input, textarea {
 /* === TITLE === */
 .game-title {
   position: relative;
-  z-index: 1000;  /* higher than body::before */
+  z-index: 1;  /* higher than body::before */
   text-align: center;
   font-size: 2rem;
   color: #fff8e1;
@@ -641,6 +641,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
