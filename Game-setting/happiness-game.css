@@ -164,8 +164,7 @@ input, textarea {
   padding-right: 0;
   position: relative;
   overflow: visible;
-  padding-bottom: 20px;
-  padding-top: 20px;
+  padding-bottom: 40px;
 }
 
 /* === GROUP TRACK CONTAINER === */
@@ -192,7 +191,7 @@ input, textarea {
   flex: 1;                 /* takes full height of .track */
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* equal gaps between lanes */
+  justify-content: space-evenly; /* equal gaps between lanes */
   align-items: stretch;
   width: 100%;
 }
@@ -641,6 +640,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
