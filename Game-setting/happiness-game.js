@@ -894,8 +894,9 @@ function renderGameScene(groups) {
     position: "relative",
     display: "flex",
     flexDirection: "column",
-    justifyContent: "space-evenly",
+    justifyContent: "flex-start",
     alignItems: "stretch",
+    gap: "20px"
     width: "100%",
     height: "100vh",
     overflow: "visible",
@@ -920,6 +921,7 @@ function renderGameScene(groups) {
       margin: 10px 0;
       border-radius: 60px;
       overflow: visible;
+      min-height: 200px;
     `;
 
     // Groom
@@ -1472,6 +1474,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
