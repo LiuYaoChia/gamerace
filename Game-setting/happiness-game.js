@@ -896,7 +896,7 @@ function renderGameScene(groups) {
     flexDirection: "column",
     justifyContent: "flex-start",
     alignItems: "stretch",
-    gap: "20px"
+    gap: "20px",
     width: "100%",
     height: "100vh",
     overflow: "visible",
@@ -1474,6 +1474,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
