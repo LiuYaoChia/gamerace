@@ -1133,7 +1133,14 @@ onValue(ref(db, "winner"), async (snap) => {
     const ranked = Object.entries(groups)
       .map(([id, g]) => {
         const raw = safeProgress(g.progress);
-        const visual = computeVisualProgress(raw);
+        const visual = computeVisualProgress(
+          raw,
+          window.innerWidth, // or els.track.offsetWidth
+          90,
+          200,
+          10
+        );
+
         if (visual >= 99.5) {
           // declare winner
         }
@@ -1475,6 +1482,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
