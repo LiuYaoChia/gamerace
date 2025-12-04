@@ -409,6 +409,7 @@ input, textarea {
 /* === Winner Popup (full screen overlay) === */
 #winner-popup {
   position: absolute !important;
+  padding-top: 40px;
   inset: 0; /* cover the whole screen */
   display: none; /* hidden until winner */
   width: 100%;  /* ensure the container spans */
@@ -437,13 +438,13 @@ input, textarea {
   width: 100%; 
   max-width: 600px; 
   gap: 50px;
-  margin: 20px 0;
+  margin: 30px 0;
 }
 
 #winner-scene img {
   width: 110px;
   height: 110px;
-  object-fit: cover;
+  object-fit: contain;
   animation: float 3s ease-in-out infinite;
 }
 
@@ -640,6 +641,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
