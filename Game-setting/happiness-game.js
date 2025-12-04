@@ -887,10 +887,9 @@ function renderGameScene(groups) {
     .sort((a, b) => Number(a[0]) - Number(b[0]));
 
   if (activeGroups.length === 0) return;
-
   const total = activeGroups.length;
-  const trackHeight = Math.max(100, Math.floor((window.innerHeight * 0.8) / total));
-
+  const trackHeight = Math.floor((window.innerHeight - (total - 1) * gap - 120) / total);
+  
   Object.assign(els.track.style, {
     position: "relative",
     display: "flex",
@@ -922,7 +921,7 @@ function renderGameScene(groups) {
       margin: 10px 0;
       border-radius: 60px;
       overflow: visible;
-      min-height: 200px;
+      min-height: 120px;
     `;
 
     // Groom
@@ -1482,6 +1481,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
