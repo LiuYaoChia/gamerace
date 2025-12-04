@@ -1251,7 +1251,7 @@ els.winnerExit?.addEventListener("click", async () => {
     alert("⚠️ 重置過程出現錯誤，請稍後再試。");
   }
 });
-onValue(ref(db, "resetSignal"), (snap) => {
+onValue(ref(db, "resetSignal"), async (snap) => {
   try {
     const ts = snap.val();
     if (!ts) return;
@@ -1259,7 +1259,7 @@ onValue(ref(db, "resetSignal"), (snap) => {
     console.log("Reset signal received:", ts);
 
     if (isPhone) {
-      // reset all phone UI to default lobby screen
+      // reset phone UI
       if (els.phoneView) els.phoneView.style.display = "none";
       if (els.setupScreen) els.setupScreen.style.display = "block";
       if (els.waitingMsg) els.waitingMsg.style.display = "none";
@@ -1267,19 +1267,18 @@ onValue(ref(db, "resetSignal"), (snap) => {
       if (els.phoneCupid) els.phoneCupid.style.display = "none";
       if (els.leaveBtn) els.leaveBtn.style.display = "none";
 
-      // Fetch fresh groups from Firebase
+      // Fetch fresh groups
       const snapGroups = await get(ref(db, "groups"));
       const groups = snapGroups.val() || {};
 
-      // Re-render group choice UI
-      renderGroupsUI(groups); // your existing function to display groups
+      // Render group choice
+      renderGroupsUI(groups);
     }
   } catch (err) {
     console.error("resetSignal handler failed:", err);
-    // fallback full reload
-    // location.reload();
   }
 });
+
 
 // ====== Start / Reset / Exit ======
 async function startGame() {
@@ -1512,3 +1511,4 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
