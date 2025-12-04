@@ -1220,6 +1220,7 @@ els.winnerExit?.addEventListener("click", async () => {
     // 3️⃣ Clear winner and reset game state
     await remove(ref(db, "winner"));
     await set(ref(db, "gameState"), "lobby");
+    await set(ref(db, "resetSignal"), Date.now());
 
     // 4️⃣ Host UI back to lobby
     if (!isPhone) {
@@ -1248,6 +1249,31 @@ els.winnerExit?.addEventListener("click", async () => {
   } catch (err) {
     console.error("Winner exit failed:", err);
     alert("⚠️ 重置過程出現錯誤，請稍後再試。");
+  }
+});
+onValue(ref(db, "resetSignal"), (snap) => {
+  try {
+    const ts = snap.val();
+    if (!ts) return;
+
+    console.log("Reset signal received:", ts);
+
+    if (isPhone) {
+      // reset all phone UI to default lobby screen
+      if (els.phoneView) els.phoneView.style.display = "none";
+      if (els.setupScreen) els.setupScreen.style.display = "block";
+      if (els.waitingMsg) els.waitingMsg.style.display = "none";
+      if (els.phoneLabel) els.phoneLabel.textContent = "none";
+      if (els.phoneCupid) els.phoneCupid.style.display = "none";
+      if (els.leaveBtn) els.leaveBtn.style.display = "none";
+
+      // optionally, reload the page if UI still misbehaves
+      // location.reload();
+    }
+  } catch (err) {
+    console.error("resetSignal handler failed:", err);
+    // fallback full reload
+    // location.reload();
   }
 });
 
@@ -1482,6 +1508,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
