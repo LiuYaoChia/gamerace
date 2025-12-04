@@ -1241,9 +1241,9 @@ els.winnerExit?.addEventListener("click", async () => {
       if (els.phoneCupid) els.phoneCupid.style.display = "none";
       if (els.leaveBtn) els.leaveBtn.style.display = "none";
       console.log("📱 Phone also returned to lobby.");
-      // **Force reload page**
-      location.reload();        // <—— HERE
     }
+        // 🔥 **Force reload for EVERY device**
+    setTimeout(() => location.reload(), 300);
     
     alert("🏁 遊戲已完全重置！所有組別與玩家已返回大廳。");
   } catch (err) {
@@ -1484,6 +1484,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
