@@ -1237,7 +1237,10 @@ els.winnerExit?.addEventListener("click", async () => {
       if (els.leaveBtn) els.leaveBtn.style.display = "none";
       console.log("📱 Phone also returned to lobby.");
     }
-
+    
+    // 🔄 6️⃣ **Force reload page**
+    location.reload();        // <—— HERE
+    
     alert("🏁 遊戲已完全重置！所有組別與玩家已返回大廳。");
   } catch (err) {
     console.error("Winner exit failed:", err);
@@ -1268,14 +1271,10 @@ async function startGame() {
   els.qrEl.style.display     = "none";
 }
 
+// Host start button (NO PASSWORD)
 if (isHost) {
   els.startBtn?.addEventListener("click", async () => {
-    const pw = prompt("請輸入管理密碼才能開始遊戲:");
-    if (pw === "1234") {
-      await startGame(); 
-    } else {
-      alert("密碼錯誤！");
-    }
+    await startGame();   // <-- directly start, no prompt
   });
 }
 
@@ -1481,6 +1480,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
