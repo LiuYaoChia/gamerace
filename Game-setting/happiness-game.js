@@ -1221,9 +1221,6 @@ els.winnerExit?.addEventListener("click", async () => {
     await remove(ref(db, "winner"));
     await set(ref(db, "gameState"), "lobby");
 
-    // ⭐ NEW: trigger global reload
-    await set(ref(db, "resetFlag"), Date.now());
-
     // 4️⃣ Host UI back to lobby
     if (!isPhone) {
       els.winnerPopup?.style.setProperty("display", "none");
@@ -1251,12 +1248,6 @@ els.winnerExit?.addEventListener("click", async () => {
     console.error("Winner exit failed:", err);
     alert("⚠️ 重置過程出現錯誤，請稍後再試。");
   }
-});
-
-onValue(ref(db, "resetFlag"), (snap) => {
-  if (!snap.exists()) return;
-  console.log("🔄 Global reset detected — reloading...");
-  location.reload();
 });
 
 // ====== Start / Reset / Exit ======
@@ -1490,6 +1481,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
