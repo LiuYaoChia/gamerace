@@ -1267,8 +1267,12 @@ onValue(ref(db, "resetSignal"), (snap) => {
       if (els.phoneCupid) els.phoneCupid.style.display = "none";
       if (els.leaveBtn) els.leaveBtn.style.display = "none";
 
-      // optionally, reload the page if UI still misbehaves
-      // location.reload();
+      // Fetch fresh groups from Firebase
+      const snapGroups = await get(ref(db, "groups"));
+      const groups = snapGroups.val() || {};
+
+      // Re-render group choice UI
+      renderGroupsUI(groups); // your existing function to display groups
     }
   } catch (err) {
     console.error("resetSignal handler failed:", err);
@@ -1508,45 +1512,3 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
