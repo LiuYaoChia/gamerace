@@ -937,18 +937,23 @@ function renderGameScene(groups) {
 
     // Label
     const label = document.createElement("div");
+    const laneRect = lane.getBoundingClientRect();
     label.className = "lane-label";
     label.innerHTML = `
-      <strong style="font-size:18px;">${groupName}</strong><br>
-      <span style="font-size:14px;">${memberNames}</span>
+      <strong style="font-size:20px;">${groupName}</strong><br>
+      <span style="font-size:16px;">${memberNames}</span>
     `;
     label.style.cssText = `
       position: absolute;
-      left: 20px;
-      top: 10px;
-      color: #fff;
+      left: 40px;
+      top: laneRect.top + 10 + "px";
+      font-weight: 700;
+      padding: 6px 12px;
+      background: rgba(0,0,0,0.55);
+      border-radius: 8px;
+      backdrop-filter: blur(3px);
       text-shadow: 1px 1px 2px #000;
-      z-index: 3;
+      z-index: 99;
     `;
 
     lane.appendChild(groom);
@@ -1480,6 +1485,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
