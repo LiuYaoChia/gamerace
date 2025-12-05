@@ -945,7 +945,7 @@ function renderGameScene(groups) {
     `;
     label.style.cssText = `
       position: absolute;
-      left: 40px;
+      left: 60px;
       top: laneRect.top + 10 + "px";
       font-weight: 700;
       padding: 6px 12px;
@@ -1512,5 +1512,6 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
