@@ -949,10 +949,11 @@ function renderGameScene(groups) {
       top: laneRect.top + 10 + "px";
       font-weight: 700;
       padding: 6px 12px;
-      background: rgba(0,0,0,0.55);
+      background: rgba(255, 255, 255, 0.75); /* translucent white */
+      color: #000; /* black text */
       border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25); /* helps visibility */
       backdrop-filter: blur(3px);
-      text-shadow: 1px 1px 2px #000;
       z-index: 99;
     `;
 
@@ -979,7 +980,7 @@ function renderGameScene(groups) {
 
   Object.assign(bride.style, {
     position: "absolute",
-    right: "80px",
+    right: "50px",
     top: "50%",
     transform: "translateY(-50%)",
     height: `${brideW}px`,
@@ -1511,4 +1512,5 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
