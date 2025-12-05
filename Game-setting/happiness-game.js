@@ -1252,34 +1252,6 @@ els.winnerExit?.addEventListener("click", async () => {
     alert("⚠️ 重置過程出現錯誤，請稍後再試。");
   }
 });
-onValue(ref(db, "resetSignal"), async (snap) => {
-  try {
-    const ts = snap.val();
-    if (!ts) return;
-
-    console.log("Reset signal received:", ts);
-
-    if (isPhone) {
-      // reset phone UI
-      if (els.phoneView) els.phoneView.style.display = "none";
-      if (els.setupScreen) els.setupScreen.style.display = "block";
-      if (els.waitingMsg) els.waitingMsg.style.display = "none";
-      if (els.phoneLabel) els.phoneLabel.textContent = "none";
-      if (els.phoneCupid) els.phoneCupid.style.display = "none";
-      if (els.leaveBtn) els.leaveBtn.style.display = "none";
-
-      // Fetch fresh groups
-      const snapGroups = await get(ref(db, "groups"));
-      const groups = snapGroups.val() || {};
-
-      // Render group choice
-      renderGroupsUI(groups);
-    }
-  } catch (err) {
-    console.error("resetSignal handler failed:", err);
-  }
-});
-
 
 // ====== Start / Reset / Exit ======
 async function startGame() {
@@ -1512,6 +1484,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
