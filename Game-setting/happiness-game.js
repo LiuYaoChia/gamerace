@@ -64,7 +64,7 @@ const els = {
   winnerExit:  document.getElementById("winner-exit"),
   phoneView:   document.getElementById("phone-view"),
   phoneCupid:  document.getElementById("phone-cupid"),
-  phone:  document.getElementById("phone-label"),
+  phoneLabel:  document.getElementById("phone-label"),
   leaveBtn:    document.getElementById("leave-group-btn"),
   renameBtn:   document.getElementById("rename-group-btn"),
   qrEl:        document.getElementById("qr-code"),
@@ -1483,6 +1483,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
