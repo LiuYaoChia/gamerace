@@ -1221,7 +1221,6 @@ els.winnerExit?.addEventListener("click", async () => {
     // 3️⃣ Clear winner and reset game state
     await remove(ref(db, "winner"));
     await set(ref(db, "gameState"), "lobby");
-    await set(ref(db, "resetSignal"), Date.now());
 
     // 4️⃣ Host UI back to lobby
     if (!isPhone) {
@@ -1484,6 +1483,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
