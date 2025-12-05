@@ -1,4 +1,4 @@
-co// ====== Firebase Setup ======
+// ====== Firebase Setup ======
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getDatabase, ref, set, onValue, get, push, remove, update, runTransaction, onDisconnect 
@@ -1512,6 +1512,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
