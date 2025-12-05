@@ -1,4 +1,4 @@
-// ====== Firebase Setup ======
+co// ====== Firebase Setup ======
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
   getDatabase, ref, set, onValue, get, push, remove, update, runTransaction, onDisconnect 
@@ -818,7 +818,7 @@ function safeProgress(value) {
 }
 
 // Compute groom position in pixels along the track
-function computeVisualProgress(raw, trackWidth = 300, groomW = 90, brideW = 200, gap = 10) {
+function computeVisualProgress(raw, trackWidth = 300, groomW = 90, brideW = 200, gap = 5) {
   const p = safeProgress(raw); // 0–100
   const w = Number(trackWidth) || 300; // fallback if trackWidth is 0/undefined
   const maxX = Math.max(0, w - (groomW + brideW + gap));
@@ -1512,6 +1512,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
