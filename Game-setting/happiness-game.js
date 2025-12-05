@@ -64,7 +64,7 @@ const els = {
   winnerExit:  document.getElementById("winner-exit"),
   phoneView:   document.getElementById("phone-view"),
   phoneCupid:  document.getElementById("phone-cupid"),
-  phoneLabel:  document.getElementById("phone-label"),
+  phone:  document.getElementById("phone-label"),
   leaveBtn:    document.getElementById("leave-group-btn"),
   renameBtn:   document.getElementById("rename-group-btn"),
   qrEl:        document.getElementById("qr-code"),
@@ -949,7 +949,7 @@ function renderGameScene(groups) {
       top: laneRect.top + 10 + "px";
       font-weight: 700;
       padding: 6px 12px;
-      background: rgba(255, 255, 255, 0.5); /* translucent white */
+      background: rgba(255, 255, 255, 0.3); /* translucent white */
       color: #000; /* black text */
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.25); /* helps visibility */
@@ -1512,6 +1512,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
