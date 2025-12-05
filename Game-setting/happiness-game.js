@@ -896,7 +896,7 @@ function renderGameScene(groups) {
     flexDirection: "column",
     justifyContent: "flex-start",
     alignItems: "stretch",
-    gap: "20px",
+    gap: "8px",
     width: "100%",
     height: "100vh",
     overflow: "visible",
@@ -918,7 +918,7 @@ function renderGameScene(groups) {
     lane.style.cssText = `
       position: relative;
       height: ${trackHeight}px;
-      margin: 10px 0;
+      margin: 4px 0;
       border-radius: 60px;
       overflow: visible;
       min-height: 120px;
@@ -1512,6 +1512,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
