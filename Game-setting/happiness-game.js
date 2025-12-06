@@ -1164,7 +1164,6 @@ onValue(ref(db, "winner"), async (snap) => {
     // --- Ranking (Top 3) ---
     const groupsSnap = await get(ref(db, "groups"));
     const groups = groupsSnap.val() || {};
-
     const ranked = Object.entries(groups)
       .map(([id, g]) => {
         const raw = safeProgress(g.progress);
@@ -1175,8 +1174,9 @@ onValue(ref(db, "winner"), async (snap) => {
           200,
           1
         );
-
-        if (visual >= 99.99) {
+    const maxX = computeVisualProgress(100, window.innerWidth, 90, 200, 1);
+    const COLLISION_THRESHOLD = 10;
+        if (visual >= maxX - COLLISION_THRESHOLD) {
           // declare winner
         }
         return {
@@ -1517,6 +1517,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
