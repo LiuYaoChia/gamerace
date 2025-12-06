@@ -867,7 +867,7 @@ function renderGameScene(groups) {
   // Groom & bride constants
   const groomW = 90;
   const brideW = 200;
-  const gap = 10;
+  const gap = 1;
 
   const trackWidth = els.track.offsetWidth || window.innerWidth;
 
@@ -1517,6 +1517,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
