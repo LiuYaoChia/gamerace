@@ -76,6 +76,7 @@ let currentPlayerId = null;
 let currentGroupId   = null;
 let lastShakeTime   = 0;
 
+
 // ===== Block Android keyboard from triggering resize resets =====
 let ignoreResize = false;
 window.addEventListener("resize", () => {
@@ -1022,11 +1023,23 @@ onValue(ref(db, "groups"), (snap) => {
   }
 });
 
+// ====== Load game sounds ======
+let sStart, sWin;
+if (!isPhone) {   // <=== Host only
+  sStart = new Audio("img/game_start.mp3");
+  sWin = new Audio("img/Winner.mp3");
+}
 
+if (isPhone) {
+  window.Audio = undefined;   // disable all accidental audio calls
+}
 
-
-
-
+function playWinnertSound() {
+  if (!isPhone && sWin) sWin.play().catch(()=>{});
+}
+function playStartSound() {
+  if (!isPhone && sStart) sStart.play().catch(()=>{});
+}
 // ====== Winner popup logic (with highlighted ranking and clean layout) ======
 onValue(ref(db, "winner"), async (snap) => {
   const winnerId = snap.val();
@@ -1200,6 +1213,7 @@ onValue(ref(db, "winner"), async (snap) => {
   } catch (err) {
     console.error("Winner fetch failed:", err);
   }
+  playWinnertSound()
 });
 
 
@@ -1272,6 +1286,7 @@ async function startGame() {
   els.setupScreen.style.display = "none";
   els.gameScreen.style.display = "block";
   els.qrEl.style.display     = "none";
+  playStartSound()
 }
 
 // Host start button (NO PASSWORD)
@@ -1483,6 +1498,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
