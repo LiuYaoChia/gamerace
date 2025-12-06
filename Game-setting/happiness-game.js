@@ -1173,7 +1173,7 @@ onValue(ref(db, "winner"), async (snap) => {
           window.innerWidth, // or els.track.offsetWidth
           90,
           200,
-          10
+          5
         );
 
         if (visual >= 99.5) {
@@ -1517,6 +1517,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
