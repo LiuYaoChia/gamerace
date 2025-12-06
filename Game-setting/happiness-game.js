@@ -819,7 +819,7 @@ function safeProgress(value) {
 }
 
 // Compute groom position in pixels along the track
-function computeVisualProgress(raw, trackWidth = 300, groomW = 90, brideW = 200, gap = 5) {
+function computeVisualProgress(raw, trackWidth = 300, groomW = 90, brideW = 200, gap = 1) {
   const p = safeProgress(raw); // 0–100
   const w = Number(trackWidth) || 300; // fallback if trackWidth is 0/undefined
   const maxX = Math.max(0, w - (groomW + brideW + gap));
@@ -1173,7 +1173,7 @@ onValue(ref(db, "winner"), async (snap) => {
           window.innerWidth, // or els.track.offsetWidth
           90,
           200,
-          5
+          1
         );
 
         if (visual >= 99.5) {
@@ -1517,6 +1517,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
