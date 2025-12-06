@@ -616,17 +616,36 @@ function addGroupShakeTx(groupId) {
       progress: newProgress,
     };
   })
-    .then((res) => {
+    .then(async (res) => {
       if (!res.committed) return;
 
       const g = res.snapshot.val();
       if (!g) return;
 
-      // ⭐ Winner only set ONCE
-      if (g.progress >= 100 && !g.isWinnerDeclared) {
-        set(ref(db, "winner"), groupId);
-        set(ref(db, `groups/${groupId}/isWinnerDeclared`), true);
-        set(ref(db, "gameState"), "finished");
+      // 🛑 if winner already exist, do nothing
+      const winnerSnap = await get(ref(db, "winner"));
+      if (winnerSnap.exists()) return;
+
+      // --- 🧮 Visual collision detection ---
+      const raw = Number(g.progress) || 0;
+
+      // Use your exact groom/bride sizes
+      const groomW = 90;
+      const brideW = 200;
+      const gap = 1;
+
+      // Use the real host track width (fallback to window width)
+      const trackWidth = window.innerWidth;
+
+      const visual = computeVisualProgress(raw, trackWidth, groomW, brideW, gap);
+      const maxX = computeVisualProgress(100, trackWidth, groomW, brideW, gap);
+
+      const COLLISION_THRESHOLD = 10; // pixels to consider “touching”
+
+      // 🏆 Winner detected when groom nearly touches bride
+      if (visual >= maxX - COLLISION_THRESHOLD) {
+        console.log("🎉 Winner detected by shake:", groupId);
+        await set(ref(db, "winner"), groupId);
       }
     })
     .catch((err) => console.error("Shake transaction failed:", err));
@@ -1174,11 +1193,6 @@ onValue(ref(db, "winner"), async (snap) => {
           200,
           1
         );
-    const maxX = computeVisualProgress(100, window.innerWidth, 90, 200, 1);
-    const COLLISION_THRESHOLD = 5;
-        if (visual >= maxX - COLLISION_THRESHOLD) {
-          // declare winner
-        }
         return {
           id,
           name: g.name || `Group ${id}`,
@@ -1517,6 +1531,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
