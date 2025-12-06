@@ -1027,7 +1027,7 @@ onValue(ref(db, "groups"), (snap) => {
 let sStart, sWin;
 if (!isPhone) {   // <=== Host only
   sStart = new Audio("img/game_start.mp3");
-  sWin = new Audio("img/Winner.mp3");
+  sWin = new Audio("img/winner.mp3");
 }
 
 if (isPhone) {
@@ -1040,6 +1040,23 @@ function playWinnertSound() {
 function playStartSound() {
   if (!isPhone && sStart) sStart.play().catch(()=>{});
 }
+function stopStartSound() {
+  if (isHost && sStart) {
+    try {
+      sStart.pause();
+      sStart.currentTime = 0;  // reset to beginning
+    } catch (e) {}
+  }
+}
+function stopWinnerSound() {
+  if (isHost && sWin) {
+    try {
+      sStart.pause();
+      sStart.currentTime = 0;  // reset to beginning
+    } catch (e) {}
+  }
+}
+
 // ====== Winner popup logic (with highlighted ranking and clean layout) ======
 onValue(ref(db, "winner"), async (snap) => {
   const winnerId = snap.val();
@@ -1214,6 +1231,7 @@ onValue(ref(db, "winner"), async (snap) => {
     console.error("Winner fetch failed:", err);
   }
   playWinnertSound()
+  stopStartSound()
 });
 
 
@@ -1264,6 +1282,7 @@ els.winnerExit?.addEventListener("click", async () => {
     console.error("Winner exit failed:", err);
     alert("⚠️ 重置過程出現錯誤，請稍後再試。");
   }
+  stopWinnerSound()
 });
 
 // ====== Start / Reset / Exit ======
@@ -1498,6 +1517,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
