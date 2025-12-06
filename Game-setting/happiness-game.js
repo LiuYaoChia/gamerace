@@ -1175,7 +1175,7 @@ onValue(ref(db, "winner"), async (snap) => {
           1
         );
     const maxX = computeVisualProgress(100, window.innerWidth, 90, 200, 1);
-    const COLLISION_THRESHOLD = 10;
+    const COLLISION_THRESHOLD = 5;
         if (visual >= maxX - COLLISION_THRESHOLD) {
           // declare winner
         }
@@ -1517,6 +1517,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
