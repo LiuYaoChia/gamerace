@@ -961,7 +961,7 @@ function renderGameScene(groups) {
     groom.style.transform = "translateY(-50%)";
     groom.style.height = `${groomW}px`;
     groom.style.transition = "left 0.4s ease-out";
-    groom.style.left = `${visual}px`;
+    groom.style.left = `${groomX}px`;
 
     // Label
     const label = document.createElement("div");
@@ -1539,6 +1539,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
