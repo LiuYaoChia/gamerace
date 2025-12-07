@@ -627,30 +627,13 @@ async function addGroupShakeTx(groupId) {
     const winnerSnap = await get(ref(db, "winner"));
     if (winnerSnap.exists()) return;
 
-    // --- Visual calculation ---
-    const raw = Number(g.progress) || 0;
-    const groomW = 90;
-    const brideW = 200;
-    const gap = 1;
-
-    // Dynamically read track width from DOM
-    let trackWidth = els.track?.offsetWidth || 1366;
-    trackWidth -= 20; // subtract left padding
-
-    const visual = computeVisualProgress(raw, trackWidth, groomW, brideW, gap);
-
     // --- Winner detection based on raw progress ---
     const WIN_THRESHOLD = 100; // 99% progress needed
     if (raw >= WIN_THRESHOLD) {
       console.log("🎉 Winner detected by shake:", groupId);
       await set(ref(db, "winner"), groupId);
+      await set(ref(db, `groups/${groupId}/progress`), 100); // ensure 100%
     }
-
-    // Optional: update groom element visually
-    if (els.groom) {
-      els.groom.style.left = `${visual}px`;
-    }
-  })
   .catch((err) => console.error("Shake transaction failed:", err));
 }
 
@@ -1540,6 +1523,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
