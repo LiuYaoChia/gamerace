@@ -634,8 +634,11 @@ function addGroupShakeTx(groupId) {
       const brideW = 200;
       const gap = 1;
 
-      // Use the real host track width (fallback to window width)
-      const trackWidth = window.innerWidth - 280;
+      // get real pixel width of track container
+      let trackWidth = els.track?.offsetWidth || window.innerWidth;
+
+      // subtract left padding because characters don't move inside padding
+      trackWidth -= 20;
 
       const visual = computeVisualProgress(raw, trackWidth, groomW, brideW, gap);
       const maxX = computeVisualProgress(100, trackWidth, groomW, brideW, gap);
@@ -1531,6 +1534,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
