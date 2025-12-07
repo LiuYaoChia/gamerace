@@ -26,8 +26,8 @@ const isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const isHost = !isPhone; // desktop can be host
 
 // ====== Config ======
-const SHAKE_COOLDOWN_MS  = 150;
-const SHAKE_THRESHOLD    = 10;
+const SHAKE_COOLDOWN_MS  = 400;
+const SHAKE_THRESHOLD    = 15;
 
 const cupidVariants = [
   "img/pinkboat_0.png","img/blackboat_0.png","img/redboat_0.png",
@@ -1521,6 +1521,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
