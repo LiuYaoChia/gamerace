@@ -600,14 +600,14 @@ function handleMotion(e) {
 }
 
 // Function to handle a shake transaction for a group
-async function addGroupShakeTx(groupId) {
+function addGroupShakeTx(groupId) {
   const gRef = ref(db, `groups/${groupId}`);
 
   runTransaction(gRef, (g) => {
     if (!g) return g;
 
     const membersCount = g.members ? Object.keys(g.members).length : 1;
-    const BASE_STEP = 3;
+    const BASE_STEP = 5;
     const step = BASE_STEP / Math.sqrt(membersCount);
     const newProgress = Math.min(100, (g.progress || 0) + step);
 
@@ -617,26 +617,22 @@ async function addGroupShakeTx(groupId) {
       progress: newProgress,
     };
   })
-  .then(async (res) => {
+  .then((res) => {
     if (!res.committed) return;
 
     const g = res.snapshot.val();
     if (!g) return;
 
-    // Skip if winner already exists
-    const winnerSnap = await get(ref(db, "winner"));
-    if (winnerSnap.exists()) return;
-
-    // --- Winner detection based on raw progress ---
-    const WIN_THRESHOLD = 100; // 99% progress needed
-    if (raw >= WIN_THRESHOLD) {
-      console.log("🎉 Winner detected by shake:", groupId);
-      await set(ref(db, "winner"), groupId);
-      await set(ref(db, `groups/${groupId}/progress`), 100); // ensure 100%
+    // ⭐ Winner only set ONCE
+    if (g.progress >= 100 && !g.isWinnerDeclared) {
+      set(ref(db, "winner"), groupId);
+      set(ref(db, `groups/${groupId}/isWinnerDeclared`), true);
+      set(ref(db, "gameState"), "finished");
     }
   })
   .catch((err) => console.error("Shake transaction failed:", err));
 }
+
 
 // ====== Animation ======
 function animateCupidJump(groupId) {
@@ -1524,6 +1520,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
