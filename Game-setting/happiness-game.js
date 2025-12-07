@@ -607,7 +607,7 @@ async function addGroupShakeTx(groupId) {
     if (!g) return g;
 
     const membersCount = g.members ? Object.keys(g.members).length : 1;
-    const BASE_STEP = 1;
+    const BASE_STEP = 3;
     const step = BASE_STEP / Math.sqrt(membersCount);
     const newProgress = Math.min(100, (g.progress || 0) + step);
 
@@ -932,8 +932,13 @@ function renderGameScene(groups) {
     const cupidImg = cupidVariants[g.cupidIndex ?? 0];
 
     const raw = safeProgress(g.progress);
+    const groomW = 90;
+    const brideW = 200;
+    const gap = 1;
+     // Dynamically read track width, fallback to 1366 (your laptop)
+    let trackWidth = els.track?.offsetWidth || 1366;
+    trackWidth -= 20; // subtract left padding
     const groomX = computeVisualProgress(raw, trackWidth, groomW, brideW, gap);
-
     // Lane container
     const lane = document.createElement("div");
     lane.className = "lane";
@@ -956,7 +961,7 @@ function renderGameScene(groups) {
     groom.style.transform = "translateY(-50%)";
     groom.style.height = `${groomW}px`;
     groom.style.transition = "left 0.4s ease-out";
-    groom.style.left = `${Math.min(groomX, trackWidth - brideW - groomW - gap)}px`;
+    groom.style.left = `${visual}px`;
 
     // Label
     const label = document.createElement("div");
@@ -1534,6 +1539,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
