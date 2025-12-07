@@ -627,6 +627,7 @@ function addGroupShakeTx(groupId) {
     if (g.progress >= 100 && !g.isWinnerDeclared) {
       set(ref(db, "winner"), groupId);
       set(ref(db, `groups/${groupId}/isWinnerDeclared`), true);
+      set(ref(db, `groups/${groupId}/winTime`), t);
       set(ref(db, "gameState"), "finished");
     }
   })
@@ -1168,30 +1169,25 @@ onValue(ref(db, "winner"), async (snap) => {
     if (!alreadyExists) {
       await push(historyRef, { groupId: winnerId, name, timestamp: Date.now() });
     }
-
     // --- Ranking (Top 3) ---
     const groupsSnap = await get(ref(db, "groups"));
     const groups = groupsSnap.val() || {};
-    const ranked = Object.entries(groups)
-      .map(([id, g]) => {
-        const raw = safeProgress(g.progress);
-        const visual = computeVisualProgress(
-          raw,
-          window.innerWidth, // or els.track.offsetWidth
-          90,
-          200,
-          1
-        );
-        return {
-          id,
-          name: g.name || `Group ${id}`,
-          progress: raw,            // <-- required for % display
-          visualProgress: visual,   // <-- consistent with track
-        };
-      })
-      .sort((a, b) => b.visualProgress - a.visualProgress)
-      .slice(0, 3);
 
+    const ranked = Object.entries(groups)
+      .map(([id, g]) => ({
+        id,
+        name: g.name || `Group ${id}`,
+        progress: safeProgress(g.progress),  // 0–100
+        winTime: g.winTime || Infinity       // earlier is better
+      }))
+      .sort((a, b) => {
+        // 1️⃣ Sort by progress
+        if (b.progress !== a.progress) return b.progress - a.progress;
+
+        // 2️⃣ If tied (e.g., both 100%), earliest winTime wins
+        return a.winTime - b.winTime;
+      })
+      .slice(0, 3);
 
     let rankContainer = document.getElementById("winner-ranking");
     if (!rankContainer) {
@@ -1520,6 +1516,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
