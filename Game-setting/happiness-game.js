@@ -640,7 +640,7 @@ async function addGroupShakeTx(groupId) {
     const visual = computeVisualProgress(raw, trackWidth, groomW, brideW, gap);
 
     // --- Winner detection based on raw progress ---
-    const WIN_THRESHOLD = 99; // 99% progress needed
+    const WIN_THRESHOLD = 100; // 99% progress needed
     if (raw >= WIN_THRESHOLD) {
       console.log("🎉 Winner detected by shake:", groupId);
       await set(ref(db, "winner"), groupId);
@@ -841,10 +841,10 @@ function safeProgress(value) {
 }
 
 // Compute groom position in pixels along the track
-function computeVisualProgress(raw, trackWidth = 300, groomW = 90, brideW = 200, gap = 1) {
+function computeVisualProgress(raw, trackWidth = 1366, groomW = 90, brideW = 200, gap = 1, extraOffset = 10) {
   const p = safeProgress(raw); // 0–100
-  const w = Number(trackWidth) || 300; // fallback if trackWidth is 0/undefined
-  const maxX = Math.max(0, w - (groomW + brideW + gap));
+  const w = Number(trackWidth) || 1366; // fallback if trackWidth is 0/undefined
+  const maxX = Math.max(0, w - (groomW + brideW + gap)+ extraOffset);
   return (p / 100) * maxX;
 }
 
@@ -935,10 +935,11 @@ function renderGameScene(groups) {
     const groomW = 90;
     const brideW = 200;
     const gap = 1;
+    const extraOffset = 10;
      // Dynamically read track width, fallback to 1366 (your laptop)
     let trackWidth = els.track?.offsetWidth || 1366;
     trackWidth -= 20; // subtract left padding
-    const groomX = computeVisualProgress(raw, trackWidth, groomW, brideW, gap);
+    const groomX = computeVisualProgress(raw, trackWidth, groomW, brideW, gap, extraOffset);
     // Lane container
     const lane = document.createElement("div");
     lane.className = "lane";
@@ -1539,6 +1540,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
