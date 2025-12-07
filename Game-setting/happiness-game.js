@@ -606,7 +606,7 @@ function addGroupShakeTx(groupId) {
     if (!g) return g;
     const membersCount = g.members ? Object.keys(g.members).length : 1;
     const BASE_STEP = 3;
-    const step = BASE_STEP * multiplier / Math.sqrt(membersCount);
+    const step = BASE_STEP / Math.sqrt(membersCount);
 
     const oldProgress = g.progress || 0;
     const newProgress = Math.min(100, oldProgress + step);
@@ -1520,6 +1520,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
