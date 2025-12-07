@@ -604,6 +604,7 @@ function addGroupShakeTx(groupId) {
 
   runTransaction(gRef, (g) => {
     if (!g) return g;
+
     const membersCount = g.members ? Object.keys(g.members).length : 1;
     const BASE_STEP = 3;
     const step = BASE_STEP / Math.sqrt(membersCount);
@@ -611,7 +612,7 @@ function addGroupShakeTx(groupId) {
     const oldProgress = g.progress || 0;
     const newProgress = Math.min(100, oldProgress + step);
 
-    // ⭐ Save winTime EXACTLY when progress hits 100 (first time only)
+    // ⭐ Save winTime EXACTLY once when reaching 100%
     const now = Date.now();
     const shouldSetWinTime = newProgress >= 100 && !g.winTime;
 
@@ -628,15 +629,25 @@ function addGroupShakeTx(groupId) {
     const g = res.snapshot.val();
     if (!g) return;
 
-    // ⭐ Winner only set ONCE
-    if (g.progress >= 100 && !g.isWinnerDeclared) {
-      set(ref(db, "winner"), groupId);
-      set(ref(db, `groups/${groupId}/isWinnerDeclared`), true);
-      set(ref(db, "gameState"), "finished");
+    // ⭐ When progress reached 100%, try to claim winner atomically
+    if (g.progress >= 100) {
+      const winnerRef = ref(db, "winner");
+
+      runTransaction(winnerRef, (currentWinner) => {
+        if (currentWinner) return currentWinner; // Winner already locked
+        return groupId;                          // We claim winner slot
+      }).then((winRes) => {
+        if (winRes.committed && winRes.snapshot.val() === groupId) {
+          // 🎉 We successfully became the winner
+          set(ref(db, `groups/${groupId}/isWinnerDeclared`), true);
+          set(ref(db, "gameState"), "finished");
+        }
+      });
     }
   })
   .catch((err) => console.error("Shake transaction failed:", err));
 }
+
 
 
 // ====== Animation ======
@@ -1520,6 +1531,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
