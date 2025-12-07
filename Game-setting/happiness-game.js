@@ -599,12 +599,11 @@ function handleMotion(e) {
 }
 
 // Function to handle a shake transaction for a group
-function addGroupShakeTx(groupId, strength = 15) {
+function addGroupShakeTx(groupId) {
   const gRef = ref(db, `groups/${groupId}`);
 
   runTransaction(gRef, (g) => {
     if (!g) return g;
-    const multiplier = Math.min(3, strength / 20);   // 1x → 3x speed
     const membersCount = g.members ? Object.keys(g.members).length : 1;
     const BASE_STEP = 3;
     const step = BASE_STEP * multiplier / Math.sqrt(membersCount);
@@ -1521,6 +1520,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
