@@ -635,7 +635,7 @@ function addGroupShakeTx(groupId) {
       const gap = 1;
 
       // get real pixel width of track container
-      let trackWidth = els.track?.offsetWidth || window.innerWidth;
+      let trackWidth = els.track?.offsetWidth;
 
       // subtract left padding because characters don't move inside padding
       trackWidth -= 20;
@@ -1534,6 +1534,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
