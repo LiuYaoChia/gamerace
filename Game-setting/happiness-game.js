@@ -634,6 +634,7 @@ async function addGroupShakeTx(groupId) {
       await set(ref(db, "winner"), groupId);
       await set(ref(db, `groups/${groupId}/progress`), 100); // ensure 100%
     }
+  })
   .catch((err) => console.error("Shake transaction failed:", err));
 }
 
@@ -1523,6 +1524,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
