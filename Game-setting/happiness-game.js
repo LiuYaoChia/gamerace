@@ -599,7 +599,8 @@ function handleMotion(e) {
   }
 }
 
-function addGroupShakeTx(groupId) {
+// Function to handle a shake transaction for a group
+async function addGroupShakeTx(groupId) {
   const gRef = ref(db, `groups/${groupId}`);
 
   runTransaction(gRef, (g) => {
@@ -616,42 +617,41 @@ function addGroupShakeTx(groupId) {
       progress: newProgress,
     };
   })
-    .then(async (res) => {
-      if (!res.committed) return;
+  .then(async (res) => {
+    if (!res.committed) return;
 
-      const g = res.snapshot.val();
-      if (!g) return;
+    const g = res.snapshot.val();
+    if (!g) return;
 
-      // 🛑 if winner already exist, do nothing
-      const winnerSnap = await get(ref(db, "winner"));
-      if (winnerSnap.exists()) return;
+    // Skip if winner already exists
+    const winnerSnap = await get(ref(db, "winner"));
+    if (winnerSnap.exists()) return;
 
-      // --- 🧮 Visual collision detection ---
-      const raw = Number(g.progress) || 0;
+    // --- Visual calculation ---
+    const raw = Number(g.progress) || 0;
+    const groomW = 90;
+    const brideW = 200;
+    const gap = 1;
 
-      // Use your exact groom/bride sizes
-      const groomW = 90;
-      const brideW = 200;
-      const gap = 1;
+    // Dynamically read track width from DOM
+    let trackWidth = els.track?.offsetWidth || 1366;
+    trackWidth -= 20; // subtract left padding
 
-      // get real pixel width of track container
-      let trackWidth = els.track?.offsetWidth;
+    const visual = computeVisualProgress(raw, trackWidth, groomW, brideW, gap);
 
-      // subtract left padding because characters don't move inside padding
-      trackWidth -= 20;
+    // --- Winner detection based on raw progress ---
+    const WIN_THRESHOLD = 99; // 99% progress needed
+    if (raw >= WIN_THRESHOLD) {
+      console.log("🎉 Winner detected by shake:", groupId);
+      await set(ref(db, "winner"), groupId);
+    }
 
-      const visual = computeVisualProgress(raw, trackWidth, groomW, brideW, gap);
-      const maxX = computeVisualProgress(100, trackWidth, groomW, brideW, gap);
-
-      const COLLISION_THRESHOLD = 10; // pixels to consider “touching”
-
-      // 🏆 Winner detected when groom nearly touches bride
-      if (visual >= maxX - COLLISION_THRESHOLD) {
-        console.log("🎉 Winner detected by shake:", groupId);
-        await set(ref(db, "winner"), groupId);
-      }
-    })
-    .catch((err) => console.error("Shake transaction failed:", err));
+    // Optional: update groom element visually
+    if (els.groom) {
+      els.groom.style.left = `${visual}px`;
+    }
+  })
+  .catch((err) => console.error("Shake transaction failed:", err));
 }
 
 // ====== Animation ======
@@ -1534,6 +1534,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
