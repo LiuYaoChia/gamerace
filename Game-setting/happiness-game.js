@@ -26,9 +26,8 @@ const isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const isHost = !isPhone; // desktop can be host
 
 // ====== Config ======
-const STEP_PERCENT       = 3;
-const SHAKE_COOLDOWN_MS  = 500;
-const SHAKE_THRESHOLD    = 15;
+const SHAKE_COOLDOWN_MS  = 150;
+const SHAKE_THRESHOLD    = 10;
 
 const cupidVariants = [
   "img/pinkboat_0.png","img/blackboat_0.png","img/redboat_0.png",
@@ -600,21 +599,28 @@ function handleMotion(e) {
 }
 
 // Function to handle a shake transaction for a group
-function addGroupShakeTx(groupId) {
+function addGroupShakeTx(groupId, strength = 15) {
   const gRef = ref(db, `groups/${groupId}`);
 
   runTransaction(gRef, (g) => {
     if (!g) return g;
-
+    const multiplier = Math.min(3, strength / 20);   // 1x → 3x speed
     const membersCount = g.members ? Object.keys(g.members).length : 1;
-    const BASE_STEP = 5;
-    const step = BASE_STEP / Math.sqrt(membersCount);
-    const newProgress = Math.min(100, (g.progress || 0) + step);
+    const BASE_STEP = 3;
+    const step = BASE_STEP * multiplier / Math.sqrt(membersCount);
+
+    const oldProgress = g.progress || 0;
+    const newProgress = Math.min(100, oldProgress + step);
+
+    // ⭐ Save winTime EXACTLY when progress hits 100 (first time only)
+    const now = Date.now();
+    const shouldSetWinTime = newProgress >= 100 && !g.winTime;
 
     return {
       ...g,
       shakes: (g.shakes || 0) + 1,
       progress: newProgress,
+      winTime: shouldSetWinTime ? now : (g.winTime || null),
     };
   })
   .then((res) => {
@@ -627,7 +633,6 @@ function addGroupShakeTx(groupId) {
     if (g.progress >= 100 && !g.isWinnerDeclared) {
       set(ref(db, "winner"), groupId);
       set(ref(db, `groups/${groupId}/isWinnerDeclared`), true);
-      set(ref(db, `groups/${groupId}/winTime`), t);
       set(ref(db, "gameState"), "finished");
     }
   })
@@ -1516,6 +1521,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
