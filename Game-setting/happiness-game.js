@@ -614,7 +614,7 @@ function addGroupShakeTx(groupId, intensity) {
     const membersCount = g.members ? Object.keys(g.members).length : 1;
 
     // BASE unit of progress
-    const BASE_STEP = 2.2;
+    const BASE_STEP = 1.5;
 
     // Scale by shaking force (stronger shake = more progress)
     const forceScale = Math.min(intensity / 15, 1.5); 
@@ -1548,6 +1548,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
