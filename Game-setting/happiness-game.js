@@ -26,8 +26,9 @@ const isPhone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const isHost = !isPhone; // desktop can be host
 
 // ====== Config ======
-const SHAKE_COOLDOWN_MS  = 300;
-const SHAKE_THRESHOLD    = 15;
+const SHAKE_THRESHOLD = 14;       // Minimum energy to count as a shake
+const SHAKE_COOLDOWN_MS = 120;    // Faster = more shakes/sec
+let lastShakeTime = 0;
 
 const cupidVariants = [
   "img/pinkboat_0.png","img/blackboat_0.png","img/redboat_0.png",
@@ -574,80 +575,97 @@ els.motionBtn?.addEventListener("click", () => {
   }
 });
 
-
+// ====== Motion Handler ======
 function handleMotion(e) {
-  // Only allow shakes when the game is playing
   if (currentGameState !== "playing") return;
+  if (!currentGroupId) return;
 
   const acc = e.accelerationIncludingGravity;
   if (!acc) return;
 
-  const strength = Math.sqrt(
+  // Compute shake intensity (vector magnitude)
+  const intensity = Math.sqrt(
     (acc.x || 0) ** 2 +
     (acc.y || 0) ** 2 +
     (acc.z || 0) ** 2
   );
 
-  if (strength > SHAKE_THRESHOLD && currentGroupId) {
-    const now = Date.now();
-    if (now - lastShakeTime > SHAKE_COOLDOWN_MS) {
-      lastShakeTime = now;
-      addGroupShakeTx(currentGroupId);
-      animateCupidJump(currentGroupId);
-    }
-  }
+  // Must exceed threshold
+  if (intensity < SHAKE_THRESHOLD) return;
+
+  const now = Date.now();
+  if (now - lastShakeTime < SHAKE_COOLDOWN_MS) return;
+  lastShakeTime = now;
+
+  // Send shake WITH intensity
+  addGroupShakeTx(currentGroupId, intensity);
+
+  // Visual animation
+  animateCupidJump(currentGroupId);
 }
 
 // Function to handle a shake transaction for a group
-function addGroupShakeTx(groupId) {
+function addGroupShakeTx(groupId, intensity) {
   const gRef = ref(db, `groups/${groupId}`);
 
   runTransaction(gRef, (g) => {
     if (!g) return g;
 
+    // Members reduce progress advantage
     const membersCount = g.members ? Object.keys(g.members).length : 1;
-    const BASE_STEP = 3;
-    const step = BASE_STEP / Math.sqrt(membersCount);
+
+    // BASE unit of progress
+    const BASE_STEP = 2.2;
+
+    // Scale by shaking force (stronger shake = more progress)
+    const forceScale = Math.min(intensity / 15, 3.0); 
+    // e.g. intensity 30 = 2×, 45 = 3×
+
+    const step = (BASE_STEP * forceScale) / Math.sqrt(membersCount);
 
     const oldProgress = g.progress || 0;
     const newProgress = Math.min(100, oldProgress + step);
 
-    // ⭐ Save winTime EXACTLY once when reaching 100%
+    // Save shake intensity (for debug or stats)
+    const lastShakeDelta = forceScale.toFixed(2);
+
+    // Win time logic
     const now = Date.now();
     const shouldSetWinTime = newProgress >= 100 && !g.winTime;
 
     return {
       ...g,
       shakes: (g.shakes || 0) + 1,
+      lastShakeDelta,
       progress: newProgress,
       winTime: shouldSetWinTime ? now : (g.winTime || null),
     };
   })
   .then((res) => {
     if (!res.committed) return;
-
     const g = res.snapshot.val();
     if (!g) return;
 
-    // ⭐ When progress reached 100%, try to claim winner atomically
     if (g.progress >= 100) {
       const winnerRef = ref(db, "winner");
 
+      // ============ Winner Lock (Atomic) ============
       runTransaction(winnerRef, (currentWinner) => {
-        if (currentWinner) return currentWinner; // Winner already locked
-        return groupId;                          // We claim winner slot
-      }).then((winRes) => {
-        if (winRes.committed && winRes.snapshot.val() === groupId) {
-          // 🎉 We successfully became the winner
+        if (currentWinner) return currentWinner; // someone already won
+        return groupId;                          // claim the win
+      })
+      .then((winRes) => {
+        const winner = winRes.snapshot.val();
+        if (winRes.committed && winner === groupId) {
+          // We officially won
           set(ref(db, `groups/${groupId}/isWinnerDeclared`), true);
           set(ref(db, "gameState"), "finished");
         }
       });
     }
   })
-  .catch((err) => console.error("Shake transaction failed:", err));
+  .catch((err) => console.error("Shake Transaction Failed:", err));
 }
-
 
 
 // ====== Animation ======
@@ -1531,6 +1549,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
