@@ -668,31 +668,19 @@ function addGroupShakeTx(groupId, intensity) {
 
 
 function animateCupidJump(groupId) {
-  // Track groom
-  const lane = document.querySelector(`.lane[data-group-id="${groupId}"]`);
-  const cupid = lane?.querySelector(".groom");
-  if (cupid) {
+  requestAnimationFrame(() => {
+    const lane = document.querySelector(`.lane[data-group-id="${groupId}"]`);
+    const cupid = lane?.querySelector(".groom");
+    if (!cupid) return;
+
     cupid.classList.remove("jump");
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        cupid.classList.add("jump");
-      });
+      cupid.classList.add("jump");
     });
     setTimeout(() => cupid.classList.remove("jump"), 600);
-  }
-
-  // Phone cupid
-  if (els.phoneCupid && els.phoneView && els.phoneView.style.display !== "none") {
-    const phoneCupid = els.phoneCupid;
-    phoneCupid.classList.remove("jump");
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        phoneCupid.classList.add("jump");
-      });
-    });
-    setTimeout(() => phoneCupid.classList.remove("jump"), 600);
-  }
+  });
 }
+
 
 
 
@@ -1565,6 +1553,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
