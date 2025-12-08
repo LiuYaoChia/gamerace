@@ -671,7 +671,7 @@ function addGroupShakeTx(groupId, intensity) {
 // ====== Animation ======
 function animateCupidJump(groupId) {
   const lane = document.querySelector(`.lane[data-group-id="${groupId}"]`);
-  const cupid = lane?.querySelector(".cupid");
+  const cupid = lane?.querySelector(".groom");
   if (cupid) { 
     cupid.classList.add("jump"); 
     setTimeout(() => cupid.classList.remove("jump"), 600); 
@@ -1549,6 +1549,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
