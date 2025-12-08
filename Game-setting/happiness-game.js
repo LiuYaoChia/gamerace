@@ -667,16 +667,17 @@ function addGroupShakeTx(groupId, intensity) {
 }
 
 
-// ====== Animation ======
 function animateCupidJump(groupId) {
   // Track groom
   const lane = document.querySelector(`.lane[data-group-id="${groupId}"]`);
   const cupid = lane?.querySelector(".groom");
   if (cupid) {
-    // Remove and re-add to restart animation
     cupid.classList.remove("jump");
-    void cupid.offsetWidth; // force reflow
-    cupid.classList.add("jump");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        cupid.classList.add("jump");
+      });
+    });
     setTimeout(() => cupid.classList.remove("jump"), 600);
   }
 
@@ -684,11 +685,15 @@ function animateCupidJump(groupId) {
   if (els.phoneCupid && els.phoneView && els.phoneView.style.display !== "none") {
     const phoneCupid = els.phoneCupid;
     phoneCupid.classList.remove("jump");
-    void phoneCupid.offsetWidth; // force reflow
-    phoneCupid.classList.add("jump");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        phoneCupid.classList.add("jump");
+      });
+    });
     setTimeout(() => phoneCupid.classList.remove("jump"), 600);
   }
 }
+
 
 
 // ===== Force stabilize layout for Samsung Android 9 =====
@@ -1557,6 +1562,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
