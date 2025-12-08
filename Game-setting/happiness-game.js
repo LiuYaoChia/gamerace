@@ -74,7 +74,6 @@ const els = {
 
 let currentPlayerId = null;
 let currentGroupId   = null;
-let lastShakeTime   = 0;
 
 
 // ===== Block Android keyboard from triggering resize resets =====
@@ -1549,6 +1548,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
