@@ -669,18 +669,27 @@ function addGroupShakeTx(groupId, intensity) {
 
 // ====== Animation ======
 function animateCupidJump(groupId) {
+  // Track groom
   const lane = document.querySelector(`.lane[data-group-id="${groupId}"]`);
   const cupid = lane?.querySelector(".groom");
-  if (cupid) { 
-    cupid.classList.add("jump"); 
-    setTimeout(() => cupid.classList.remove("jump"), 600); 
+  if (cupid) {
+    // Remove and re-add to restart animation
+    cupid.classList.remove("jump");
+    void cupid.offsetWidth; // force reflow
+    cupid.classList.add("jump");
+    setTimeout(() => cupid.classList.remove("jump"), 600);
   }
 
+  // Phone cupid
   if (els.phoneCupid && els.phoneView && els.phoneView.style.display !== "none") {
-    els.phoneCupid.classList.add("jump");
-    setTimeout(() => els.phoneCupid.classList.remove("jump"), 600);
+    const phoneCupid = els.phoneCupid;
+    phoneCupid.classList.remove("jump");
+    void phoneCupid.offsetWidth; // force reflow
+    phoneCupid.classList.add("jump");
+    setTimeout(() => phoneCupid.classList.remove("jump"), 600);
   }
 }
+
 
 // ===== Force stabilize layout for Samsung Android 9 =====
 const isSamsungAndroid9 =
@@ -1548,6 +1557,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
