@@ -1267,7 +1267,7 @@ onValue(ref(db, "winner"), async (snap) => {
           color:${color};
           text-shadow:1px 1px 2px #000;
         ">
-          ${medal} ${r.name} — <span style="color:#fff;">${r.progress}%</span>
+          ${medal} ${r.name} — <span style="color:#fff;">${r.progress.toFixed(2)}%</span>
         </li>`;
     });
     rankHTML += `</ul>`;
@@ -1562,6 +1562,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
