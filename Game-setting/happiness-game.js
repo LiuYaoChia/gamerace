@@ -1166,12 +1166,15 @@ onValue(ref(db, "winner"), async (snap) => {
     winnerScene.appendChild(groomImg);
     winnerScene.appendChild(brideImg);
 
-    // Optional: force reflow to restart animation
-    void groomImg.offsetWidth;
-    void brideImg.offsetWidth;
-    groomImg.classList.add("land");
-    brideImg.classList.add("land");
+    // --- Restart animation safely ---
+    function restartAnimation(el) {
+      el.classList.remove("land");
+      void el.offsetWidth;      // force reflow
+      el.classList.add("land"); // re-trigger animation
+    }
 
+    restartAnimation(groomImg);
+    restartAnimation(brideImg);
 
     if (els.winnerPopup) {
       els.winnerPopup.style.display = "flex";
@@ -1562,6 +1565,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
