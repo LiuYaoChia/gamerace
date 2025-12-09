@@ -1326,6 +1326,42 @@ els.winnerExit?.addEventListener("click", async () => {
   stopWinnerSound()
 });
 
+
+// ============ ⏳ Countdown Logic ============
+function startCountdown(callback) {
+  const overlay = document.getElementById("countdown-overlay");
+  const numBox = document.getElementById("countdown-number");
+
+  overlay.style.display = "flex";
+
+  let n = 3;
+  numBox.textContent = n;
+
+  const timer = setInterval(() => {
+    n--;
+    if (n > 0) {
+      numBox.textContent = n;
+      numBox.style.animation = "none";
+      void numBox.offsetWidth;
+      numBox.style.animation = "countdownPop 0.9s ease-out";
+    } else {
+      numBox.textContent = "GO!";
+      numBox.style.animation = "none";
+      void numBox.offsetWidth;
+      numBox.style.animation = "countdownPop 0.9s ease-out";
+
+      clearInterval(timer);
+
+      setTimeout(() => {
+        overlay.style.display = "none";
+        callback();   // fire real game start
+      }, 600);
+    }
+  }, 1000);
+}
+
+
+
 // ====== Start / Reset / Exit ======
 async function startGame() {
   // Reset progress to 0 for all groups
@@ -1352,7 +1388,7 @@ async function startGame() {
 // Host start button (NO PASSWORD)
 if (isHost) {
   els.startBtn?.addEventListener("click", async () => {
-    await startGame();   // <-- directly start, no prompt
+    startCountdown(startGame);   // <-- directly start, no prompt
   });
 }
 
@@ -1558,58 +1594,5 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
