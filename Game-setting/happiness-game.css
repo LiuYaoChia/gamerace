@@ -321,9 +321,9 @@ input, textarea {
 
 /* Groom hop animation */
 @keyframes groomHop {
-  0%   { transform: translateY(-50%) rotate(-1.5deg); }
-  50%  { transform: translateY(-50%) rotate(1.5deg); }
-  100% { transform: translateY(-50%) rotate(-1.5deg); }
+  0%   { transform: translateY(-50%) rotate(-2deg); }
+  50%  { transform: translateY(-50%) rotate(2deg); }
+  100% { transform: translateY(-50%) rotate(-2deg); }
 }
 
 .groom.hop {
@@ -458,8 +458,6 @@ input, textarea {
   object-fit: contain;
   animation: float 3s ease-in-out infinite;
 }
-
-
 
 
 /* Winner Name */
@@ -652,46 +650,4 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
