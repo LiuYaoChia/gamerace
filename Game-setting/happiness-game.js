@@ -979,6 +979,11 @@ function renderGameScene(groups) {
     groom.style.transition = "left 0.4s ease-out";
     groom.style.left = `${groomX}px`;
 
+    // Trigger hop animation on movement
+    groom.classList.remove("hop");   // restart animation if consecutive
+    void groom.offsetWidth;          // force reflow so animation restarts
+    groom.classList.add("hop");
+
     // Label
     const label = document.createElement("div");
     const laneRect = lane.getBoundingClientRect();
@@ -1553,6 +1558,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
