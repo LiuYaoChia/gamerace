@@ -802,6 +802,7 @@ onValue(ref(db, "gameState"), snap => {
       hide(els.phoneCupid);
       hide(els.leaveBtn);
       hide(els.renameBtn);
+      hide(els.track);
 
       renderGroupChoices().catch(console.warn);
       return;
@@ -812,6 +813,7 @@ onValue(ref(db, "gameState"), snap => {
       hide(els.setupScreen);
       hide(els.form);
       hide(els.qrEl);
+      hide(els.track);
 
       if (currentGroupId) {
         show(els.phoneView);
@@ -1594,5 +1596,6 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
