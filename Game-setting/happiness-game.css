@@ -321,10 +321,9 @@ input, textarea {
 
 /* Groom hop animation */
 @keyframes groomHop {
-  0%   { transform: translateY(-50%) rotate(0deg) scale(1); }
-  30%  { transform: translateY(calc(-50% - 15px)) rotate(0deg) scale(1.05); }
-  60%  { transform: translateY(calc(-50% - 5px)) rotate(0deg) scale(0.98); }
-  100% { transform: translateY(-50%) rotate(0deg) scale(1); }
+  0%   { transform: translateY(-50%) rotate(-1.5deg); }
+  50%  { transform: translateY(-50%) rotate(1.5deg); }
+  100% { transform: translateY(-50%) rotate(-1.5deg); }
 }
 
 .groom.hop {
@@ -653,6 +652,7 @@ input, textarea {
   margin: 6px 0;
   color: #222;
 }
+
 
 
 
