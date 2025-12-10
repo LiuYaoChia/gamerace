@@ -1329,13 +1329,19 @@ els.winnerExit?.addEventListener("click", async () => {
 });
 
 
+const countdownAudio = new Audio("img/14280.mp3");
+
+
 // ============ ⏳ Countdown Logic ============
 function startCountdown(callback) {
   const overlay = document.getElementById("countdown-overlay");
   const numBox = document.getElementById("countdown-number");
 
   overlay.style.display = "flex";
-
+  // --- 1. Start audio at the same time as countdown ---
+  countdownAudio.currentTime = 0;
+  countdownAudio.play();
+  
   let n = 3;
   numBox.textContent = n;
 
@@ -1596,6 +1602,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
