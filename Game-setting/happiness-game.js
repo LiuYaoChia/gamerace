@@ -629,7 +629,7 @@ function addGroupShakeTx(groupId, intensity) {
     const lastShakeDelta = forceScale.toFixed(2);
 
     // Win time logic
-    const now = Date.now();
+    import { serverTimestamp } from "firebase/database";
     const shouldSetWinTime = newProgress >= 100 && !g.winTime;
 
     return {
@@ -637,7 +637,7 @@ function addGroupShakeTx(groupId, intensity) {
       shakes: (g.shakes || 0) + 1,
       lastShakeDelta,
       progress: newProgress,
-      winTime: shouldSetWinTime ? now : (g.winTime || null),
+      winTime: shouldSetWinTime ? serverTimestamp() : (g.winTime || null),
     };
   })
   .then((res) => {
@@ -1222,7 +1222,10 @@ onValue(ref(db, "winner"), async (snap) => {
         id,
         name: g.name || `Group ${id}`,
         progress: safeProgress(g.progress),  // 0–100
-        winTime: g.winTime || Infinity       // earlier is better
+        winTime:
+          (typeof g.winTime === "number")
+            ? g.winTime
+            : Infinity,
       }))
       .sort((a, b) => {
         // 1️⃣ Sort by progress
@@ -1602,6 +1605,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
