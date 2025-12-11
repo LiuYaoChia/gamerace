@@ -6,7 +6,7 @@ import {
 import { 
   getAuth, signInAnonymously, onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
+import { serverTimestamp } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyCK4uNQlQwXk4LS9ZYB6_pkbZbrd1kj-vA",
   authDomain: "happiness-game-e6bf1.firebaseapp.com",
@@ -629,7 +629,6 @@ function addGroupShakeTx(groupId, intensity) {
     const lastShakeDelta = forceScale.toFixed(2);
 
     // Win time logic
-    import { serverTimestamp } from "firebase/database";
     const shouldSetWinTime = newProgress >= 100 && !g.winTime;
 
     return {
@@ -1605,6 +1604,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
