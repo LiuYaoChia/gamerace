@@ -845,6 +845,7 @@ onValue(ref(db, "gameState"), snap => {
       hide(els.resetBtn);
       show(els.gameScreen);
       show(els.rank);
+      stopsBeginSound()
       if (typeof showGame === "function") showGame();
     }
   }
@@ -1071,26 +1072,6 @@ onValue(ref(db, "groups"), (snap) => {
     if (myGroup) updatePhoneView(myGroup);
   }
 });
-//====== Load lobby sounds ======
-let audioUnlocked = false;
-
-function unlockAudio() {
-  if (audioUnlocked) return;
-  audioUnlocked = true;
-
-  const a = new Audio();
-  a.play().catch(()=>{});
-
-  console.log("🔓 Audio unlocked");
-}
-
-if (isHost) {
-  document.addEventListener("click", () => {
-    unlockAudio();       // allow audio autoplay
-    playsBeginSound();   // play lobby sound (host only)
-  }, { once: true });
-}
-
 
 // ====== Load game sounds ======
 let sStart, sWin, sBegin;
@@ -1428,8 +1409,7 @@ async function startGame() {
 
 // Host start button (NO PASSWORD)
 if (isHost) {
-  els.startBtn?.addEventListener("click", async () => {
-    stopsBeginSound(); 
+  els.startBtn?.addEventListener("click", async () => { 
     startCountdown(startGame);   // <-- directly start, no prompt
   });
 }
@@ -1636,6 +1616,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
