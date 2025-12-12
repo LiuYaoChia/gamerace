@@ -1410,6 +1410,7 @@ async function startGame() {
 // Host start button (NO PASSWORD)
 if (isHost) {
   els.startBtn?.addEventListener("click", async () => { 
+    stopsBeginSound()
     startCountdown(startGame);   // <-- directly start, no prompt
   });
 }
@@ -1616,6 +1617,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
