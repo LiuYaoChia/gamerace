@@ -836,6 +836,7 @@ onValue(ref(db, "gameState"), snap => {
       show(els.gameScreen);
       hide(els.gameTitle);
       hide(els.rank);
+      playsBeginSound()
     }
 
     if (currentGameState === "playing") {
@@ -1096,7 +1097,7 @@ let sStart, sWin, sBegin;
 if (!isPhone) {   // <=== Host only
   sStart = new Audio("img/game_start.mp3");
   sWin = new Audio("img/winner.mp3");
-  sBegin = new Audio("img/14280.mp3");
+  sBegin = new Audio("img/lobby.mp3");
 }
 
 if (isPhone) {
@@ -1635,6 +1636,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
