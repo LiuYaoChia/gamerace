@@ -836,6 +836,7 @@ onValue(ref(db, "gameState"), snap => {
       show(els.gameScreen);
       hide(els.gameTitle);
       hide(els.rank);
+      playsBeginSound()
     }
 
     if (currentGameState === "playing") {
@@ -1072,10 +1073,11 @@ onValue(ref(db, "groups"), (snap) => {
 });
 
 // ====== Load game sounds ======
-let sStart, sWin;
+let sStart, sWin, sBegin;
 if (!isPhone) {   // <=== Host only
   sStart = new Audio("img/game_start.mp3");
   sWin = new Audio("img/winner.mp3");
+  sBegin = new Audio("img/14280.mp3");
 }
 
 if (isPhone) {
@@ -1088,6 +1090,9 @@ function playWinnertSound() {
 function playStartSound() {
   if (!isPhone && sStart) sStart.play().catch(()=>{});
 }
+function playsBeginSound() {
+  if (!isPhone && sBegin) sBegin.play().catch(()=>{});
+}
 function stopStartSound() {
   if (isHost && sStart) {
     try {
@@ -1099,12 +1104,19 @@ function stopStartSound() {
 function stopWinnerSound() {
   if (isHost && sWin) {
     try {
-      sStart.pause();
-      sStart.currentTime = 0;  // reset to beginning
+      sWin.pause();
+      sWin.currentTime = 0;  // reset to beginning
     } catch (e) {}
   }
 }
-
+function stopsBeginSound() {
+  if (isHost && sBegin) {
+    try {
+      sBegin.pause();
+      sBegin.currentTime = 0;  // reset to beginning
+    } catch (e) {}
+  }
+}
 // ====== Winner popup logic (with highlighted ranking and clean layout) ======
 onValue(ref(db, "winner"), async (snap) => {
   const winnerId = snap.val();
@@ -1392,6 +1404,7 @@ async function startGame() {
   els.gameScreen.style.display = "block";
   els.qrEl.style.display     = "none";
   playStartSound()
+  stopsBeginSound()
 }
 
 // Host start button (NO PASSWORD)
@@ -1603,6 +1616,7 @@ async function removeRedundantGroups() {
   await removeExtraGroups();       // remove any leftover 6th group
   if (!isHost) await renderGroupChoices();
 })();
+
 
 
 
